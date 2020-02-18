@@ -1,0 +1,94 @@
+{
+  "name": "bnc",
+  "version": "0.0.1",
+  "description": "The CLI deployment tool for Hyperledger enterprise blockchains",
+  "main": "index.js",
+  "private": true,
+  "cacheDirectories": [
+    "node_modules"
+  ],
+  "files": [
+    "bin/*",
+    "dist/*",
+    "templates/*",
+    "network-objects/*",
+    "tools/*",
+    "docker-compose.yml",
+    "package.json"
+  ],
+  "bin": {
+    "bnc": "./dist/command.js"
+  },
+  "engines": {
+    "node": ">=8.9.0"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc",
+    "prepare": "npm run build",
+    "lint": "tslint --fix -c './tslint.json' -p -p './tsconfig.json'",
+    "test": "mocha -r ts-node/register tests/**/*.spec.ts --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://git.irt-systemx.fr/bnc.git"
+  },
+  "keywords": [
+    "bnc",
+    "development",
+    "hyperledger",
+    "fabric",
+    "environment",
+    "blockchain",
+    "hyperledger fabric"
+  ],
+  "authors": [
+    {
+      "name": "Wassim Znaidi",
+      "email": "wassim.znaidi@gmail.com"
+    },
+    {
+      "name": "Sahar Fehri",
+      "email": "sahar.fehri@irt-systemx.fr"
+    },
+    {
+      "name": "Ahmed Souissi",
+      "email": "ahmed.souissi@irt-systemx.fr"
+    },
+    {
+      "name": "Chiraz Chaabane",
+      "email": "chiraz.chaabane@irt-systemx.fr"
+    }
+  ],
+  "dependencies": {
+    "async": "^2.1.4",
+    "chai": "^4.2.0",
+    "chalk": "^1.1.3",
+    "commander": "^2.9.0",
+    "ejs": "^2.6.1",
+    "fabric-ca-client": "^1.4.5",
+    "fabric-client": "^1.4.5",
+    "fs-extra": "^8.1.0",
+    "inquirer": "^7.0.4",
+    "mem-fs": "^1.1.3",
+    "mem-fs-editor": "^6.0.0",
+    "mocha": "^7.0.1",
+    "path": "^0.12.7",
+    "shelljs": "^0.8.3",
+    "tslib": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.9",
+    "@types/fs-extra": "^8.1.0",
+    "@types/mocha": "^7.0.1",
+    "@types/node": "^12.12.27",
+    "husky": "3.1.0",
+    "lint-staged": "9.5.0",
+    "prettier": "1.19.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^8.6.2",
+    "tsc": "^1.20150623.0",
+    "tslint": "^6.0.0",
+    "typescript": "^3.7.5"
+  }
+}
