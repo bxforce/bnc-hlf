@@ -14,7 +14,6 @@ export class NetworkOptions {
 }
 
 export class Network {
-
   organizations: Organization[];
   channels: Channel[];
 
@@ -48,3 +47,5 @@ export class Network {
     return;
   }
 }
+
+const buildNetworkConfig = (configFilePath: string) => {};

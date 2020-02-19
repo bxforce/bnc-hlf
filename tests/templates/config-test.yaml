@@ -1,0 +1,34 @@
+chains:
+  - template_folder: /home/ubuntu/hlf-files
+  - fabric: 2.0
+  - organisations:
+      - org1:
+          - tls: true
+          - couchdb: true
+          - domain_name: org1.com
+          - ca: ca1
+          - orderers:
+              - consensus: raft
+          - peers:
+              - peer0:
+                  - engine_name: host1
+              - peer1:
+                  - engine_name: host2
+engines:
+  - engineOrg1:
+      - host1:
+          - type: docker
+          - ip: 192.168.208.13
+          - port: 2375
+          - settings: [ default ]
+      - host2:
+          - type: docker
+          - ip: 192.168.208.204
+          - port: 2375
+          - settings: [ default ]
+  - engineOrg2:
+      - host1:
+          - type: docker
+          - ip: 192.168.208.13
+          - port: 2375
+          - settings: [ default ]
