@@ -1,3 +1,4 @@
+/* tslint:disable:no-unused-variable */
 import { l } from './utils/logs';
 
 export class CLI {
