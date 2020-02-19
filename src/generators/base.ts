@@ -12,12 +12,15 @@ export abstract class BaseGenerator {
     get filePath(): string {
         return join(this.path, this.filename);
     }
+
     run() {
         return SysWrapper.execContent(this.contents);
     }
+
     check() {
         return SysWrapper.existsPath(this.success);
     }
+
     save() {
         return SysWrapper.createFile(this.filePath, this.contents);
     }

@@ -15,20 +15,20 @@ const tasks = {
     },
 
     async cleanNetwork(rmi: boolean) {
-      l('Not yet implemented');
+      l('[Clean] Not yet implemented');
     },
 
     async installChaincode() {
-      l('Not yet implemented');
+      l('[Install Chaincode] Not yet implemented');
 
     },
 
     async upgradeChaincode() {
-      l('Not yet implemented');
+      l('[Upgrade Chaincode] Not yet implemented');
     },
 
     async invokeChaincode() {
-      l('Not yet implemented');
+      l('[Invoke Chaincode] Not yet implemented');
     },
 };
 
