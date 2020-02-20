@@ -4,6 +4,7 @@ import {NetworkConfiguration} from './parser/networkConfiguration';
 import {DockercomposeRootCAYamlGenerator} from './generators/dockercomposeRootCA.yaml';
 import {DockercomposeRunShGenerator} from './generators/dockercomposeRun.sh';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/networkClean.sh';
+import {ConfigurationValidator} from './parser/configurationValidator';
 
 export  class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -12,9 +13,13 @@ export  class Orchestrator {
     // const homedir = require('os').homedir();
     // const path = join(homedir, this.networkRootPath);
 
+    l('Validate input configuration file');
+    const validator = new ConfigurationValidator();
+    const isValid = validator.isValid(configFilePath);
+
     l('Start parsing the blockchain configuration file');
     let configParse = new NetworkConfiguration(configFilePath);
-    await configParse.parse();
+    const organizations = await configParse.parse();
 
     l('Finishing parsing the blockchain configuration file');
   }

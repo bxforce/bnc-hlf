@@ -7,6 +7,7 @@ import {Peer} from '../models/peer';
 import {Orderer} from '../models/orderer';
 
 export class NetworkConfiguration {
+
   constructor(public fullFilePath: string) {}
 
   async parse() {

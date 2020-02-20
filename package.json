@@ -77,7 +77,8 @@
     "shelljs": "^0.8.3",
     "tslib": "^1.10.0",
     "js-yaml": "^3.13.1",
-    "yaml": "^1.7.2"
+    "yaml": "^1.7.2",
+    "yaml-validator": "^2.2.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.9",
