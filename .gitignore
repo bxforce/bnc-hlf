@@ -5,6 +5,8 @@
 node_tmp/
 node_modules/
 npm-debug.log.*
+.c9/
+dist/
 /.awcache/*
 /.cache-loader/*
 

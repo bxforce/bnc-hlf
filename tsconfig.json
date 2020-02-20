@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "emitDecoratorMetadata": true,
         "outDir": "./dist",
         "rootDir": "./src",
         "target": "es5",
