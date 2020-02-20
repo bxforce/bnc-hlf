@@ -1,7 +1,7 @@
-import { FileSystemWallet, X509WalletMixin } from 'fabric-network';
+import { FileSystemWallet, X509WalletMixin, Wallet } from 'fabric-network';
 
-export class Wallet {
-    wallet: any;
+export class Wallets {
+    wallet: Wallet;
     constructor(public walletPath: string) {
         this.wallet = new FileSystemWallet(walletPath)
     }
@@ -22,5 +22,9 @@ export class Wallet {
 
     async deleteIdentity (id) {
         return await this.wallet.delete(id);
+    }
+
+    getWallet () {
+        return this.wallet;
     }
 }
