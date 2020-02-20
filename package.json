@@ -68,6 +68,7 @@
     "ejs": "^2.6.1",
     "fabric-ca-client": "^1.4.5",
     "fabric-client": "^1.4.5",
+    "fabric-network": "^1.4.5",
     "fs-extra": "^8.1.0",
     "inquirer": "^7.0.4",
     "mem-fs": "^1.1.3",
