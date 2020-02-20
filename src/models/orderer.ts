@@ -1,9 +1,11 @@
 export class OrdererOptions {
-  number: number;
-  ports: string[];
-  host: string;
+  engineName: string;
+  consensus: string;
+  number?: number;
+  ports?: string[];
+  host?: string;
 }
 
 export class Orderer {
-  constructor(public name: string, public options: OrdererOptions) {}
+  constructor(public name: string,  public options: OrdererOptions) {}
 }

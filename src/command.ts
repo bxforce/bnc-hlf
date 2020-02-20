@@ -5,11 +5,6 @@ import { CLI } from './cli';
 
 const pkg = require('../package.json');
 
-function collect(val, memo) {
-  memo.push(val);
-  return memo;
-}
-
 const tasks = {
   async createRootCA() {
     return await CLI.startRootCA();

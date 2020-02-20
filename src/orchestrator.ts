@@ -1,6 +1,6 @@
 import {join} from 'path';
 import {l} from './utils/logs';
-import {ConfigParser} from './parser/configParser';
+import {NetworkConfiguration} from './parser/networkConfiguration';
 import {DockercomposeRootCAYamlGenerator} from './generators/dockercomposeRootCA.yaml';
 import {DockercomposeRunShGenerator} from './generators/dockercomposeRun.sh';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/networkClean.sh';
@@ -9,11 +9,11 @@ export  class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
 
   async initNetwork(configFilePath: string) {
-    const homedir = require('os').homedir();
-    const path = join(homedir, this.networkRootPath);
+    // const homedir = require('os').homedir();
+    // const path = join(homedir, this.networkRootPath);
 
     l('Start parsing the blockchain configuration file');
-    let configParse = new ConfigParser(configFilePath);
+    let configParse = new NetworkConfiguration(configFilePath);
     await configParse.parse();
 
     l('Finishing parsing the blockchain configuration file');

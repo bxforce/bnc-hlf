@@ -9,6 +9,7 @@ chains:
           - ca: ca1
           - orderers:
               - consensus: raft
+              - engine_name: host1
           - peers:
               - peer0:
                   - engine_name: host1
