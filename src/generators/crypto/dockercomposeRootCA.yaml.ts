@@ -1,4 +1,4 @@
-import { BaseGenerator } from './base';
+import { BaseGenerator } from '../base';
 
 export class DockercomposeRootCAYamlGenerator extends BaseGenerator {
   contents = `version: '2'

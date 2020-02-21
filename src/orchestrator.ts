@@ -1,12 +1,12 @@
-import {join} from 'path';
-import {l} from './utils/logs';
-import {NetworkConfiguration} from './parser/networkConfiguration';
-import {DockercomposeRootCAYamlGenerator} from './generators/dockercomposeRootCA.yaml';
-import {DockercomposeRunShGenerator} from './generators/dockercomposeRun.sh';
-import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/networkClean.sh';
-import {ConfigurationValidator} from './parser/configurationValidator';
+import { join } from 'path';
+import { l } from './utils/logs';
+import { NetworkConfiguration } from './parser/networkConfiguration';
+import { DockercomposeRootCAYamlGenerator } from './generators/crypto/dockercomposeRootCA.yaml';
+import { DockercomposeRunShGenerator } from './generators/dockercomposeRun.sh';
+import { NetworkCleanShGenerator, NetworkCleanShOptions } from './generators/networkClean.sh';
+import { ConfigurationValidator } from './parser/configurationValidator';
 
-export  class Orchestrator {
+export class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
 
   async initNetwork(configFilePath: string) {
