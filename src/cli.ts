@@ -6,9 +6,20 @@ import * as path from 'path';
 
 import { l, d } from './utils/logs';
 import { Wallets } from './models/wallet';
+import {Orchestrator} from './orchestrator';
 
 export class CLI {
+  static async createNetwork(configFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.initNetwork(configFilePath);
+    return orchEngine;
+  }
 
+  static async cleanNetwork(rmi: boolean) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.cleanDocker(rmi);
+    return orchEngine;
+  }
     static ccpPath = path.resolve(__dirname, '..', 'tests', 'ca', 'connection-org1.json');
     static ccpJSON = fs.readFileSync(CLI.ccpPath, 'utf8');
     static ccp = JSON.parse(CLI.ccpJSON);
@@ -59,13 +70,11 @@ export class CLI {
 
 }
 
-export class NetworkCLI {
-    networkRootPath = './hyperledger-fabric-network';
-
-    public async clean(rmi: boolean) {
-        l('************ Success!');
-        l('Environment cleaned!');
-    }
+  static async startRootCA() {
+    const orchEngine = new Orchestrator();
+    await orchEngine.startRootCa();
+    return orchEngine;
+  }
 }
 
 export class ChaincodeCLI {
