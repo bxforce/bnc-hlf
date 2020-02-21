@@ -19,9 +19,8 @@ const tasks = {
       l('Not yet implemented');
     },
 
-    async enroll(id, secret) {
-      console.log('Progress ');
-      return await CLI.enroll(id, secret);
+    async enroll(type, id, secret, affiliation, mspID) {
+      return await CLI.enroll(type, id, secret, affiliation, mspID);
     },
 
     async fetchIdentity(id) {
@@ -72,13 +71,14 @@ program
     });
 
 program
-  .command('enroll <id> <secret> [args...]')
+  .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
-  .action(async (id:string , secret:string, args:string[], cmd:any ) => {
+  .action(async (type:string, id:string , secret:string,affiliation:string ,mspID:string,  args:string[], cmd:any ) => {
     console.log('lp', id, secret)
-    await tasks.enroll(id, secret); // if -R is not passed cmd.rmi is true
-
+    await tasks.enroll(type, id, secret, affiliation, mspID); // if -R is not passed cmd.rmi is true
   });
+
+
 
 program
   .command('fetch-dentity <id> [args...]')
@@ -88,12 +88,11 @@ program
   });
 
 program  // just for testing to be deleted
-  .command('delete-dentity <id> [args...]')
+  .command('delete-identity <id> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (id:string, args:string[], cmd: any) => {
     await tasks.deleteIdentity(id);
   });
-
 
 program
     .command('install <name> <language>')
