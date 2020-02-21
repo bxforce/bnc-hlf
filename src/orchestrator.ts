@@ -28,7 +28,7 @@ export class Orchestrator {
     const homedir = require('os').homedir();
     const path = join(homedir, this.networkRootPath);
 
-    let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-root-ca.yaml', path);
+    let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-root-ca.yaml', path, null);
 
     let dockerRun = new DockercomposeRunShGenerator('docker-start-ca.sh', path, {
       networkRootPath: path,
