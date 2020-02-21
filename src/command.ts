@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import * as program from 'commander';
 import { l } from './utils/logs';
+import { CLI } from './cli';
 
 const pkg = require('../package.json');
 
@@ -16,6 +17,19 @@ const tasks = {
 
     async cleanNetwork(rmi: boolean) {
       l('Not yet implemented');
+    },
+
+    async enroll(id, secret) {
+      console.log('Progress ');
+      return await CLI.enroll(id, secret);
+    },
+
+    async fetchIdentity(id) {
+      return await CLI.fetchIdentity(id);
+    },
+
+    async deleteIdentity(id) {
+      return await CLI.deleteIdentity(id);
     },
 
     async installChaincode() {
@@ -56,6 +70,30 @@ program
     .action(async (cmd: any) => {
         await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
     });
+
+program
+  .command('enroll <id> <secret> [args...]')
+  .option('-R, --no-rmi', 'Do not remove docker images')
+  .action(async (id:string , secret:string, args:string[], cmd:any ) => {
+    console.log('lp', id, secret)
+    await tasks.enroll(id, secret); // if -R is not passed cmd.rmi is true
+
+  });
+
+program
+  .command('fetch-dentity <id> [args...]')
+  .option('-R, --no-rmi', 'Do not remove docker images')
+  .action(async (id:string, args:string[], cmd: any) => {
+    await tasks.fetchIdentity(id);
+  });
+
+program  // just for testing to be deleted
+  .command('delete-dentity <id> [args...]')
+  .option('-R, --no-rmi', 'Do not remove docker images')
+  .action(async (id:string, args:string[], cmd: any) => {
+    await tasks.deleteIdentity(id);
+  });
+
 
 program
     .command('install <name> <language>')
