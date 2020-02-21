@@ -4,7 +4,7 @@ import { FileSystemWallet, X509WalletMixin, Gateway } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { l } from './utils/logs';
+import { l, d } from './utils/logs';
 import { Wallets } from './models/wallet';
 
 export class CLI {
@@ -23,7 +23,8 @@ export class CLI {
             let cli = new EnrollCLI();
             l('before big call');
             let enrollmentOBJ = await cli.enrollManager(id, secret,mspID);
-            l(`Enrollment Object : ${enrollmentOBJ}` );
+          //  l(`Enrollment Object : ${enrollmentOBJ}` );
+            console.log('enrollment obj', enrollmentOBJ)
             return enrollmentOBJ;
         } else {
             // register user/peer

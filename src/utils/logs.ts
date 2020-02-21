@@ -1,14 +1,20 @@
+import * as chalk from 'chalk';
+
 export function l(msg: string | Error) {
-    if (typeof msg === 'string') {
-        console.log(`[BNC] - ${msg}`);
+  if (typeof msg === 'string') {
+    console.log(`[BNC] - ${msg}`);
+  } else {
+    if ((msg as any).responses && (msg as any).responses.length > 0) {
+      for (let response of (msg as any).responses) {
+        console.log(response.Error);
+        console.log(response);
+      }
     } else {
-        if ((msg as any).responses && (msg as any).responses.length > 0) {
-            for (let response of (msg as any).responses) {
-                console.log(response.Error);
-                console.log(response);
-            }
-        } else {
-            console.log(msg);
-        }
+      console.log(msg);
     }
+  }
+}
+
+export function d(msg) {
+  console.log(chalk.green(`[BNC] - ${msg}`));
 }
