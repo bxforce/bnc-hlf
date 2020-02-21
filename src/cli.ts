@@ -7,11 +7,11 @@ import * as path from 'path';
 import { l } from './utils/logs';
 import { Wallets } from './models/wallet';
 
-const ccpPath = path.resolve(__dirname, '..','..', 'fabric-samples', 'first-network', 'connection-org1.json');
-const ccpJSON = fs.readFileSync(ccpPath, 'utf8');
-const ccp = JSON.parse(ccpJSON);
-
 export class CLI {
+
+    static ccpPath = path.resolve(__dirname, '..', 'tests', 'ca', 'connection-org1.json');
+    static ccpJSON = fs.readFileSync(CLI.ccpPath, 'utf8');
+    static ccp = JSON.parse(CLI.ccpJSON);
 
     static async cleanNetwork(rmi: boolean) {
         return;
@@ -82,7 +82,7 @@ export class EnrollCLI {
     public async enrollManager (id, secret, mspID) {
         try {
             // Create a new CA client for interacting with the CA.
-            const caInfo = ccp.certificateAuthorities['ca.org1.example.com'];   //!!!!!!!!!!!!!!!!!!!!!! Maybe this should be intered as param ????
+            const caInfo = CLI.ccp.certificateAuthorities['ca.org1.example.com'];   //!!!!!!!!!!!!!!!!!!!!!! Maybe this should be intered as param ????
             const caTLSCACerts = caInfo.tlsCACerts.pem;
             const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
             // Create a new file system based wallet for managing identities.
@@ -144,7 +144,7 @@ export class RegisterCLI {
             // Create a new gateway for connecting to our peer node.
             const gateway = new Gateway();
             let wallet = myWallet.getWallet();
-            await gateway.connect(ccpPath, { wallet , identity: 'admin', discovery: { enabled: true, asLocalhost: true } });
+            await gateway.connect(CLI.ccpPath, { wallet , identity: 'admin', discovery: { enabled: true, asLocalhost: true } });
             // Get the CA client object from the gateway for interacting with the CA.
             const client = gateway.getClient();
             const ca = client.getCertificateAuthority();

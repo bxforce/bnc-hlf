@@ -78,8 +78,6 @@ program
     await tasks.enroll(type, id, secret, affiliation, mspID); // if -R is not passed cmd.rmi is true
   });
 
-
-
 program
   .command('fetch-dentity <id> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
