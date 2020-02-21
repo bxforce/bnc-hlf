@@ -1,17 +1,18 @@
-import {BaseGenerator} from './base';
-import {Organization} from '../models/organization';
+import { BaseGenerator } from './base';
+import { Organization } from '../models/organization';
+import { Peer } from '../models/peer';
 
 export class DockerComposeOrdererYamlOptions {
   networkRootPath: string;
   composeNetwork: string;
   org: Organization;
   envVars: {
-    FABRIC_VERSION: string,
-    THIRDPARTY_VERSION: string
+    FABRIC_VERSION: string;
+    THIRDPARTY_VERSION: string;
   };
 }
 
-export class DockercomposeOrdererYamlGenerator extends BaseGenerator {
+export class DockerComposeOrdererYamlGenerator extends BaseGenerator {
   contents = `version: '2'
 networks:
   ${this.options.composeNetwork}:
@@ -34,8 +35,14 @@ services:
             - 7050:7050
         volumes:
             - ${this.options.networkRootPath}/artifacts/config/:/etc/hyperledger/configtx
-            - ${this.options.networkRootPath}/artifacts/crypto-config/ordererOrganizations/${this.options.org.domainName}/orderers/orderer.${this.options.org.domainName}/:/etc/hyperledger/msp/orderer
-            - ${this.options.networkRootPath}/artifacts/crypto-config/peerOrganizations/${this.options.org.name}.${this.options.org.domainName}/peers/peer0.${this.options.org.name}.${this.options.org.domainName}/:/etc/hyperledger/msp/peer${this.options.org.name}
+            - ${this.options.networkRootPath}/artifacts/crypto-config/ordererOrganizations/${
+    this.options.org.domainName
+  }/orderers/orderer.${this.options.org.domainName}/:/etc/hyperledger/msp/orderer
+            - ${this.options.networkRootPath}/artifacts/crypto-config/peerOrganizations/${this.options.org.name}.${
+    this.options.org.domainName
+  }/peers/${DockerComposeOrdererYamlGenerator.getFirstOrganisationPeer(this.options.org)}.${this.options.org.name}.${
+    this.options.org.domainName
+  }/:/etc/hyperledger/msp/peer${this.options.org.name}
         networks:
             - ${this.options.composeNetwork}
     `;
@@ -44,10 +51,7 @@ services:
     super(filename, path);
   }
 
-  // async discoverCert(org: Organization): Promise<string> {
-  //   let files = await SysWrapper.enumFilesInFolder(join(this.options.networkRootPath,
-  //     `/artifacts/crypto-config/peerOrganizations/${org.name}.${org.domainName}/ca`));
-  //
-  //   return files.find(x => x.indexOf('_sk') !== -1);
-  // }
+  private static getFirstOrganisationPeer(organization: Organization): Peer {
+    return organization.peers.filter(peer => peer.options.number === 0)[0];
+  }
 }
