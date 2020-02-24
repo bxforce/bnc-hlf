@@ -13,23 +13,18 @@ export class NetworkConfiguration {
   async parse() {
     l('Starting Parsing configuration file');
 
-    // const file = fs.readFileSync(this.fullFilePath, 'utf8');
-    // const content = yaml.safeLoad(file);
-
     const configContent = await SysWrapper.getFile(this.fullFilePath);
     const parsedYaml = safeLoad(configContent);
-
-    // const organisations = new Organization('org');
-
-    // Parsing engine
-    const engines: Engine[] = this.buildEngine(parsedYaml['engines']);
 
     // Parsing chains definition
     const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
 
+    // Parsing engine
+    const engines: Engine[] = this.buildEngine(parsedYaml['engines']);
+
     // Set engine for every organization
     organizations.map((organization) => {
-      organization.engines = engines.filter(eng => eng.name === organization.name);
+      organization.engines = engines.filter(eng => eng.orgName === organization.engineOrgName);
     });
 
     l('Finish Parsing configuration file');
@@ -40,66 +35,60 @@ export class NetworkConfiguration {
   private buildEngine(yamlEngine): Engine[] {
     const engines = [];
 
-    yamlEngine.forEach((eng) => {
-      const orgEngineName = Object.keys(eng)[0];
-      const orgEngines = eng[orgEngineName];
+    for(const engineEntry of yamlEngine) {
+      const { engine, hosts } = engineEntry;
 
-      orgEngines.forEach((hosts) => {
-        const hostName = Object.keys(hosts)[0];
-        const hostEngines = hosts[hostName];
-        const [ {type}, {ip}, {port}, {settings}] = hostEngines;
-
-        const engine = new Engine(hostName, { ip, port, type, settings }, orgEngineName);
-
-        engines.push(engine);
-      });
-    });
+      for(const hostEntry of hosts) {
+        const { host, type, url, port, settings} = hostEntry;
+        engines.push(new Engine(host, { url, port, type, settings }, engine));
+      }
+    }
 
     return engines;
   }
 
   private buildOrganisations(yamlOrganisations): Organization[] {
     const organizations: Organization[] = [];
-    const [{template_folder}, {fabric}, {organisations}] = yamlOrganisations;
+    const { template_folder, fabric, tls, consensus, db,  organisations } = yamlOrganisations;
 
     organisations.forEach((org) => {
-      const orgName = Object.keys(org)[0];
-      const organisation = org[orgName];
-      const [{tls}, {couchdb}, {domain_name}, {ca}, orderers, peers] = organisation;
+      const { organisation, engineOrg, domain_name, ca, orderers, peers } = org;
 
       // parse & store orderers
-      const[{consensus}, {engine_name: ordererEngineName}] = orderers[Object.keys(orderers)[0]];
       const ords = [];
-      ords.push(new Orderer(`orderer_${orgName}`, {
-        engineName: ordererEngineName,
-        consensus
-      }));
+      orderers.forEach(ord => {
+        const { orderer, engine_name: ordererEngineName } = ord;
+        ords.push(new Orderer(orderer, {
+          engineName: ordererEngineName,
+          consensus
+        }));
+      });
 
       // peer parsing
-      const parsedPeers = [];
-      peers[Object.keys(peers)[0]].forEach((p, index) => {
-        const peerName = Object.keys(p)[0];
-        const peer = p[peerName];
+      const parsedPeers: Peer[] = [];
+      peers.forEach((pe, index) => {
+        const { peer: peerName, engine_name: peerEngineName } = pe;
 
-        const [{engine_name: peerEngineName}] = peer;
+        // TODO check if db leveldb or couchdb
 
-        // store the parsed peer
         parsedPeers.push(new Peer(peerName, {
           engineName: peerEngineName,
           number: index,
           ports: [`7${index}51`, `7${index}52`, `7${index}53`],
           couchDbPort: `5${index}84`,
-          couchDB: couchdb
+          couchDB: db
         }));
+
       });
 
-      organizations.push(new Organization(orgName, {
+      organizations.push(new Organization(organisation, {
         orderers: ords,
         peers: parsedPeers,
         templateFolder: template_folder,
         fabricVersion: fabric,
         tls,
-        domainName: domain_name
+        domainName: domain_name,
+        engineOrgName: engineOrg
       }));
     });
 

@@ -18,6 +18,10 @@ const tasks = {
     return await CLI.cleanNetwork(rmi);
   },
 
+  async validateAndParse(filePath: string) {
+    return await CLI.validateAndParse(filePath);
+  },
+
   async installChaincode() {
     l('[Install Chaincode] Not yet implemented');
   },
@@ -39,6 +43,15 @@ program
       // TODO check if the file exists
 
       await tasks.createNetwork(cmd.config);
+    }
+  });
+
+program
+  .command('parse')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.validateAndParse(cmd.config);
     }
   });
 

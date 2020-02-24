@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { l } from './utils/logs';
+import { l, d, e } from './utils/logs';
 import { NetworkConfiguration } from './parser/networkConfiguration';
 import { DockercomposeRootCAYamlGenerator } from './generators/crypto/dockercomposeRootCA.yaml';
 import { DockercomposeRunShGenerator } from './generators/dockercomposeRun.sh';
@@ -22,6 +22,24 @@ export class Orchestrator {
     const organizations = await configParse.parse();
 
     l('Finishing parsing the blockchain configuration file');
+  }
+
+  async validateAndParse(configFilePath: string) {
+
+    l('Validate input configuration file');
+    const validator = new ConfigurationValidator();
+    const isValid = validator.isValid(configFilePath);
+
+    if(!isValid) {
+      e('Configuration file is invalid');
+      return;
+    }
+
+    l('Start parsing the blockchain configuration file');
+    let configParse = new NetworkConfiguration(configFilePath);
+    const organizations = await configParse.parse();
+
+    return organizations;
   }
 
   public async startRootCa() {
