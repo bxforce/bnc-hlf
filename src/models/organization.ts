@@ -15,6 +15,7 @@ export class OrganizationOptions {
   fabricVersion?: string;
   tls?: boolean;
   domainName?: string;
+  engineOrgName?: string;
 }
 
 export class Organization {
@@ -23,6 +24,7 @@ export class Organization {
   orderers: Orderer[];
   users: User[];
   engines: Engine[];
+  engineOrgName: string;
   templateFolder: string;
   fabricVersion: string;
   isSecure = false;
@@ -35,6 +37,7 @@ export class Organization {
       this.orderers = options.orderers;
       this.users = options.users;
       this.engines = options.engines;
+      this.engineOrgName = options.engineOrgName
       this.templateFolder = options.templateFolder;
       this.fabricVersion = options.fabricVersion;
       this.isSecure = options.tls;

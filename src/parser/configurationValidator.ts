@@ -1,62 +1,66 @@
 import * as YamlValidator from 'yaml-validator';
-import { l } from '../utils/logs';
-import {IYamlValidatorOptions} from 'yaml-validator';
+import {l} from '../utils/logs';
 
 export class ConfigurationValidator {
-
-  configurationOptions: IYamlValidatorOptions = {
-    log: false,
-    structure: {
-      chains: {
-        template_folder: 'string',
-        fabric: 'string',
-        organisations: [
-          {
-            'name': {
-              tls: 'boolean',
-              couchdb: 'boolean',
-              domain_name: 'string',
-              ca: 'string',
-              orderers: {
-                consensus: 'string',
-                engine_name: 'string'
-              },
-              peers: [
-                {
-                  'peerName': {
-                    engine_name: 'string'
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      },
-      engines: [
+  static structure = {
+    chains: {
+      template_folder: 'string',
+      fabric: 'string',
+      tls: 'boolean',
+      consensus: 'string',
+      db: 'string',
+      organisations: [
         {
-          'orgEngineName': [
+          organisation: 'string',
+          engineOrg: 'string',
+          domain_name: 'string',
+          ca: {
+            name: 'string',
+            engine_name: 'string'
+          },
+          orderers: [
             {
-              'engineName': {
-                type: 'string',
-                ip: 'string',
-                port: 'string',
-                settings: [
-                  'string'
-                ]
-              }
+              orderer: 'string',
+              engine_name: 'string'
+            }
+          ],
+          peers: [
+            {
+              peer: 'string',
+              engine_name: 'string'
             }
           ]
         }
       ]
     },
-    onWarning: function(error, filepath){
+    engines: [
+      {
+        engine: 'string',
+        hosts: [
+          {
+            host: 'string',
+            type: 'string',
+            url: 'string',
+            port: 'number',
+            settings: ['string']
+          }
+        ]
+      }
+    ]
+  };
+
+  options: YamlValidator.IYamlValidatorOptions = {
+    log: false,
+    structure: ConfigurationValidator.structure,
+    onWarning: function (error, filepath) {
       l(`${filepath} has error: ${error}`);
     },
     writeJson: false,
   };
 
   isValid(filePath: string) {
-    const validator = new YamlValidator(this.configurationOptions);
+    l(`Validating ${filePath}...`);
+    const validator = new YamlValidator(this.options);
     validator.validate([filePath]);
     const reports = validator.report();
 

@@ -24,6 +24,17 @@ export  class Orchestrator {
     l('Finishing parsing the blockchain configuration file');
   }
 
+  async validateAndParse(configFilePath: string) {
+
+    l('Validate input configuration file');
+    const validator = new ConfigurationValidator();
+    const isValid = validator.isValid(configFilePath);
+
+    // l('Start parsing the blockchain configuration file');
+    // let configParse = new NetworkConfiguration(configFilePath);
+    // const organizations = await configParse.parse();
+  }
+
   public async startRootCa() {
     const homedir = require('os').homedir();
     const path = join(homedir, this.networkRootPath);
