@@ -1,25 +1,27 @@
-/* tslint:disable:no-unused-variable */
-import { l } from './utils/logs';
+import {Orchestrator} from './orchestrator';
 
 export class CLI {
+  static async validateAndParse(configFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.validateAndParse(configFilePath);
+    return orchEngine;
+  }
 
-    static async cleanNetwork(rmi: boolean) {
-        return;
-    }
-}
+  static async createNetwork(configFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.initNetwork(configFilePath);
+    return orchEngine;
+  }
 
-export class NetworkCLI {
-    networkRootPath = './hyperledger-fabric-network';
+  static async cleanNetwork(rmi: boolean) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.cleanDocker(rmi);
+    return orchEngine;
+  }
 
-    public async clean(rmi: boolean) {
-        l('************ Success!');
-        l('Environment cleaned!');
-    }
-}
-
-export class ChaincodeCLI {
-    networkRootPath = './hyperledger-fabric-network';
-
-    constructor(private name: string) {
-    }
+  static async startRootCA() {
+    const orchEngine = new Orchestrator();
+    await orchEngine.startRootCa();
+    return orchEngine;
+  }
 }
