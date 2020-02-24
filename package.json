@@ -18,7 +18,7 @@
   ],
   "bin": {
     "bnc": "./dist/command.js",
-    "docker-test": "./dist/docker.js"
+    "docker-test": "./dist/docker-test.js"
   },
   "engines": {
     "node": ">=8.9.0"
@@ -78,6 +78,7 @@
     "dockerode": "^3.1.0",
     "docker-compose": "^0.23.2",
     "node-docker-api": "^1.1.22",
+    "denodeify": "^1.2.1",
     "path": "^0.12.7",
     "shelljs": "^0.8.3",
     "tslib": "^1.10.0"
