@@ -3,8 +3,10 @@ import * as chalk from 'chalk';
 export function l(msg: string | object | Error) {
     if (typeof msg === 'string') {
         console.log(chalk.blue(`[BNC] - ${msg}`));
+        return;
     } if (typeof msg === 'object') {
         console.log(chalk.blue('[BNC] - ', msg));
+        return;
     } else {
         if ((msg as any).responses && (msg as any).responses.length > 0) {
             for (let response of (msg as any).responses) {
