@@ -32,7 +32,7 @@ echo "[Step 2] Creating admin certs"
 export FABRIC_CA_CLIENT_HOME=$ADMIN_DIR
 # Get certificates from ICA
 
-fabric-ca-client enroll --csr.names C=ES,ST=Madrid,L=Madrid,O=dummyOrg.com -m Admin@dummyOrg.com -u http://Admin@dummyOrg.com:mysecret@ica.dummyOrg:8054 
+fabric-ca-client enroll --csr.names C=ES,ST=Madrid,L=Madrid,O=${this.options.org.fullName} -m Admin@${this.options.org.fullName} -u http://Admin@${this.options.org.fullName}:mysecret@ca.interm.${this.options.org.fullName}:8054 
 mkdir -p $ADMIN_DIR/msp/admincerts && cp $ADMIN_DIR/msp/signcerts/*.pem $ADMIN_DIR/msp/admincerts/
 
 
@@ -40,7 +40,7 @@ echo "[Step 2] Completed"
 echo "[Step 3] Creating peer certs"
 
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR
-fabric-ca-client enroll --csr.names C=ES,ST=Madrid,L=Madrid,O=dummyOrg.com -m peer0.dummyOrg.com -u http://Admin@dummyOrg.com:mysecret@ica.dummyOrg:8054 
+fabric-ca-client enroll --csr.names C=ES,ST=Madrid,L=Madrid,O=${this.options.org.fullName} -m ${this.options.org.firstPeerFullName} -u http://Admin@${this.options.org.fullName}:mysecret@ca.interm.${this.options.org.fullName}:8054 
 mkdir -p $PEER_DIR/msp/admincerts && cp $ADMIN_DIR/msp/signcerts/*.pem $PEER_DIR/msp/admincerts/
 sleep 2
 echo "[Step 3] Completed"
@@ -57,8 +57,7 @@ echo "[Step 5] Creating Scaffolfding"
 
 cp -r $PWD/certsICA/* $ORG_DIR/ca
 echo "[Step 5] Completed"
-  
-  `;
+`;
 
   constructor(filename: string, path: string, private options: DockerComposeYamlOptions) {
     super(filename, path);
