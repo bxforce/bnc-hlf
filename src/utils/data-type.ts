@@ -5,7 +5,8 @@ export class DockerComposeYamlOptions {
   composeNetwork: string;
   org: Organization;
   envVars?: {
-    FABRIC_VERSION: string;
-    THIRDPARTY_VERSION: string;
+    FABRIC_VERSION?: string;
+    FABRIC_CA_VERSION?: string;
+    THIRDPARTY_VERSION?: string;
   };
 }

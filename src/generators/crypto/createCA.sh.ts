@@ -4,7 +4,10 @@ import { DockerComposeYamlOptions } from '../../utils/data-type';
 export class CreateCAShGenerator extends BaseGenerator {
   contents = `
 export REGISTRAR_DIR=$PWD
-export FABRIC_CA_CLIENT_HOME=$REGISTRAR_DIR
+export FABRIC_CA_CLIENT_HOME=${this.options.networkRootPath}/fabric-binaries/${this.options.envVars.FABRIC_VERSION}/bin
+
+export PATH=FABRIC_CA_CLIENT_HOME:$PWD:$PATH
+export FABRIC_CFG_PATH=$PWD
 
 export ORG_DIR=$PWD/crypto-config/peerOrganizations/${this.options.org.fullName}
 export PEER_TLS=$PWD/peertls

@@ -1,17 +1,15 @@
 import {BaseGenerator} from '../base';
 import {DockerComposeYamlOptions} from '../../utils/data-type';
 
+// TODO inline the script with the one here: https://github.com/hyperledger/fabric/blob/master/scripts/bootstrap.sh
 export class DownloadFabricBinariesGenerator extends BaseGenerator {
   contents = `
     #!/bin/bash
   set -e
 # Download the necessary bin files
 
-# if version not passed in, default to latest released version
 export VERSION=${this.options.envVars.FABRIC_VERSION}
-# if ca version not passed in, default to latest released version
-export CA_VERSION=$VERSION
-# current version of thirdparty images (couchdb, kafka and zookeeper) released
+export CA_VERSION=${this.options.envVars.FABRIC_CA_VERSION}
 export THIRDPARTY_IMAGE_VERSION=${this.options.envVars.THIRDPARTY_VERSION}
 export ARCH=$(echo "$(uname -s|tr '[:upper:]' '[:lower:]'|sed 's/mingw64_nt.*/windows/')-$(uname -m | sed 's/x86_64/amd64/g')")
 export MARCH=$(uname -m)
@@ -114,17 +112,9 @@ echo "Checking IMAGES"
 
   }
 
-  # prior to 1.1.0 architecture was determined by uname -m
-if [[ $VERSION =~ ^1\\.[0]\\.* ]]; then
-  export FABRIC_TAG=$MARCH-$VERSION
-  export CA_TAG=$MARCH-$CA_VERSION
-  export THIRDPARTY_TAG=$MARCH-$THIRDPARTY_IMAGE_VERSION
-else
-  # starting with 1.2.0, multi-arch images will be default
-  export CA_TAG="$CA_VERSION"
-  export FABRIC_TAG="$VERSION"
-  export THIRDPARTY_TAG="$THIRDPARTY_IMAGE_VERSION"
-fi
+export CA_TAG="$CA_VERSION"
+export FABRIC_TAG="$VERSION"
+export THIRDPARTY_TAG="$THIRDPARTY_IMAGE_VERSION"
 
 dockerInstall
 `;

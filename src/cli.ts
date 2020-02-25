@@ -1,9 +1,9 @@
 import {Orchestrator} from './orchestrator';
 
 export class CLI {
-  static async validateAndParse(configFilePath: string) {
+  static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
     const orchEngine = new Orchestrator();
-    await orchEngine.validateAndParse(configFilePath);
+    await orchEngine.validateAndParse(configFilePath, skipDownload);
     return orchEngine;
   }
 

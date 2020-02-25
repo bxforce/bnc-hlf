@@ -18,8 +18,8 @@ const tasks = {
     return await CLI.cleanNetwork(rmi);
   },
 
-  async validateAndParse(filePath: string) {
-    return await CLI.validateAndParse(filePath);
+  async validateAndParse(filePath: string, skipDownload?: boolean) {
+    return await CLI.validateAndParse(filePath, skipDownload);
   },
 
   async installChaincode() {
@@ -49,9 +49,10 @@ program
 program
   .command('parse')
   .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
   .action(async (cmd: any) => {
     if (cmd) {
-      await tasks.validateAndParse(cmd.config);
+      await tasks.validateAndParse(cmd.config, !!cmd.skipDownload);
     }
   });
 

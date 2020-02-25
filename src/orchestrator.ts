@@ -28,7 +28,10 @@ export class Orchestrator {
     l('Finishing parsing the blockchain configuration file');
   }
 
-  async validateAndParse(configFilePath: string) {
+  async validateAndParse(
+    configFilePath: string,
+    skipDownload = false
+  ) {
 
     l('Validate input configuration file');
     const validator = new ConfigurationValidator();
@@ -53,24 +56,27 @@ export class Orchestrator {
       org: organizations[0],
       envVars: {
         FABRIC_VERSION: '2.0.0',
+        FABRIC_CA_VERSION: '1.4.4',
         THIRDPARTY_VERSION: '0.4.18'
       }
     };
 
-    let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-ca.yaml', path, options);
+    if(!skipDownload) {
+      l('Download fabric binaries...');
+      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', path, options);
+      await downloadFabricBinariesGenerator.save();
+      await downloadFabricBinariesGenerator.run();
+      l('Ran Download fabric binaries');
+    }
 
+    // create ca
+
+    let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-ca.yaml', path, options);
     l('Saving compose Root CA');
     await dockerComposeRootCA.save();
     l('Starting Root CA docker container...');
     await dockerComposeRootCA.startRootCa();
     l('Ran Root CA docker container...');
-
-    // create ca
-    l('Download fabric binaries...');
-    const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', path, options);
-    await downloadFabricBinariesGenerator.save();
-    await downloadFabricBinariesGenerator.run();
-    l('Ran Download fabric binaries');
 
     const createCaShGenerator = new CreateCAShGenerator('createCa.sh', path, options);
     l('Saving createCA.sh');
