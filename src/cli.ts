@@ -2,7 +2,6 @@
 import { FileSystemWallet, X509WalletMixin, Gateway } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
-
 import { l, d } from './utils/logs';
 import { Wallets } from './models/wallet';
 import {Orchestrator} from './orchestrator';
