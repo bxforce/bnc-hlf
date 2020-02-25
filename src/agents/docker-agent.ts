@@ -19,9 +19,14 @@ export class DockerEngine {
     return container;
   }
 
-  listContainers(): Promise<any>{
-    //TODO return a list of Container Objects
-    return this.engine.listContainers();
+  async listContainers(options?): Promise<Container[]>{
+    let containers: any[] = await this.engine.listContainers(options);
+    let containerList: Container[] = [];
+    for(let containerInfo of containers){
+      let containerObj = this.getContainer(containerInfo.Id);
+      containerList.push(containerObj);
+    }
+    return  containerList;
   }
 
   //Networks Management
@@ -57,11 +62,11 @@ export class DockerEngine {
   }
 
   //Docker-compose Management
-  upAll(options): Promise<any>{// TODO test
+  composeUpAll(options: Compose.IDockerComposeOptions): Promise<any>{
     return Compose.upAll(options);
   }
 
-  down(options): Promise<any>{ // TODO test
+  composeDown(options: Compose.IDockerComposeOptions): Promise<any>{
     return Compose.down(options);
   }
 }
@@ -88,8 +93,8 @@ export class Container {
     return this.container.stop();
   }
 
-  remove() {
-    return this.container.remove();
+  remove(options?) {
+    return this.container.remove(options);
   }
 
   setContainer(container:any) {

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { l } from './utils/logs';
-import { DockerEngine, Container } from './generators/agents/docker-agent';
+import * as path from 'path';
+import { DockerEngine, Container } from './agents/docker-agent';
 
 const test = async () => {
   let engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
@@ -18,6 +19,7 @@ const test = async () => {
   });
   await container.create();
   await container.start();
+  //l(typeof container);
   await container.stop();
 
   let containerData = await container.inspect();
@@ -28,8 +30,30 @@ const test = async () => {
   await containerClone.remove();
 };
 
+const testCompose = async () => {
+  let engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+  await engine.composeDown({cwd: path.join(__dirname), log: true });
+  await engine.composeUpAll({
+    cwd: path.join(__dirname),
+    log: true/*,
+    config: 'docker-compose-build.yml',
+    commandOptions: [ '--build', [ '--timeout', '5' ]]*/
+  });
+  // option object : https://docs.docker.com/engine/api/v1.37/#operation/ContainerList
+  let containers: Container[] = await  engine.listContainers({
+    all: true,
+    filters: {
+      network: ['bnc-tools_default']
+    }
+  });
+  for(let container of containers){
+    await container.remove({force: true}); //If the container is running, kill it before removing it.
+  }
+};
 try{
   test();
+  //test-remote(); //TODO
+  testCompose();
 }catch(error){
   l(error.message);
 }
