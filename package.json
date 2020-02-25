@@ -20,7 +20,7 @@
     "bnc": "./dist/command.js"
   },
   "engines": {
-    "node": ">=8.9.0"
+    "node": ">=12.15.1"
   },
   "scripts": {
     "clean": "rimraf dist",
@@ -60,15 +60,20 @@
       "email": "chiraz.chaabane@irt-systemx.fr"
     }
   ],
+  "peerDependencies": {
+    "fabric-ca-client": ">=1.1.2",
+    "fabric-client": ">=1.1.2",
+    "fabric-network": ">=1.1.2"
+  },
   "dependencies": {
     "async": "^2.1.4",
     "chai": "^4.2.0",
     "chalk": "^3.0.0",
     "commander": "^4.1.1",
     "ejs": "^3.0.1",
-    "fabric-ca-client": "^1.4.6",
-    "fabric-client": "^1.4.5",
-    "fabric-network": "^1.4.6",
+    "fabric-client": "^1.4.7",
+    "fabric-ca-client": "^1.4.7",
+    "fabric-network": "^1.4.7",
     "fs-extra": "^8.1.0",
     "grpc": "^1.24.2",
     "inquirer": "^7.0.4",
