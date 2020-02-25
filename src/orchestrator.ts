@@ -5,6 +5,7 @@ import {DockercomposeRootCAYamlGenerator} from './generators/dockercomposeRootCA
 import {DockercomposeRunShGenerator} from './generators/dockercomposeRun.sh';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/networkClean.sh';
 import {ConfigurationValidator} from './parser/configurationValidator';
+import {Caclient} from './core/hlf/ca_client';
 
 export  class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -55,5 +56,15 @@ export  class Orchestrator {
 
     l('************ Success!');
     l('Environment cleaned!');
+  }
+
+  public async enrollManager(id, secret, mspID) {
+    const caclient = new Caclient();
+    await caclient.enrollManager (id, secret, mspID)
+  }
+
+  public async registerManager(id, secret, affiliation, mspID) {
+    const caclient = new Caclient();
+    await caclient.registrationManager (id, secret, affiliation, mspID);
   }
 }

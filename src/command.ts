@@ -34,9 +34,6 @@ const tasks = {
       l('Not yet implemented');
 
     },
-  async installChaincode() {
-    l('[Install Chaincode] Not yet implemented');
-  },
 
   async upgradeChaincode() {
     l('[Upgrade Chaincode] Not yet implemented');
@@ -87,22 +84,6 @@ program  // just for testing to be deleted
     await tasks.deleteIdentity(id);
   });
 
-program
-    .command('install <name> <language>')
-    .option('-o, --org <organization>', 'Target organization.', collect, [])
-    .option('-C, --channel <channel>', 'Channel to deploy the chaincode. Default to \'ch1\'', collect, [])
-    .option('-c, --ctor <constructor>', 'Smart contract constructor params')
-    .option('-x, --collections-config <collections-config>', 'Collections config file path (private data)')
-    .option('-p, --path <path>', 'Path to deploy the network folder')
-    .option('-P, --chaincode-path <path>', 'Path to chaincode package. Default to ./<name>')
-    .option('-i, --inside', 'Optimized for running inside the docker compose network')
-    .option('-D, --debug', 'Run in debug mode, no container (NodeJS chaincodes only)')
-    .action(async (name: string, language: string, cmd: any) => {
-        cmd.channel = (!cmd.channel || cmd.channel.length === 0) ? ['ch1'] : cmd.channel;
-        await Promise.all(cmd.channel.map(channel => {
-            return tasks.installChaincode();
-        }));
-    });
 program.command('start-root-ca').action(async () => {
   await tasks.createRootCA();
 });
