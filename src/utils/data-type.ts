@@ -4,7 +4,7 @@ export class DockerComposeYamlOptions {
   networkRootPath: string;
   composeNetwork: string;
   org: Organization;
-  envVars: {
+  envVars?: {
     FABRIC_VERSION: string;
     THIRDPARTY_VERSION: string;
   };

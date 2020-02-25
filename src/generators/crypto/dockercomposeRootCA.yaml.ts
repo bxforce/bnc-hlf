@@ -41,4 +41,8 @@ services:
   startRootCa() {
     return exec(`docker-compose -f ${this.filePath} up -d ca.root`, { silent: true });
   }
+
+  stopRootCa() {
+    return exec(`docker-compose -f ${this.filePath} up -d ca.root`, { silent: true });
+  }
 }

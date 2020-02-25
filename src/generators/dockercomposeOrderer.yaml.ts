@@ -1,6 +1,4 @@
 import { BaseGenerator } from './base';
-import { Organization } from '../models/organization';
-import { Peer } from '../models/peer';
 import { DockerComposeYamlOptions } from '../utils/data-type';
 
 export class DockerComposeOrdererYamlGenerator extends BaseGenerator {

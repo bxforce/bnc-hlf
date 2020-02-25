@@ -10,7 +10,7 @@ export class NetworkConfiguration {
 
   constructor(public fullFilePath: string) {}
 
-  async parse() {
+  async parse(): Promise<Organization[]> {
     l('Starting Parsing configuration file');
 
     const configContent = await SysWrapper.getFile(this.fullFilePath);

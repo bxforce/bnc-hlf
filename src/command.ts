@@ -62,8 +62,13 @@ program
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
-program.command('start-root-ca').action(async () => {
-  await tasks.createRootCA();
+program.command('start-root-ca')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if(cmd) {
+      await tasks.createRootCA();
+    }
+
 });
 
 program.version(pkg.version);

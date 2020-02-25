@@ -3,7 +3,6 @@ import { User } from './user';
 import { Peer } from './peer';
 import { Orderer } from './orderer';
 import { Engine } from './engine';
-import { join } from 'path';
 
 export class OrganizationOptions {
   peers: Peer[];
