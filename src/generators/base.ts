@@ -2,23 +2,26 @@ import { join } from 'path';
 import { SysWrapper } from '../utils/sysWrapper';
 
 export abstract class BaseGenerator {
-    contents: string;
-    /** Breadcrumb */
-    success: string;
+  contents: string;
 
-    constructor(public filename: string, public path: string) {
-    }
+  /** Breadcrumb */
+  success: string;
 
-    get filePath(): string {
-        return join(this.path, this.filename);
-    }
-    run() {
-        return SysWrapper.execContent(this.contents);
-    }
-    check() {
-        return SysWrapper.existsPath(this.success);
-    }
-    save() {
-        return SysWrapper.createFile(this.filePath, this.contents);
-    }
+  constructor(public filename: string, public path: string) {}
+
+  get filePath(): string {
+    return join(this.path, this.filename);
+  }
+
+  run() {
+    return SysWrapper.execContent(this.contents);
+  }
+
+  check() {
+    return SysWrapper.existsPath(this.success);
+  }
+
+  save() {
+    return SysWrapper.createFile(this.filePath, this.contents);
+  }
 }
