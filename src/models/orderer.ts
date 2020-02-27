@@ -1,11 +1,11 @@
 export class OrdererOptions {
-  engineName: string;
   consensus: string;
+  engineName?: string;
   number?: number;
   ports?: string[];
   host?: string;
 }
 
 export class Orderer {
-  constructor(public name: string,  public options: OrdererOptions) {}
+  constructor(public name: string, public options: OrdererOptions) {}
 }
