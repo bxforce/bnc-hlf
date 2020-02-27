@@ -1,9 +1,10 @@
 export class PeerOptions {
-  engineName: string;
+  engineName?: string;
   number: number;
   ports: string[];
   couchDB?: boolean;
-  couchDbPort: string;
+  couchDbPort?: string;
+  host?: string;
 }
 
 export class Peer {

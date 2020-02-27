@@ -1,9 +1,9 @@
 import { Orchestrator } from './orchestrator';
 
 export class CLI {
-  static async validateAndParse(configFilePath: string) {
+  static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
     const orchEngine = new Orchestrator();
-    await orchEngine.validateAndParse(configFilePath);
+    await orchEngine.validateAndParse(configFilePath, skipDownload);
     return orchEngine;
   }
 
@@ -22,6 +22,12 @@ export class CLI {
   static async startRootCA() {
     const orchEngine = new Orchestrator();
     await orchEngine.startRootCa();
+    return orchEngine;
+  }
+
+  static async generateGenesis(configGenesisFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateGenesis(configGenesisFilePath);
     return orchEngine;
   }
 }

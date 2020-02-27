@@ -5,15 +5,17 @@ import { Organization } from '../models/organization';
 import { Engine } from '../models/engine';
 import { Peer } from '../models/peer';
 import { Orderer } from '../models/orderer';
+import { BaseParser } from './base';
 
-export class NetworkConfiguration {
-  constructor(public fullFilePath: string) {}
+export class DeploymentParser extends BaseParser {
+  constructor(public fullFilePath: string) {
+    super(fullFilePath);
+  }
 
-  async parse() {
+  async parse(): Promise<Organization[]> {
     l('Starting Parsing configuration file');
 
-    const configContent = await SysWrapper.getFile(this.fullFilePath);
-    const parsedYaml = safeLoad(configContent);
+    const parsedYaml = await this.parseRaw();
 
     // Parsing chains definition
     const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);

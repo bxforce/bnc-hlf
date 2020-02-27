@@ -10,6 +10,7 @@ npm-debug.log.*
 dist/
 /.awcache/*
 /.cache-loader/*
+/dist
 
 ######################
 # SASS

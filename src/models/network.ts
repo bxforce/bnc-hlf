@@ -2,6 +2,7 @@
 import { Organization } from './organization';
 import { Channel } from './channel';
 import { User } from './user';
+import { ConsensusType } from '../utils/constants';
 
 const HL_VERSION = '2.0';
 const HL_EXT_VERSION = '0.4.18';
@@ -11,16 +12,14 @@ export class NetworkOptions {
   externalHyperledgerVersion?: string;
   inside?: boolean = false;
   networkConfigPath?: string;
+  consensus?: ConsensusType;
 }
 
 export class Network {
-  organizations: Organization[];
+  organizations: Organization[] = [];
   channels: Channel[];
 
-  constructor(public path: string, public options: NetworkOptions) {
-    this.options.hyperledgerVersion = HL_VERSION;
-    this.options.externalHyperledgerVersion = HL_EXT_VERSION;
-  }
+  constructor(public path: string, public options: NetworkOptions) {}
 
   async init() {
     return;

@@ -43,4 +43,17 @@ export class Organization {
       this.domainName = options.domainName;
     }
   }
+
+  get fullName(): string {
+    return `${this.name}.${this.domainName}`;
+  }
+
+  get firstPeerFullName(): string {
+    if (this.peers.length === 0) {
+      return 'dummy';
+    }
+
+    const peer0 = this.peers.filter(peer => peer.options.number === 0)[0];
+    return `${peer0.name}.${this.fullName}`;
+  }
 }

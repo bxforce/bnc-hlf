@@ -1,6 +1,6 @@
 export class OrdererOptions {
-  engineName: string;
   consensus: string;
+  engineName?: string;
   number?: number;
   ports?: string[];
   host?: string;
