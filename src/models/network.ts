@@ -16,7 +16,7 @@ export class NetworkOptions {
 }
 
 export class Network {
-  organizations: Organization[];
+  organizations: Organization[] = [];
   channels: Channel[];
 
   constructor(public path: string, public options: NetworkOptions) {

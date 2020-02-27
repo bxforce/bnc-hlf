@@ -67,7 +67,7 @@ export class ConfigurationValidator {
           ],
           anchorPeer: {
             host_name: 'string',
-            port: 'string'
+            port: 'number'
           }
         }
       ]
@@ -93,6 +93,7 @@ export class ConfigurationValidator {
     };
   }
 
+  // TODO in case of error, display it
   private static isValid(filePath: string, options: YamlValidator.IYamlValidatorOptions) {
     l(`Validating ${filePath}...`);
     const validator = new YamlValidator(options);

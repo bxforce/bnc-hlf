@@ -20,11 +20,11 @@ export class GenesisParser extends BaseParser {
     // parse the organization
     const orgs = [];
     for (const org of organisations) {
-      const { organisation: orgName, domain_name: orgDomain, orderers, anchorPeers } = org;
+      const { organisation: orgName, domain_name: orgDomain, orderers, anchorPeer } = org;
 
       // get Anchor peer
-      const { host_name: anchorHost, port: anchorPort } = anchorPeers;
-      const anchorPeer = new Peer('anchor-peer', {
+      const { host_name: anchorHost, port: anchorPort } = anchorPeer;
+      const anchorP = new Peer('anchor-peer', {
         number: 0,
         host: anchorHost,
         ports: [anchorPort]
@@ -47,19 +47,22 @@ export class GenesisParser extends BaseParser {
       orgs.push(
         new Organization(orgName, {
           domainName: orgDomain,
-          peers: [anchorPeer],
+          peers: [anchorP],
           orderers
         })
       );
     }
 
     // fill and return the network object
-    return new Network('genesis-network', {
+    const network = new Network('genesis-network', {
       networkConfigPath: template_folder,
       hyperledgerVersion: HLF_VERSION.HLF_2,
       externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
       inside: false,
       consensus: networkConsensus
     });
+    network.organizations = orgs;
+
+    return network;
   }
 }
