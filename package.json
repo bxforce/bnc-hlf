@@ -13,7 +13,7 @@
     "templates/*",
     "network-objects/*",
     "tools/*",
-    "docker-compose.yml",
+    "tests/templates/docker-compose.yml",
     "package.json"
   ],
   "bin": {
