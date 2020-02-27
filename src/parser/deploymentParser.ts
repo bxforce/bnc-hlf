@@ -1,20 +1,21 @@
 import { safeLoad } from 'js-yaml';
 import { SysWrapper } from '../utils/sysWrapper';
 import { l } from '../utils/logs';
-import {Organization} from '../models/organization';
-import {Engine} from '../models/engine';
-import {Peer} from '../models/peer';
-import {Orderer} from '../models/orderer';
+import { Organization } from '../models/organization';
+import { Engine } from '../models/engine';
+import { Peer } from '../models/peer';
+import { Orderer } from '../models/orderer';
+import { BaseParser } from './base';
 
-export class NetworkConfiguration {
-
-  constructor(public fullFilePath: string) {}
+export class DeploymentParser extends BaseParser {
+  constructor(public fullFilePath: string) {
+    super(fullFilePath);
+  }
 
   async parse(): Promise<Organization[]> {
     l('Starting Parsing configuration file');
 
-    const configContent = await SysWrapper.getFile(this.fullFilePath);
-    const parsedYaml = safeLoad(configContent);
+    const parsedYaml = await this.parseRaw();
 
     // Parsing chains definition
     const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
@@ -23,7 +24,7 @@ export class NetworkConfiguration {
     const engines: Engine[] = this.buildEngine(parsedYaml['engines']);
 
     // Set engine for every organization
-    organizations.map((organization) => {
+    organizations.map(organization => {
       organization.engines = engines.filter(eng => eng.orgName === organization.engineOrgName);
     });
 
@@ -35,11 +36,11 @@ export class NetworkConfiguration {
   private buildEngine(yamlEngine): Engine[] {
     const engines = [];
 
-    for(const engineEntry of yamlEngine) {
+    for (const engineEntry of yamlEngine) {
       const { engine, hosts } = engineEntry;
 
-      for(const hostEntry of hosts) {
-        const { host, type, url, port, settings} = hostEntry;
+      for (const hostEntry of hosts) {
+        const { host, type, url, port, settings } = hostEntry;
         engines.push(new Engine(host, { url, port, type, settings }, engine));
       }
     }
@@ -49,19 +50,21 @@ export class NetworkConfiguration {
 
   private buildOrganisations(yamlOrganisations): Organization[] {
     const organizations: Organization[] = [];
-    const { template_folder, fabric, tls, consensus, db,  organisations } = yamlOrganisations;
+    const { template_folder, fabric, tls, consensus, db, organisations } = yamlOrganisations;
 
-    organisations.forEach((org) => {
+    organisations.forEach(org => {
       const { organisation, engineOrg, domain_name, ca, orderers, peers } = org;
 
       // parse & store orderers
       const ords = [];
       orderers.forEach(ord => {
         const { orderer, engine_name: ordererEngineName } = ord;
-        ords.push(new Orderer(orderer, {
-          engineName: ordererEngineName,
-          consensus
-        }));
+        ords.push(
+          new Orderer(orderer, {
+            engineName: ordererEngineName,
+            consensus
+          })
+        );
       });
 
       // peer parsing
@@ -71,25 +74,28 @@ export class NetworkConfiguration {
 
         // TODO check if db leveldb or couchdb
 
-        parsedPeers.push(new Peer(peerName, {
-          engineName: peerEngineName,
-          number: index,
-          ports: [`7${index}51`, `7${index}52`, `7${index}53`],
-          couchDbPort: `5${index}84`,
-          couchDB: db
-        }));
-
+        parsedPeers.push(
+          new Peer(peerName, {
+            engineName: peerEngineName,
+            number: index,
+            ports: [`7${index}51`, `7${index}52`, `7${index}53`],
+            couchDbPort: `5${index}84`,
+            couchDB: db
+          })
+        );
       });
 
-      organizations.push(new Organization(organisation, {
-        orderers: ords,
-        peers: parsedPeers,
-        templateFolder: template_folder,
-        fabricVersion: fabric,
-        tls,
-        domainName: domain_name,
-        engineOrgName: engineOrg
-      }));
+      organizations.push(
+        new Organization(organisation, {
+          orderers: ords,
+          peers: parsedPeers,
+          templateFolder: template_folder,
+          fabricVersion: fabric,
+          tls,
+          domainName: domain_name,
+          engineOrgName: engineOrg
+        })
+      );
     });
 
     return organizations;

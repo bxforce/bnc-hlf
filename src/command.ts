@@ -6,6 +6,10 @@ import { CLI } from './cli';
 const pkg = require('../package.json');
 
 const tasks = {
+  async generateGenesis(filePath: string) {
+    return await CLI.generateGenesis(filePath);
+  },
+
   async createRootCA() {
     return await CLI.startRootCA();
   },
@@ -36,6 +40,15 @@ const tasks = {
 };
 
 program
+  .command('generate-genesis')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.generateGenesis(cmd.config);
+    }
+  });
+
+program
   .command('new')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .action(async (cmd: any) => {
@@ -63,14 +76,14 @@ program
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
-program.command('start-root-ca')
+program
+  .command('start-root-ca')
   .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .action(async (cmd: any) => {
-    if(cmd) {
+    if (cmd) {
       await tasks.createRootCA();
     }
-
-});
+  });
 
 program.version(pkg.version);
 

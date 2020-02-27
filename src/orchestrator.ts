@@ -1,14 +1,16 @@
 import { join } from 'path';
 import { l, d, e } from './utils/logs';
-import { NetworkConfiguration } from './parser/networkConfiguration';
+import { DeploymentParser } from './parser/deploymentParser';
 import { DockercomposeRootCAYamlGenerator } from './generators/crypto/dockercomposeRootCA.yaml';
 import { DockercomposeRunShGenerator } from './generators/dockercomposeRun.sh';
 import { NetworkCleanShGenerator, NetworkCleanShOptions } from './generators/networkClean.sh';
-import { ConfigurationValidator } from './parser/configurationValidator';
-import {DockerComposeYamlOptions} from './utils/data-type';
-import {CreateCAShGenerator} from './generators/crypto/createCA.sh';
-import {HLF_VERSION} from './utils/constants';
-import {DownloadFabricBinariesGenerator} from './generators/utils/downloadFabricBinaries';
+import { ConfigurationValidator } from './parser/validator/configurationValidator';
+import { DockerComposeYamlOptions } from './utils/data-type';
+import { CreateCAShGenerator } from './generators/crypto/createCA.sh';
+import { HLF_VERSION } from './utils/constants';
+import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabricBinaries';
+import { Network } from './models/network';
+import { GenesisParser } from './parser/geneisParser';
 
 export class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -19,31 +21,42 @@ export class Orchestrator {
 
     l('Validate input configuration file');
     const validator = new ConfigurationValidator();
-    const isValid = validator.isValid(configFilePath);
+    const isValid = validator.isValidDeployment(configFilePath);
 
     l('Start parsing the blockchain configuration file');
-    let configParse = new NetworkConfiguration(configFilePath);
+    let configParse = new DeploymentParser(configFilePath);
     const organizations = await configParse.parse();
 
     l('Finishing parsing the blockchain configuration file');
   }
 
-  async validateAndParse(
-    configFilePath: string,
-    skipDownload = false
-  ) {
+  async generateGenesis(configGenesisFilePath: string) {
+    l('Parsing genesis input file');
+    const validator = new ConfigurationValidator();
+    const isValid = validator.isValidGenesis(configGenesisFilePath);
+    if (!isValid) {
+      e('Genesis configuration input file is invalid');
+      return;
+    }
 
+    const parser = new GenesisParser(configGenesisFilePath);
+    const network: Network = await parser.parse();
+
+    d('Testing debugging genesis generation');
+  }
+
+  async validateAndParse(configFilePath: string, skipDownload = false) {
     l('Validate input configuration file');
     const validator = new ConfigurationValidator();
-    const isValid = validator.isValid(configFilePath);
+    const isValid = validator.isValidDeployment(configFilePath);
 
-    if(!isValid) {
+    if (!isValid) {
       e('Configuration file is invalid');
       return;
     }
 
     l('Start parsing the blockchain configuration file');
-    let configParse = new NetworkConfiguration(configFilePath);
+    let configParse = new DeploymentParser(configFilePath);
     const organizations = await configParse.parse();
 
     // Generate dynamically crypto
@@ -61,7 +74,7 @@ export class Orchestrator {
       }
     };
 
-    if(!skipDownload) {
+    if (!skipDownload) {
       l('Download fabric binaries...');
       const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', path, options);
       await downloadFabricBinariesGenerator.save();
@@ -98,7 +111,6 @@ export class Orchestrator {
     l('Starting Root CA docker container...');
     await dockerComposeRootCA.startRootCa();
     l('Ran Root CA docker container...');
-
   }
 
   public async cleanDocker(rmi: boolean) {
