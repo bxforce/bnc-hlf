@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { l } from './utils/logs';
+import { l } from '../src/utils/logs';
 import * as path from 'path';
-import { DockerEngine, Container } from './agents/docker-agent';
+import { DockerEngine, Container } from '../src/agents/docker-agent';
 
 const test = async () => {
   let engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
