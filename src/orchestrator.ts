@@ -11,6 +11,7 @@ import { HLF_VERSION } from './utils/constants';
 import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabricBinaries';
 import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
+import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 
 export class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -31,6 +32,9 @@ export class Orchestrator {
   }
 
   async generateGenesis(configGenesisFilePath: string) {
+    const homedir = require('os').homedir();
+    const path = join(homedir, this.networkRootPath);
+
     l('Parsing genesis input file');
     const validator = new ConfigurationValidator();
     const isValid = validator.isValidGenesis(configGenesisFilePath);
@@ -38,9 +42,17 @@ export class Orchestrator {
       e('Genesis configuration input file is invalid');
       return;
     }
+    l('Input genesis file validated');
 
+    l('Start parsing genesis input file');
     const parser = new GenesisParser(configGenesisFilePath);
     const network: Network = await parser.parse();
+    l('Genesis input file parsed');
+
+    l('Start generating configtx.yaml file');
+    const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+    await configTx.save();
+    l('Configtx.yaml file saved');
 
     d('Testing debugging genesis generation');
   }

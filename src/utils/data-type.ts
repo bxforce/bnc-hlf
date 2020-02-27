@@ -1,4 +1,5 @@
 import { Organization } from '../models/organization';
+import { Network } from '../models/network';
 
 export class DockerComposeYamlOptions {
   networkRootPath: string;

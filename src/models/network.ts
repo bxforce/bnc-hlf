@@ -19,10 +19,7 @@ export class Network {
   organizations: Organization[] = [];
   channels: Channel[];
 
-  constructor(public path: string, public options: NetworkOptions) {
-    this.options.hyperledgerVersion = HL_VERSION;
-    this.options.externalHyperledgerVersion = HL_EXT_VERSION;
-  }
+  constructor(public path: string, public options: NetworkOptions) {}
 
   async init() {
     return;

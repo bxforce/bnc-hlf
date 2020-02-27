@@ -48,7 +48,7 @@ export class GenesisParser extends BaseParser {
         new Organization(orgName, {
           domainName: orgDomain,
           peers: [anchorP],
-          orderers
+          orderers: ords
         })
       );
     }
