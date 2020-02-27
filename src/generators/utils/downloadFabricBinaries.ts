@@ -1,5 +1,5 @@
-import {BaseGenerator} from '../base';
-import {DockerComposeYamlOptions} from '../../utils/data-type';
+import { BaseGenerator } from '../base';
+import { DockerComposeYamlOptions } from '../../utils/data-type';
 
 // TODO inline the script with the one here: https://github.com/hyperledger/fabric/blob/master/scripts/bootstrap.sh
 export class DownloadFabricBinariesGenerator extends BaseGenerator {

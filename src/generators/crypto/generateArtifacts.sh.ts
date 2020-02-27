@@ -1,7 +1,7 @@
-import {BaseGenerator} from '../base';
+import { BaseGenerator } from '../base';
 
 export class GenerateArtifacts extends BaseGenerator {
-  contents= `
+  contents = `
   #!/bin/bash
 
 export PATH=$PWD/bin:$PATH
@@ -18,5 +18,4 @@ configtxgen -profile Channel -outputCreateChannelTx ./channel-artifacts/channel1
   constructor(filename: string, path: string) {
     super(filename, path);
   }
-
 }
