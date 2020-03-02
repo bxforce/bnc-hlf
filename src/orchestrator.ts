@@ -67,4 +67,14 @@ export  class Orchestrator {
     const caclient = new Caclient();
     await caclient.registrationManager (id, secret, affiliation, mspID);
   }
+
+  public async fetchIdentity(id) {
+    const caclient = new Caclient();
+    await caclient.fetchIdentity(id);
+  }
+
+  public async deleteIdentity(id) {
+    const caclient = new Caclient();
+    await caclient.deleteIdentity(id);
+  }
 }

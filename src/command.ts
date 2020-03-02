@@ -66,7 +66,6 @@ program
   .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (type:string, id:string , secret:string,affiliation:string ,mspID:string,  args:string[], cmd:any ) => {
-    console.log('lp', id, secret)
     await tasks.enroll(type, id, secret, affiliation, mspID); // if -R is not passed cmd.rmi is true
   });
 

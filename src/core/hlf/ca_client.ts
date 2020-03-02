@@ -8,7 +8,7 @@ import * as fs from 'fs';
 
 export  class Caclient {
 
-  static ccpPath = path.resolve(__dirname, '..','..', 'tests', 'ca', 'connection-org1.json');
+  static ccpPath = path.resolve(__dirname, '..','..','..', 'tests', 'ca', 'connection-org1.json');
   static ccpJSON = fs.readFileSync(Caclient.ccpPath, 'utf8');
   static ccp = JSON.parse(Caclient.ccpJSON);
 
@@ -83,7 +83,7 @@ export  class Caclient {
 
   }
 
-  static async fetchIdentity(id) {
+  public async fetchIdentity(id) {
     const walletPath = path.join(process.cwd(), 'wallet');
     const wallet = new Wallets(walletPath);
     const identity = await wallet.getIdentity(id);
@@ -91,7 +91,7 @@ export  class Caclient {
     return identity;
   }
 
-  static async deleteIdentity(id) {
+  public async deleteIdentity(id) {
     const walletPath = path.join(process.cwd(), 'wallet');
     const wallet = new Wallets(walletPath);
     try{
