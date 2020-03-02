@@ -106,6 +106,9 @@ export class Orchestrator {
     await createCaShGenerator.save();
     l('Executing createCA.sh');
     await createCaShGenerator.run();
+
+    l('Copy generated credentials');
+    await createCaShGenerator.copyAsRoot();
     l('Ran createCA.sh');
   }
 
