@@ -26,25 +26,22 @@ const tasks = {
     return await CLI.validateAndParse(filePath, skipDownload);
   },
 
-  async installChaincode() {
-    l('[Install Chaincode] Not yet implemented');
+  async enroll(type, id, secret, affiliation, mspID) {
+    return await CLI.enroll(type, id, secret, affiliation, mspID);
   },
-    async enroll(type, id, secret, affiliation, mspID) {
-      return await CLI.enroll(type, id, secret, affiliation, mspID);
-    },
 
-    async fetchIdentity(id) {
-      return await CLI.fetchIdentity(id);
-    },
+  async fetchIdentity(id) {
+    return await CLI.fetchIdentity(id);
+  },
 
-    async deleteIdentity(id) {
-      return await CLI.deleteIdentity(id);
-    },
+  async deleteIdentity(id) {
+    return await CLI.deleteIdentity(id);
+  },
 
-    async installChaincode() {
-      l('Not yet implemented');
+  async installChaincode() {
+    l('Not yet implemented');
 
-    },
+  },
 
   async upgradeChaincode() {
     l('[Upgrade Chaincode] Not yet implemented');
