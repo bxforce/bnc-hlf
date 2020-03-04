@@ -135,14 +135,14 @@ export class Orchestrator {
     l('Environment cleaned!');
   }
 
-  public async enrollManager(id, secret, mspID) {
+  public async enroll(id, secret, mspID) {
     const caclient = new Caclient();
-    await caclient.enrollManager (id, secret, mspID)
+    await caclient.enroll(id, secret, mspID)
   }
 
-  public async registerManager(id, secret, affiliation, mspID) {
+  public async registerUser(id, secret, affiliation, mspID) {
     const caclient = new Caclient();
-    await caclient.registrationManager (id, secret, affiliation, mspID);
+    await caclient.registerUser (id, secret, affiliation, mspID);
   }
 
   public async fetchIdentity(id) {

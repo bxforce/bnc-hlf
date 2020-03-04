@@ -6,7 +6,7 @@ export function l(msg: string | object | Error) {
     return;
   }
   if (typeof msg === 'object') {
-    console.log(chalk.blue('[BNC] - ', msg));
+    console.log('[BNC] - ', msg);
     return;
   } else {
     if ((msg as any).responses && (msg as any).responses.length > 0) {

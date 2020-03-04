@@ -105,7 +105,7 @@ program
   });
 
 program
-  .command('fetch-dentity <id> [args...]')
+  .command('fetch-identity <id> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (id:string, args:string[], cmd: any) => {
     await tasks.fetchIdentity(id);

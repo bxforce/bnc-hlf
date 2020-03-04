@@ -1,10 +1,6 @@
 /* tslint:disable:no-unused-variable */
 import {Orchestrator} from './orchestrator';
-
-enum Type {
-  admin = 'admin',
-  user = 'user'
-}
+import { Type_User }  from './utils/constants';
 
 export class CLI {
   static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
@@ -39,10 +35,10 @@ export class CLI {
 
   static async enroll(type, id, secret, affiliation, mspID) {
     const enrollEngine = new Orchestrator();
-    if(type == Type.admin){
-      await enrollEngine.enrollManager(id, secret, mspID);
+    if(type == Type_User.admin){
+      await enrollEngine.enroll(id, secret, mspID);
     } else {
-      await enrollEngine.registerManager(id, secret, affiliation, mspID);
+      await enrollEngine.registerUser(id, secret, affiliation, mspID);
     }
   }
 

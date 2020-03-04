@@ -12,7 +12,7 @@ export class Wallets {
         return this.wallet;
     }
 
-    async fetchWallet (id) {  //rename this to exists
+    async exists (id) {  //rename this to exists
         return await this.wallet.exists(id);
     }
 

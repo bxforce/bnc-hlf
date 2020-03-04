@@ -5,99 +5,98 @@ import { Wallets } from '../../models/wallet';
 import { FileSystemWallet, X509WalletMixin, Gateway } from 'fabric-network';
 import { CLI } from '../../cli';
 import * as fs from 'fs';
+import {l, d, e } from '../../utils/logs';
+import {Type_User} from '../../utils/constants';
+import { Ca_Client_Path } from '../../utils/constants';
 
 export  class Caclient {
+  ccpPath:string;
+  walletPath: string;
+  ccpJSON: string;
+  ccp: any;
+  caInfo: any;
+  wallet: Wallets;
 
-  static ccpPath = path.resolve(__dirname, '..','..','..', 'tests', 'ca', 'connection-org1.json');
-  static ccpJSON = fs.readFileSync(Caclient.ccpPath, 'utf8');
-  static ccp = JSON.parse(Caclient.ccpJSON);
+  constructor() {
+    this.ccpPath = path.resolve(__dirname, Ca_Client_Path.ccpPath);
+    this.ccpJSON = fs.readFileSync(this.ccpPath, 'utf8');
+    this.ccp = JSON.parse(this.ccpJSON);
+    this.caInfo = this.ccp.certificateAuthorities[Ca_Client_Path.caInfo];
+    this.walletPath = path.join(process.cwd(), Ca_Client_Path.walletDirectoryName);
+    this.wallet = new Wallets(this.walletPath);
+  }
 
-  public async enrollManager (id, secret, mspID) {
+  public async enroll (id, secret, mspID) {
     try {
-      // Create a new CA client for interacting with the CA.
-      const caInfo = Caclient.ccp.certificateAuthorities['ca.org1.example.com'];   //!!!!!!!!!!!!!!!!!!!!!! Maybe this should be intered as param ????
-      const caTLSCACerts = caInfo.tlsCACerts.pem;
-      const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
-      // Create a new file system based wallet for managing identities.
-      const walletPath = path.join(process.cwd(), 'wallet');
-      const wallet = new Wallets(walletPath);
-      console.log(`Wallet path: ${walletPath}`);
-      // Check to see if we've already enrolled the admin user.
-      const identity = await wallet.fetchWallet(id);
+      const caTLSCACerts = this.caInfo.tlsCACerts.pem;
+      const ca = new FabricCAServices(this.caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, this.caInfo.caName);
+      const identity = await this.wallet.exists(id);
       if (identity) {
-        console.log('An identity for the admin user',id,' already exists in the wallet');
+        l(`An identity for the admin user ${id} already exists in the wallet`);
         return;
       }
       // Enroll the admin user, and import the new identity into the wallet.
-      let enrollment = await doEnroll(id, secret, wallet, ca, mspID);
-      console.log('Successfully enrolled admin user',id,' and imported it into the wallet');
-      console.log('Enrollment Obj', enrollment);
+      let enrollment = await doEnroll(id, secret, this.wallet, ca, mspID);
+      l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
+      l(`Enrollment Obj:`);
+      l(enrollment)
       return enrollment;
 
     } catch (error) {
-      console.error(`Failed to enroll admin user "admin": ${error}`);
-      process.exit(1);
+      e(`Failed to enroll admin user "admin": ${error}`);
+      return error;
     }
   }
 
-  public async registrationManager (id, secret, affiliation, mspID) {
+  public async registerUser (id, secret, affiliation, mspID) {
     try {
-
-      // Create a new file system based wallet for managing identities.
-      const walletPath = path.join(process.cwd(), 'wallet');
-      const myWallet = new Wallets(walletPath);
-      console.log(`Wallet path: ${walletPath}`);
-
       // Check to see if we've already enrolled the user.
-      const userIdentity = await myWallet.fetchWallet(id);
+      const userIdentity = await this.wallet.exists(id);
       if (userIdentity) {
-        console.log('An identity for the user "user1" already exists in the wallet');
+        l(`An identity for the user ${id} already exists in the wallet`);
         return;
       }
       // Check to see if we've already enrolled the admin user.
-      const adminIdentity = await myWallet.fetchWallet('admin');
+      const adminIdentity = await this.wallet.exists(Type_User.admin);
       if (!adminIdentity) {
-        console.log('An identity for the admin user "admin" does not exist in the wallet');
-        console.log('Run the enrollAdmin.ts application before retrying');
+        l('An identity for the admin user "admin" does not exist in the wallet');
+        l('Run the enrollAdmin.ts application before retrying');
         return;
       }
 
       // Create a new gateway for connecting to our peer node.
       const gateway = new Gateway();
-      let wallet = myWallet.getWallet();
-      await gateway.connect(Caclient.ccpPath, { wallet , identity: 'admin', discovery: { enabled: true, asLocalhost: true } });
+      let wallet = this.wallet.getWallet();
+      await gateway.connect(this.ccpPath, { wallet , identity: Type_User.admin, discovery: { enabled: true, asLocalhost: true } });
       // Get the CA client object from the gateway for interacting with the CA.
       const client = gateway.getClient();
       const ca = client.getCertificateAuthority();
-      const adminUser = await client.getUserContext('admin', false);
+      const adminUser = await client.getUserContext(Type_User.admin, false);
       // Register the user, enroll the user, and import the new identity into the wallet.
       const secretRegister = await ca.register({ affiliation: affiliation, enrollmentID: id, role: 'client' }, adminUser);
-      let enrollment = await doEnroll(id, secretRegister, myWallet, ca, mspID);
-      console.log('Successfully registered and enrolled admin user "user1" and imported it into the wallet');
-      console.log('Enrollment Obj', enrollment);
+      let enrollment = await doEnroll(id, secretRegister, this.wallet, ca, mspID);
+      l('Successfully registered and enrolled admin user "user1" and imported it into the wallet');
+      l(`Enrollment Obj:`);
+      l(enrollment)
       return enrollment;
     } catch (error) {
-      console.error(`Failed to register user "user1": ${error}`);
-      process.exit(1);
+      e(`Failed to register user "user1": ${error}`);
+      return error;
     }
 
   }
 
   public async fetchIdentity(id) {
-    const walletPath = path.join(process.cwd(), 'wallet');
-    const wallet = new Wallets(walletPath);
-    const identity = await wallet.getIdentity(id);
-    console.log('Your identity', id, ':' , identity);
+    const identity = await this.wallet.getIdentity(id);
+    l(`Your identity  ${id} ': ${JSON.stringify(identity)}`);
     return identity;
   }
 
   public async deleteIdentity(id) {
-    const walletPath = path.join(process.cwd(), 'wallet');
-    const wallet = new Wallets(walletPath);
+    console.log('into delete')
     try{
-      console.log('before delete');
-      const identity = await wallet.deleteIdentity(id);
-      console.log('Your identity', id, ':' , identity);
+      const identity = await this.wallet.deleteIdentity(id);
+      l(`Your identity  ${id} ':'  ${JSON.stringify(identity)}`);
       return identity;
     }catch(e){
       return e;
@@ -106,9 +105,11 @@ export  class Caclient {
   }
 
 }
+
+
 const doEnroll = async (id, secret, wallet, ca, mspID) => {  //mspID : 'Org1MSP'
   const enrollment = await ca.enroll({ enrollmentID: id , enrollmentSecret: secret }); //ca.enroll({ enrollmentID: 'admin', enrollmentSecret: 'adminpw' });
   await wallet.createWallet(id, mspID, enrollment );
-  console.log('Successfully enrolled admin user',id,' and imported it into the wallet');
+  l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
   return enrollment;
 };
