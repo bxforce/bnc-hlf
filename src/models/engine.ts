@@ -1,6 +1,4 @@
-
 export class EngineOptions {
-  ip: string;
   port: number;
   url?: string;
   secure?: boolean;

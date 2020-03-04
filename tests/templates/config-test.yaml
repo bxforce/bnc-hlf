@@ -1,35 +1,41 @@
 chains:
-  - template_folder: /home/ubuntu/hlf-files
-  - fabric: 2.0
-  - organisations:
-      - org1:
-          - tls: true
-          - couchdb: true
-          - domain_name: org1.com
-          - ca: ca1
-          - orderers:
-              - consensus: raft
-              - engine_name: host1
-          - peers:
-              - peer0:
-                  - engine_name: host1
-              - peer1:
-                  - engine_name: host2
+  template_folder: "/home/ubuntu/hlf-files"
+  fabric: "2.0"
+  tls: true
+  consensus: "raft"
+  db: "couchdb"
+  organisations:
+    - organisation: "org1"
+      engineOrg: "engineOrg1"
+      domain_name: "bnc.com"
+      ca:
+        name: "ca1"
+        engine_name: "host2"
+      orderers:
+        - orderer: "orderer0"
+          engine_name: "host1"
+      peers:
+        - peer: "peer0"
+          engine_name: "host1"
+        - peer: "peer1"
+          engine_name: "host2"
 engines:
-  - engineOrg1:
-      - host1:
-          - type: docker
-          - ip: 192.168.208.13
-          - port: 2375
-          - settings: [ default ]
-      - host2:
-          - type: docker
-          - ip: 192.168.208.204
-          - port: 2375
-          - settings: [ default ]
-  - engineOrg2:
-      - host1:
-          - type: docker
-          - ip: 192.168.208.13
-          - port: 2375
-          - settings: [ default ]
+  - engine: "engineOrg1"
+    hosts:
+      - host: "host1"
+        type: "docker"
+        url: "192.168.208.13"
+        port: 2375
+        settings: [ "default" ]
+      - host: "host2"
+        type: "docker"
+        url: "192.168.208.204"
+        port: 2375
+        settings: [ "default" ]
+  - engine: "engineOrg2"
+    hosts:
+      - host: "host1"
+        type: "docker"
+        url: "192.168.208.13"
+        port: 2375
+        settings: [ "default" ]

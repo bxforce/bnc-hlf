@@ -1,9 +1,4 @@
 /* tslint:disable:no-unused-variable */
-import { FileSystemWallet, X509WalletMixin, Gateway } from 'fabric-network';
-import * as fs from 'fs';
-import * as path from 'path';
-import { l, d } from './utils/logs';
-import { Wallets } from './models/wallet';
 import {Orchestrator} from './orchestrator';
 
 enum Type {
@@ -12,6 +7,12 @@ enum Type {
 }
 
 export class CLI {
+  static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.validateAndParse(configFilePath, skipDownload);
+    return orchEngine;
+  }
+
   static async createNetwork(configFilePath: string) {
     const orchEngine = new Orchestrator();
     await orchEngine.initNetwork(configFilePath);
@@ -27,6 +28,12 @@ export class CLI {
   static async startRootCA() {
     const orchEngine = new Orchestrator();
     await orchEngine.startRootCa();
+    return orchEngine;
+  }
+
+  static async generateGenesis(configGenesisFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateGenesis(configGenesisFilePath);
     return orchEngine;
   }
 
@@ -49,11 +56,3 @@ export class CLI {
     await enrollEngine.deleteIdentity(id);
   }
 }
-
-export class ChaincodeCLI {
-    networkRootPath = './hyperledger-fabric-network';
-
-    constructor(private name: string) {
-    }
-}
-

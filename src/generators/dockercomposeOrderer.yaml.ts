@@ -1,16 +1,5 @@
 import { BaseGenerator } from './base';
-import { Organization } from '../models/organization';
-import { Peer } from '../models/peer';
-
-export class DockerComposeOrdererYamlOptions {
-  networkRootPath: string;
-  composeNetwork: string;
-  org: Organization;
-  envVars: {
-    FABRIC_VERSION: string;
-    THIRDPARTY_VERSION: string;
-  };
-}
+import { DockerComposeYamlOptions } from '../utils/data-type';
 
 export class DockerComposeOrdererYamlGenerator extends BaseGenerator {
   contents = `version: '2'
@@ -35,23 +24,12 @@ services:
             - 7050:7050
         volumes:
             - ${this.options.networkRootPath}/artifacts/config/:/etc/hyperledger/configtx
-            - ${this.options.networkRootPath}/artifacts/crypto-config/ordererOrganizations/${
-    this.options.org.domainName
-  }/orderers/orderer.${this.options.org.domainName}/:/etc/hyperledger/msp/orderer
-            - ${this.options.networkRootPath}/artifacts/crypto-config/peerOrganizations/${this.options.org.name}.${
-    this.options.org.domainName
-  }/peers/${DockerComposeOrdererYamlGenerator.getFirstOrganisationPeer(this.options.org)}.${this.options.org.name}.${
-    this.options.org.domainName
-  }/:/etc/hyperledger/msp/peer${this.options.org.name}
+            - ${this.options.networkRootPath}/artifacts/crypto-config/ordererOrganizations/${this.options.org.domainName}/orderers/orderer.${this.options.org.domainName}/:/etc/hyperledger/msp/orderer
+            - ${this.options.networkRootPath}/artifacts/crypto-config/peerOrganizations/${this.options.org.name}.${this.options.org.domainName}/peers/${this.options.org.firstPeerFullName}.${this.options.org.name}.${this.options.org.domainName}/:/etc/hyperledger/msp/peer${this.options.org.name}
         networks:
             - ${this.options.composeNetwork}
     `;
-
-  constructor(filename: string, path: string, private options: DockerComposeOrdererYamlOptions) {
+  constructor(filename: string, path: string, private options: DockerComposeYamlOptions) {
     super(filename, path);
-  }
-
-  private static getFirstOrganisationPeer(organization: Organization): Peer {
-    return organization.peers.filter(peer => peer.options.number === 0)[0];
   }
 }

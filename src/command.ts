@@ -6,6 +6,10 @@ import { CLI } from './cli';
 const pkg = require('../package.json');
 
 const tasks = {
+  async generateGenesis(filePath: string) {
+    return await CLI.generateGenesis(filePath);
+  },
+
   async createRootCA() {
     return await CLI.startRootCA();
   },
@@ -18,6 +22,13 @@ const tasks = {
     return await CLI.cleanNetwork(rmi);
   },
 
+  async validateAndParse(filePath: string, skipDownload?: boolean) {
+    return await CLI.validateAndParse(filePath, skipDownload);
+  },
+
+  async installChaincode() {
+    l('[Install Chaincode] Not yet implemented');
+  },
     async enroll(type, id, secret, affiliation, mspID) {
       return await CLI.enroll(type, id, secret, affiliation, mspID);
     },
@@ -45,6 +56,15 @@ const tasks = {
 };
 
 program
+  .command('generate-genesis')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.generateGenesis(cmd.config);
+    }
+  });
+
+program
   .command('new')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .action(async (cmd: any) => {
@@ -56,12 +76,30 @@ program
   });
 
 program
+  .command('parse')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.validateAndParse(cmd.config, !!cmd.skipDownload);
+    }
+  });
+
+program
   .command('clean')
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
+program
+  .command('start-root-ca')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.createRootCA();
+    }
+  });
 program
   .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
