@@ -10,6 +10,7 @@ import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabr
 import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
+import { CreateCertsShGenerator } from './generators/crypto/createCerts.sh';
 
 export class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -106,10 +107,11 @@ export class Orchestrator {
     await createCaShGenerator.save();
     l('Executing createCA.sh');
     await createCaShGenerator.run();
-
     l('Copy generated credentials');
     await createCaShGenerator.copyAsRoot();
     l('Ran createCA.sh');
+
+    const createCertsGenerator = new CreateCertsShGenerator('createCerts', path, options);
   }
 
   public async startRootCa() {
