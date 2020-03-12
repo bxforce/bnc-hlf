@@ -6,7 +6,6 @@ export class CreateIdentCertsShGenerator extends BaseGenerator {
   contents = `
 export PATH=${this.options.networkRootPath}/fabric-binaries/${this.options.envVars.FABRIC_VERSION}/bin:${this.options.networkRootPath}:$PATH
 export FABRIC_CFG_PATH=${this.options.networkRootPath}
-mkdir -p 
 
 echo "[Step 1] Enroling client and registering peer and user identitities"
 
