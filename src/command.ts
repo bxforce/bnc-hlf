@@ -10,10 +10,6 @@ const tasks = {
     return await CLI.generateGenesis(filePath);
   },
 
-  async createRootCA() {
-    return await CLI.startRootCA();
-  },
-
   async createNetwork(filePath: string) {
     return await CLI.createNetwork(filePath);
   },
@@ -74,15 +70,6 @@ program
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
-  });
-
-program
-  .command('start-root-ca')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.createRootCA();
-    }
   });
 
 program.version(pkg.version);

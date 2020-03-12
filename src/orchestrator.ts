@@ -1,16 +1,17 @@
 import { join } from 'path';
 import { l, d, e } from './utils/logs';
 import { DeploymentParser } from './parser/deploymentParser';
-import { DockercomposeRootCAYamlGenerator } from './generators/crypto/dockercomposeRootCA.yaml';
 import { NetworkCleanShGenerator, NetworkCleanShOptions } from './generators/networkClean.sh';
 import { ConfigurationValidator } from './parser/validator/configurationValidator';
 import { DockerComposeYamlOptions } from './utils/data-type';
-import { CreateCAShGenerator } from './generators/crypto/createCA.sh';
 import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabricBinaries';
 import { Network } from './models/network';
+import { DockerEngine, Network as DockerNetwork } from './agents/docker-agent';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
-import { CreateCertsShGenerator } from './generators/crypto/createCerts.sh';
+import { DockerComposeCaGenerator } from './generators/crypto/dockerComposeCa.yaml';
+import { CreateIdentCertsShGenerator } from './generators/crypto/createIdentCerts.sh';
+import { DockerComposePeerGenerator } from './generators/crypto/dockercomposePeer.yaml';
 
 export class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -76,7 +77,7 @@ export class Orchestrator {
 
     const options: DockerComposeYamlOptions = {
       networkRootPath: path,
-      composeNetwork: 'docker-compose-ca.yaml',
+      composeNetwork: 'bnc_network',
       org: organizations[0],
       envVars: {
         FABRIC_VERSION: '2.0.0',
@@ -93,39 +94,26 @@ export class Orchestrator {
       l('Ran Download fabric binaries');
     }
 
+    // create network
+    const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
+    l('Create docker network (bnc-network)');
+    await engine.createNetwork({ Name: options.composeNetwork });
+    l('Docker network (bnc-network) created');
+
     // create ca
-
-    let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-ca.yaml', path, options);
-    l('Saving compose Root CA');
-    await dockerComposeRootCA.save();
-    l('Starting Root CA docker container...');
-    await dockerComposeRootCA.startRootCa();
+    let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
+    l('Starting ORG CA docker container...');
+    await dockerComposeCA.save();
+    await dockerComposeCA.startOrgCa();
     l('Ran Root CA docker container...');
 
-    const createCaShGenerator = new CreateCAShGenerator('createCa.sh', path, options);
-    l('Saving createCA.sh');
-    await createCaShGenerator.save();
-    l('Executing createCA.sh');
-    await createCaShGenerator.run();
-    l('Copy generated credentials');
-    await createCaShGenerator.copyAsRoot();
-    l('Ran createCA.sh');
+    const createCaShGenerator = new CreateIdentCertsShGenerator('createCerts.sh', path, options);
+    l('Creating certificates');
+    await createCaShGenerator.buildCertificate();
+    l('Ran createCerts.sh');
 
-    const createCertsGenerator = new CreateCertsShGenerator('createCerts', path, options);
-  }
-
-  public async startRootCa() {
-    const homedir = require('os').homedir();
-    const path = join(homedir, this.networkRootPath);
-
-    let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-ca.yaml', path, null);
-
-    l('Saving compose Root CA');
-    await dockerComposeRootCA.save();
-
-    l('Starting Root CA docker container...');
-    await dockerComposeRootCA.startRootCa();
-    l('Ran Root CA docker container...');
+    const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
+    await dockerComposePeer.save();
   }
 
   public async cleanDocker(rmi: boolean) {

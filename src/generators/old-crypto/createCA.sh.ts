@@ -2,6 +2,8 @@ import * as chalk from 'chalk';
 import * as sudo from 'sudo-prompt';
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { DockerEngine } from '../../agents/docker-agent';
+import { e } from '../../utils/logs';
 
 export class CreateCAShGenerator extends BaseGenerator {
   contents = `
@@ -25,12 +27,13 @@ fabric-ca-client enroll -m admin -u http://adminCA:adminpw@0.0.0.0:7054
 fabric-ca-client register --id.name ca.interm.${this.options.org.fullName} --id.type client \\
  --id.secret adminpw --csr.names C=ES,ST=Madrid,L=Madrid,O=${this.options.org.fullName} \\
  --csr.cn ica.dummyOrg -m ca.interm.${this.options.org.fullName} --id.attrs  '"hf.IntermediateCA=true"' -u http://0.0.0.0:7054 
-
-docker-compose -f ${this.options.networkRootPath}/docker-compose-ca.yaml up -d ca.interm.${this.options.org.fullName}
 `;
 
-  constructor(filename: string, path: string, private options: DockerComposeYamlOptions) {
+  dockerEngine: DockerEngine;
+
+  constructor(filename: string, path: string, private options: DockerComposeYamlOptions, private engine?: DockerEngine) {
     super(filename, path);
+    this.dockerEngine = engine ? engine : new DockerEngine({ socketPath: '/var/run/docker.sock' });
   }
 
   copyAsRoot() {
@@ -53,5 +56,24 @@ docker-compose -f ${this.options.networkRootPath}/docker-compose-ca.yaml up -d c
         resolved(true);
       });
     });
+  }
+
+  async buildCaCertificate() {
+    try {
+      // register the ca root admin (save and execute the shell file
+      await this.save();
+      await this.run();
+
+      // start the intermediate ca container
+      await this.dockerEngine.composeOne(`ca.interm.${this.options.org.fullName}`, {
+        cwd: this.path,
+        config: this.filename
+      });
+
+      // Copy
+      this.copyAsRoot();
+    } catch (err) {
+      e(err);
+    }
   }
 }

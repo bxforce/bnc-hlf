@@ -19,12 +19,6 @@ export class CLI {
     return orchEngine;
   }
 
-  static async startRootCA() {
-    const orchEngine = new Orchestrator();
-    await orchEngine.startRootCa();
-    return orchEngine;
-  }
-
   static async generateGenesis(configGenesisFilePath: string) {
     const orchEngine = new Orchestrator();
     await orchEngine.generateGenesis(configGenesisFilePath);

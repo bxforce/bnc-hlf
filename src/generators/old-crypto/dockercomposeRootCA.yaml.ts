@@ -1,6 +1,7 @@
 import { exec } from 'shelljs';
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { DockerEngine } from '../../agents/docker-agent';
 
 export class DockercomposeRootCAYamlGenerator extends BaseGenerator {
   contents = `version: '2'
@@ -34,15 +35,28 @@ services:
     container_name: ca.interm.${this.options.org.fullName}
 `;
 
+  dockerEngine: DockerEngine;
+
   constructor(filename: string, path: string, private options: DockerComposeYamlOptions) {
     super(filename, path);
+    this.dockerEngine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
   }
 
-  startRootCa() {
-    return exec(`docker-compose -f ${this.filePath} up -d ca.root`, { silent: true });
+  async startRootCa() {
+    await this.dockerEngine.composeUpAll({
+      cwd: this.path,
+      log: true,
+      config: this.filePath
+    });
+    // return exec(`docker-compose -f ${this.filePath} up -d ca.root`, { silent: true });
   }
 
-  stopRootCa() {
-    return exec(`docker-compose -f ${this.filePath} up -d ca.root`, { silent: true });
+  async stopRootCa() {
+    await this.dockerEngine.composeDown({
+      cwd: this.path,
+      log: true,
+      config: this.filePath
+    });
+    // return exec(`docker-compose -f ${this.filePath} up -d ca.root`, { silent: true });
   }
 }

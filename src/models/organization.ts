@@ -48,6 +48,10 @@ export class Organization {
     return `${this.name}.${this.domainName}`;
   }
 
+  get mspName(): string {
+    return `${this.name}MSP`;
+  }
+
   get firstPeerFullName(): string {
     if (this.peers.length === 0) {
       return 'dummy';

@@ -76,7 +76,7 @@
     "mem-fs-editor": "^6.0.0",
     "mocha": "^7.0.1",
     "dockerode": "^3.1.0",
-    "docker-compose": "^0.23.2",
+    "docker-compose": "^0.23.3",
     "node-docker-api": "^1.1.22",
     "denodeify": "^1.2.1",
     "path": "^0.12.7",
