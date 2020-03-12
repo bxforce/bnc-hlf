@@ -1,6 +1,6 @@
 import * as Docker from 'dockerode';
 import * as Compose from 'docker-compose';
-import { IDockerComposeOptions } from 'docker-compose';
+import { l } from '../utils/logs';
 
 export class DockerEngine {
   engine: any;
@@ -31,9 +31,13 @@ export class DockerEngine {
   }
 
   //Networks Management
-  createNetwork(options): Promise<any> {
-    // TODO check if the network exists already
-    return this.engine.createNetwork(options);
+  async createNetwork(options): Promise<any> {
+    const already = await this.isNetworkExist(options.Name);
+    if (!already) {
+      return this.engine.createNetwork(options);
+    }
+
+    l(`Docker network (${options.Name}) already exists`);
   }
 
   getNetwork(id): Network {
@@ -45,6 +49,12 @@ export class DockerEngine {
   listNetworks(): Promise<any> {
     //TODO return a list of Network Objects
     return this.engine.listNetworks();
+  }
+
+  async isNetworkExist(name: string): Promise<Boolean> {
+    const networks = await this.listNetworks();
+    const fNetwork = networks.filter(network => network.Name === name);
+    return fNetwork.length > 0;
   }
 
   //Volumes Management

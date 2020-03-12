@@ -60,4 +60,13 @@ export class Organization {
     const peer0 = this.peers.filter(peer => peer.options.number === 0)[0];
     return `${peer0.name}.${this.fullName}`;
   }
+
+  peerFullName(pIndex): string {
+    if (!!this.peers && this.peers.length === 0) {
+      throw new Error(`No peers available for organisation ${this.name}`);
+    }
+
+    const peer = this.peers.find(p => p.options.number === pIndex);
+    return `${peer.name}.${this.fullName}`;
+  }
 }

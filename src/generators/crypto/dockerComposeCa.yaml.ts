@@ -2,6 +2,8 @@ import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { DockerEngine } from '../../agents/docker-agent';
 import { e } from '../../utils/logs';
+import * as sudo from 'sudo-prompt';
+import * as chalk from 'chalk';
 
 export class DockerComposeCaGenerator extends BaseGenerator {
   contents = `
@@ -52,7 +54,7 @@ services:
       - ${this.options.composeNetwork}    
   `;
 
-  constructor(filename: string, path: string, private options?: DockerComposeYamlOptions, private dockerEngine?: DockerEngine) {
+  constructor(filename: string, path: string, private options?: DockerComposeYamlOptions, private readonly dockerEngine?: DockerEngine) {
     super(filename, path);
     if (!this.dockerEngine) {
       this.dockerEngine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
@@ -60,20 +62,42 @@ services:
   }
 
   async startTlsCa() {
-    await this.dockerEngine.composeOne(`ca.${this.options.org.name}.tls`, {
-      cwd: this.path,
-      config: this.filename
-    });
+    try {
+      await this.dockerEngine.composeOne(`ca.${this.options.org.name}.tls`, { cwd: this.path, config: this.filename });
+      await this.changeOwnership(`${this.options.networkRootPath}/${this.options.org.name}`);
+    } catch (err) {
+      e(err);
+    }
   }
 
   async startOrgCa() {
     try {
-      await this.dockerEngine.composeOne(`rca.${this.options.org.name}`, {
-        cwd: this.path,
-        config: this.filename
-      });
+      await this.dockerEngine.composeOne(`rca.${this.options.org.name}`, { cwd: this.path, config: this.filename });
+      await this.changeOwnership(`${this.options.networkRootPath}/${this.options.org.name}`);
     } catch (err) {
       e(err);
     }
+  }
+
+  private changeOwnership(folder: string) {
+    const options = {
+      name: 'BNC'
+    };
+
+    const command = `chown -R 1001:1001 ${folder}`;
+
+    return new Promise((resolved, rejected) => {
+      sudo.exec(command, options, (error, stdout, stderr) => {
+        if (error) {
+          rejected(error);
+        }
+
+        if (stderr) {
+          console.error(chalk.red(stderr));
+        }
+
+        resolved(true);
+      });
+    });
   }
 }

@@ -107,13 +107,13 @@ export class Orchestrator {
     await dockerComposeCA.startOrgCa();
     l('Ran Root CA docker container...');
 
-    const createCaShGenerator = new CreateIdentCertsShGenerator('createCerts.sh', path, options);
-    l('Creating certificates');
-    await createCaShGenerator.buildCertificate();
-    l('Ran createCerts.sh');
-
-    const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
-    await dockerComposePeer.save();
+    // const createCaShGenerator = new CreateIdentCertsShGenerator('createCerts.sh', path, options);
+    // l('Creating certificates');
+    // await createCaShGenerator.buildCertificate();
+    // l('Ran createCerts.sh');
+    //
+    // const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
+    // await dockerComposePeer.save();
   }
 
   public async cleanDocker(rmi: boolean) {
