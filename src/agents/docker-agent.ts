@@ -1,173 +1,217 @@
-import * as Docker from 'dockerode';
 import * as Compose from 'docker-compose';
 import { l } from '../utils/logs';
+import {
+  Container,
+  ContainerCreateOptions,
+  ContainerInfo,
+  ContainerInspectInfo,
+  DockerOptions,
+  Network,
+  NetworkInspectInfo,
+  Volume,
+  VolumeInspectInfo
+} from 'dockerode';
+import { IDockerComposeOptions, IDockerComposeResult } from 'docker-compose';
+import * as Dockerode from 'dockerode';
 
 export class DockerEngine {
-  engine: any;
+  engine: Dockerode;
 
-  constructor(public engineAdr: any) {
-    this.engine = new Docker(engineAdr);
+  constructor(public engineOptions: DockerOptions) {
+    this.engine = new Dockerode(engineOptions);
   }
 
   //Containers Management
-  createContainer(options): Promise<any> {
-    return this.engine.createContainer(options);
+  async createContainer(options: ContainerCreateOptions): Promise<Container> {
+    const already = await this.doesContainerExist(options.name);
+    if (!already) {
+      return this.engine.createContainer(options);
+    }
+    l(`Docker network (${options.name}) already exists`);
   }
 
-  getContainer(id): Container {
-    let container = new Container(this.engine);
+  getContainer(id: string): DockerContainer {
+    let container = new DockerContainer(this);
     container.setContainer(this.engine.getContainer(id));
     return container;
   }
 
-  async listContainers(options?): Promise<Container[]> {
-    let containers: any[] = await this.engine.listContainers(options);
-    let containerList: Container[] = [];
+  async listContainers(options?: {}): Promise<DockerContainer[]> {
+    let containers: ContainerInfo[] = await this.engine.listContainers(options);
+    let containerList: DockerContainer[] = [];
     for (let containerInfo of containers) {
-      let containerObj = this.getContainer(containerInfo.Id);
+      let containerObj: DockerContainer = this.getContainer(containerInfo.Id);
       containerList.push(containerObj);
     }
     return containerList;
   }
 
+  async doesContainerExist(name: string): Promise<Boolean> {
+    const containers = await this.engine.listContainers();
+    const fContainer = containers.filter(container => container.Names.filter(Name => Name === name).length > 0);
+    return fContainer.length > 0;
+  }
+
   //Networks Management
-  async createNetwork(options): Promise<any> {
-    const already = await this.isNetworkExist(options.Name);
+  async createNetwork(options: { Name: string }): Promise<any> {
+    //TODO test if it accepts other fields
+    const already = await this.doesNetworkExist(options.Name);
     if (!already) {
       return this.engine.createNetwork(options);
     }
-
     l(`Docker network (${options.Name}) already exists`);
   }
 
-  getNetwork(id): Network {
-    let network = new Network(this.engine);
+  getNetwork(id: string): DockerNetwork {
+    let network = new DockerNetwork(this);
     network.setNetwork(this.engine.getNetwork(id));
     return network;
   }
 
-  listNetworks(): Promise<any> {
-    //TODO return a list of Network Objects
-    return this.engine.listNetworks();
+  async listNetworks(options?: {}): Promise<DockerNetwork[]> {
+    let networks: any[] = await this.engine.listNetworks(options);
+    let networkList: DockerNetwork[] = [];
+    for (let networkInfo of networks) {
+      let networkObj: DockerNetwork = this.getNetwork(networkInfo.Id);
+      networkList.push(networkObj);
+    }
+    return networkList;
   }
 
-  async isNetworkExist(name: string): Promise<Boolean> {
-    const networks = await this.listNetworks();
+  async doesNetworkExist(name: string): Promise<Boolean> {
+    const networks = await this.engine.listNetworks();
     const fNetwork = networks.filter(network => network.Name === name);
     return fNetwork.length > 0;
   }
 
   //Volumes Management
-  createVolume(options): Promise<any> {
-    // TODO
-    return this.engine.createVolume(options);
+  async createVolume(options: { Name?: string }): Promise<any> {
+    //TODO test if it accepts other fields
+    if (options.hasOwnProperty('Name')) {
+      const already = await this.doesNetworkExist(options.Name);
+      if (!already) {
+        return this.engine.createVolume(options);
+      }
+      l(`Docker network (${options.Name}) already exists`);
+    } else {
+      return this.engine.createVolume(options);
+    }
   }
 
-  getVolume(id): Volume {
-    let volume = new Volume(this.engine);
-    volume.setVolume(this.engine.getVolume(id));
+  getVolume(name: string): DockerVolume {
+    let volume = new DockerVolume(this);
+    volume.setVolume(this.engine.getVolume(name));
     return volume;
   }
 
-  listVolumes(): Promise<any> {
-    //TODO return a list of Volume Objects
-    return this.engine.listVolumes();
+  async listVolumes(options?: {}): Promise<DockerVolume[]> {
+    let { Volumes } = await this.engine.listVolumes(options);
+    let volumeList: DockerVolume[] = [];
+    for (let volumeInfo of Volumes) {
+      let volumeObj: DockerVolume = this.getVolume(volumeInfo.Name);
+      volumeList.push(volumeObj);
+    }
+    return volumeList;
+  }
+
+  async doesVolumeExist(name: string): Promise<Boolean> {
+    const { Volumes } = await this.engine.listVolumes();
+    const fVolume = Volumes.filter(volume => volume.Name === name);
+    return fVolume.length > 0;
   }
 
   //Docker-compose Management
-  composeUpAll(options: Compose.IDockerComposeOptions): Promise<any> {
+  composeUpAll(options?: IDockerComposeOptions): Promise<IDockerComposeResult> {
     return Compose.upAll(options);
   }
 
-  composeOne(service: string, options: Compose.IDockerComposeOptions): Promise<any> {
+  composeOne(service: string, options?: IDockerComposeOptions): Promise<IDockerComposeResult> {
     return Compose.upOne(service, options);
   }
 
-  composeDown(options: Compose.IDockerComposeOptions): Promise<any> {
+  composeDown(options?: IDockerComposeOptions): Promise<IDockerComposeResult> {
     return Compose.down(options);
   }
 }
 
-export class Container {
-  container: any;
+export class DockerContainer {
+  public container: Container;
 
-  constructor(public engine: DockerEngine, public options?: any) {}
+  constructor(public engine: DockerEngine, public options?: ContainerCreateOptions) {}
 
-  async create() {
+  async create(): Promise<void> {
     this.container = await this.engine.createContainer(this.options);
   }
 
-  start() {
-    return this.container.start();
+  start(options?: {}): Promise<any> {
+    return this.container.start(options);
   }
 
-  inspect() {
-    return this.container.inspect();
+  inspect(options?: {}): Promise<ContainerInspectInfo> {
+    return this.container.inspect(options);
   }
 
-  stop() {
-    return this.container.stop();
+  stop(options?: {}): Promise<any> {
+    return this.container.stop(options);
   }
 
-  remove(options?) {
+  remove(options?: {}): Promise<any> {
     return this.container.remove(options);
   }
 
-  setContainer(container: any) {
-    return (this.container = container);
+  setContainer(container: Container): void {
+    this.container = container;
   }
 }
 
-export class Network {
-  // TODO test and verify
-  network: any;
+export class DockerNetwork {
+  network: Network;
 
-  constructor(public engine: DockerEngine, public options?: any) {}
+  constructor(public engine: DockerEngine, public options?: { Name: string }) {}
 
-  async create() {
+  async create(): Promise<void> {
     this.network = await this.engine.createNetwork(this.options);
   }
 
-  remove() {
-    return this.network.remove();
+  remove(options?: {}): Promise<any> {
+    return this.network.remove(options);
   }
 
-  connect() {
-    return this.network.connect();
+  connect(options?: {}): Promise<any> {
+    return this.network.connect(options);
   }
 
-  update() {
-    return this.network.update();
+  disconnect(options?: {}): Promise<any> {
+    return this.network.disconnect(options);
   }
 
-  inspect() {
+  inspect(): Promise<NetworkInspectInfo> {
     return this.network.inspect();
   }
 
-  setNetwork(network: any) {
-    return (this.network = network);
+  setNetwork(network: Network): void {
+    this.network = network;
   }
 }
 
-export class Volume {
-  // TODO test and verify
-  volume: any;
+export class DockerVolume {
+  volume: Volume;
 
-  constructor(public engine: DockerEngine, public options?: any) {}
+  constructor(public engine: DockerEngine, public options?: {}) {}
 
-  async create() {
+  async create(): Promise<void> {
     this.volume = await this.engine.createVolume(this.options);
   }
 
-  remove() {
-    return this.volume.remove();
+  remove(options?: {}): Promise<any> {
+    return this.volume.remove(options);
   }
 
-  inspect() {
+  inspect(): Promise<VolumeInspectInfo> {
     return this.volume.inspect();
   }
 
-  setVolume(volume: any) {
-    return (this.volume = volume);
+  setVolume(volume: Volume): void {
+    this.volume = volume;
   }
 }
