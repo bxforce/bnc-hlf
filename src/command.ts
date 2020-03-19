@@ -87,37 +87,89 @@ program
     }
   });
 
-const init = program.command('init');
-  /*.action((cmd) => {
-    l('f option ' + cmd.filePath);
-  })*/
-
-init
-  .command('genesis')
-  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath generate genesis_block')
+const configurationCmd = program.command('configuration');
+configurationCmd
+  .command('generate-all')
+  .description('shared Configuration files')
+  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
   .action(cmd => {
-    l('genesis ' + cmd.filePath);
+    l('generate-all command not yet implemented');
   });
-init
-  .command('configTx')
-  //.requiredOption('-c, --file-path <path>', 'bncGenesisConfigurationFilePath generate configTx')
+configurationCmd
+  .command('generate-genesis')
+  .description('generate genesis_block')
+  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
   .action(cmd => {
-    l('configTx ' + cmd.filePath);
+    l('generate-genesis command not yet implemented');
   });
-init
-  .command('anchorTx')
-  //.requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath generate anchorTx')
-  .action(() => {
-    l('anchorTx');
+configurationCmd
+  .command('generate-configtx')
+  .description('generate configTx')
+  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
+  .action(cmd => {
+    l('generate-configtx command not yet implemented');
+  });
+configurationCmd
+  .command('generate-anchortx')
+  .description('generate anchorTx')
+  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
+  .action(cmd => {
+    l('generate-anchortx command not yet implemented');
   });
 
-// double nested command example
-/*const init1 = init.command('init1');
-init1
-  .command('init2')
-  .action((cmd) => {
-    l('init2');
-  });*/
+const credentialsCmd = program.command('credentials');
+credentialsCmd
+  .command('generate-all')
+  .description("generate nodes' credentials")
+  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
+  .action(cmd => {
+    l('generate-all command not yet implemented');
+  });
+credentialsCmd
+  .command('generate-genesis')
+  .description('enroll admin')
+  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
+  .action(cmd => {
+    l('generate-genesis command not yet implemented');
+  });
+
+const networkCmd = program.command('network');
+networkCmd
+  .command('start-all')
+  .description('create/start network')
+  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
+  .action(cmd => {
+    l('network start-all command not yet implemented');
+  });
+networkCmd
+  .command('stop-all')
+  .description('stop network')
+  .action(cmd => {
+    l('network stop-all command not yet implemented');
+  });
+
+const channelCmd = program.command('channel');
+channelCmd
+  .command('create')
+  .description('create channel if it does not exist')
+  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
+  .action(cmd => {
+    l('channel create command not yet implemented');
+  });
+channelCmd
+  .command('join')
+  .description('join channel')
+  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
+  .action(cmd => {
+    l('channel join command not yet implemented');
+  });
+channelCmd
+  .command('update')
+  .description('update channel')
+  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
+  .action(cmd => {
+    l('channel update command not yet implemented');
+  });
 
 program.version(pkg.version);
 
