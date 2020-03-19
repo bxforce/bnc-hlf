@@ -2,6 +2,8 @@
 import * as program from 'commander';
 import { l } from './utils/logs';
 import { CLI } from './cli';
+import * as commander from 'commander';
+import { isCombinedModifierFlagSet } from 'tslint';
 
 const pkg = require('../package.json');
 
@@ -84,6 +86,38 @@ program
       await tasks.createRootCA();
     }
   });
+
+const init = program.command('init');
+  /*.action((cmd) => {
+    l('f option ' + cmd.filePath);
+  })*/
+
+init
+  .command('genesis')
+  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath generate genesis_block')
+  .action(cmd => {
+    l('genesis ' + cmd.filePath);
+  });
+init
+  .command('configTx')
+  //.requiredOption('-c, --file-path <path>', 'bncGenesisConfigurationFilePath generate configTx')
+  .action(cmd => {
+    l('configTx ' + cmd.filePath);
+  });
+init
+  .command('anchorTx')
+  //.requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath generate anchorTx')
+  .action(() => {
+    l('anchorTx');
+  });
+
+// double nested command example
+/*const init1 = init.command('init1');
+init1
+  .command('init2')
+  .action((cmd) => {
+    l('init2');
+  });*/
 
 program.version(pkg.version);
 
