@@ -14,6 +14,51 @@ import {
 import { IDockerComposeOptions, IDockerComposeResult } from 'docker-compose';
 import * as Dockerode from 'dockerode';
 
+interface NetworkListOptions {
+  filters?: string;
+}
+
+interface VolumeListOptions {
+  filters?: string;
+}
+
+interface ContainerListOptions {
+  all?: boolean;
+  limit?: number;
+  size?: boolean;
+  filters?: string;
+}
+
+interface NetworkCreateOptions {
+  Name: string;
+  CheckDuplicate?: boolean;
+  Driver?: string;
+  Internal?: boolean;
+  Attachable?: boolean;
+  Ingress?: boolean;
+  IPAM?: {};
+  EnableIPv6?: boolean;
+  Options?: {};
+  Labels?: {};
+}
+
+interface VolumeCreateOptions {
+  Name?: string;
+  Driver?: string;
+  DriverOpts?: {};
+  Labels?: {};
+}
+
+interface ContainerRemoveOptions {
+  v: boolean;
+  force: boolean;
+  link: boolean;
+}
+
+interface VolumeRemoveOptions {
+  force?: boolean;
+}
+
 export class DockerEngine {
   engine: Dockerode;
 
@@ -36,7 +81,7 @@ export class DockerEngine {
     return container;
   }
 
-  async listContainers(options?: {}): Promise<DockerContainer[]> {
+  async listContainers(options?: ContainerListOptions): Promise<DockerContainer[]> {
     let containers: ContainerInfo[] = await this.engine.listContainers(options);
     let containerList: DockerContainer[] = [];
     for (let containerInfo of containers) {
@@ -53,8 +98,7 @@ export class DockerEngine {
   }
 
   //Networks Management
-  async createNetwork(options: { Name: string }): Promise<any> {
-    //TODO test if it accepts other fields
+  async createNetwork(options: NetworkCreateOptions): Promise<Network> {
     const already = await this.doesNetworkExist(options.Name);
     if (!already) {
       return this.engine.createNetwork(options);
@@ -68,7 +112,7 @@ export class DockerEngine {
     return network;
   }
 
-  async listNetworks(options?: {}): Promise<DockerNetwork[]> {
+  async listNetworks(options?: VolumeListOptions): Promise<DockerNetwork[]> {
     let networks: any[] = await this.engine.listNetworks(options);
     let networkList: DockerNetwork[] = [];
     for (let networkInfo of networks) {
@@ -85,8 +129,7 @@ export class DockerEngine {
   }
 
   //Volumes Management
-  async createVolume(options: { Name?: string }): Promise<any> {
-    //TODO test if it accepts other fields
+  async createVolume(options: VolumeCreateOptions): Promise<Volume> {
     if (options.hasOwnProperty('Name')) {
       const already = await this.doesNetworkExist(options.Name);
       if (!already) {
@@ -104,7 +147,7 @@ export class DockerEngine {
     return volume;
   }
 
-  async listVolumes(options?: {}): Promise<DockerVolume[]> {
+  async listVolumes(options?: NetworkListOptions): Promise<DockerVolume[]> {
     let { Volumes } = await this.engine.listVolumes(options);
     let volumeList: DockerVolume[] = [];
     for (let volumeInfo of Volumes) {
@@ -155,7 +198,7 @@ export class DockerContainer {
     return this.container.stop(options);
   }
 
-  remove(options?: {}): Promise<any> {
+  remove(options?: ContainerRemoveOptions): Promise<any> {
     return this.container.remove(options);
   }
 
@@ -167,7 +210,7 @@ export class DockerContainer {
 export class DockerNetwork {
   network: Network;
 
-  constructor(public engine: DockerEngine, public options?: { Name: string }) {}
+  constructor(public engine: DockerEngine, public options?: NetworkCreateOptions) {}
 
   async create(): Promise<void> {
     this.network = await this.engine.createNetwork(this.options);
@@ -197,13 +240,13 @@ export class DockerNetwork {
 export class DockerVolume {
   volume: Volume;
 
-  constructor(public engine: DockerEngine, public options?: {}) {}
+  constructor(public engine: DockerEngine, public options?: VolumeCreateOptions) {}
 
   async create(): Promise<void> {
     this.volume = await this.engine.createVolume(this.options);
   }
 
-  remove(options?: {}): Promise<any> {
+  remove(options?: VolumeRemoveOptions): Promise<any> {
     return this.volume.remove(options);
   }
 
