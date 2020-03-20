@@ -38,6 +38,45 @@ const tasks = {
 
   async invokeChaincode() {
     l('[Invoke Chaincode] Not yet implemented');
+  },
+  async init(config: string, genesis: boolean, configtx: boolean, anchortx: any) {
+    if (!(genesis || configtx || anchortx)) {
+      l('[init all] Not yet implemented');
+    } else if (configtx) {
+      l('[init configTx] Not yet implemented');
+    } else if (anchortx) {
+      l('[init anchorTx] Not yet implemented');
+    } else if (genesis) {
+      l('[init genesis] Not yet implemented');
+    }
+    //l('config file: ' + config;
+  },
+  enroll(config: string, admin: boolean) {
+    if (admin) {
+      l('[enroll admin] Not yet implemented');
+    } else {
+      l('[enroll all] Not yet implemented');
+    }
+    //l('config file: ' + config;
+  },
+  start(config: string) {
+    l('[start] not yet implemented');
+    //l('config file: ' + config;
+  },
+  stop() {
+    l('[stop] not yet implemented');
+  },
+  createChannel(config: string) {
+    l('[channel create] not yet implemented');
+    //l('config file: ' + config;
+  },
+  joinChannel(config: string) {
+    l('[channel join] not yet implemented');
+    //l('config file: ' + config;
+  },
+  updateChannel() {
+    l('[channel update] not yet implemented');
+    //l('config file: ' + config;
   }
 };
 
@@ -87,88 +126,59 @@ program
     }
   });
 
-const configurationCmd = program.command('configuration');
-configurationCmd
-  .command('generate-all')
-  .description('shared Configuration files')
-  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
-  .action(cmd => {
-    l('generate-all command not yet implemented');
-  });
-configurationCmd
-  .command('generate-genesis')
-  .description('generate genesis_block')
-  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
-  .action(cmd => {
-    l('generate-genesis command not yet implemented');
-  });
-configurationCmd
-  .command('generate-configtx')
-  .description('generate configTx')
-  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
-  .action(cmd => {
-    l('generate-configtx command not yet implemented');
-  });
-configurationCmd
-  .command('generate-anchortx')
-  .description('generate anchorTx')
-  .requiredOption('-f, --file-path <path>', 'bncGenesisConfigurationFilePath')
-  .action(cmd => {
-    l('generate-anchortx command not yet implemented');
+program
+  .command('init')
+  .option('--genesis', 'generate genesis_block')
+  .option('--configtx', 'generate configTx')
+  .option('--anchortx', 'generate anchorTx')
+  .requiredOption('-f, --config <path>', 'bncGenesisConfigurationFilePath')
+  .action(async cmd => {
+    await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });
 
-const credentialsCmd = program.command('credentials');
-credentialsCmd
-  .command('generate-all')
-  .description("generate nodes' credentials")
-  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
-  .action(cmd => {
-    l('generate-all command not yet implemented');
-  });
-credentialsCmd
-  .command('generate-genesis')
-  .description('enroll admin')
-  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
-  .action(cmd => {
-    l('generate-genesis command not yet implemented');
+program
+  .command('enroll')
+  .option('--admin', 'enroll admin')
+  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  .action(async cmd => {
+    await tasks.enroll(cmd.config, cmd.admin);
   });
 
-const networkCmd = program.command('network');
-networkCmd
-  .command('start-all')
+program
+  .command('start')
   .description('create/start network')
-  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
-  .action(cmd => {
-    l('network start-all command not yet implemented');
+  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  .action(async cmd => {
+    await tasks.start(cmd.config);
   });
-networkCmd
-  .command('stop-all')
+program
+  .command('stop')
   .description('stop network')
-  .action(cmd => {
-    l('network stop-all command not yet implemented');
+  .action(async () => {
+    await tasks.stop();
   });
 
 const channelCmd = program.command('channel');
 channelCmd
   .command('create')
   .description('create channel if it does not exist')
-  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
-  .action(cmd => {
-    l('channel create command not yet implemented');
+  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  .action(async cmd => {
+    await tasks.createChannel(cmd.config);
   });
 channelCmd
   .command('join')
   .description('join channel')
-  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
-  .action(cmd => {
-    l('channel join command not yet implemented');
+  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  .action(async cmd => {
+    await tasks.joinChannel(cmd.config);
   });
 channelCmd
   .command('update')
   .description('update channel')
-  .requiredOption('-f, --file-path <path>', 'configurationTemplateFilePath')
-  .action(cmd => {
-    l('channel update command not yet implemented');
+  .requiredOption('--anchortx')
+  .action(async () => {
+    await tasks.updateChannel();
   });
 
 program.version(pkg.version);
