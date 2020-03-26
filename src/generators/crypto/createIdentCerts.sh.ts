@@ -43,7 +43,6 @@ fabric-ca-client enroll -d -m ${peer.name}.${this.options.org.fullName} -u http:
   )
   .join(' ')}
 
-
 echo "[Step 3] Creating org admin certs"
 mkdir ${this.options.networkRootPath}/${this.options.org.name}/Admin@${this.options.org.fullName}/msp
 export FABRIC_CA_CLIENT_HOME=${this.options.networkRootPath}/${this.options.org.name}/Admin@${this.options.org.fullName}
