@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import { l } from '../src/utils/logs';
 import * as path from 'path';
-import { DockerEngine, Container } from '../src/agents/docker-agent';
+import { DockerEngine, DockerContainer } from '../src/agents/docker-agent';
 
 const test = async () => {
   let engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
-  let container = new Container(engine,{
+  let container = new DockerContainer(engine,{
     Image: 'ubuntu:16.04',
     name: 'test',
     AttachStdin: false,
@@ -24,7 +24,7 @@ const test = async () => {
 
   let containerData = await container.inspect();
   l(containerData.Name);
-  let containerClone: Container = engine.getContainer(containerData.Name.substr(1));
+  let containerClone: DockerContainer = engine.getContainer(containerData.Name.substr(1));
   await containerClone.start();
   await containerClone.stop();
   await containerClone.remove();
@@ -40,7 +40,7 @@ const testCompose = async () => {
     commandOptions: [ '--build', [ '--timeout', '5' ]]*/
   });
   // option object : https://docs.docker.com/engine/api/v1.37/#operation/ContainerList
-  let containers: Container[] = await  engine.listContainers({
+  let containers: DockerContainer[] = await  engine.listContainers({
     all: true,
     filters: {
       network: ['bnc-tools_default']
