@@ -2,8 +2,6 @@
 import * as program from 'commander';
 import { l } from './utils/logs';
 import { CLI } from './cli';
-import * as commander from 'commander';
-import { isCombinedModifierFlagSet } from 'tslint';
 
 const pkg = require('../package.json');
 
