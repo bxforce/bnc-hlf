@@ -18,6 +18,13 @@ export  class Caclient {
   caInfo: any;
   wallet: Wallets;
 
+  /**
+   * Responsible for the user and admin enrollments
+   * @param caInfo if not provided in command it takes by default 'ca.org1.example.com'
+   * @param walletDirectoryName if not specified  in command it takes by default 'wallet'
+   * @param ccpPath if not specified in command it takes by default '../../../tests/ca/connection-org1.json'
+   */
+
   constructor(  caInfo: string,
                 walletDirectoryName: string,
                 ccpPath: string ) {
@@ -29,6 +36,12 @@ export  class Caclient {
     this.wallet = new Wallets(this.walletPath);
   }
 
+  /**
+   * Enrolls an admin user
+   * @param id
+   * @param secret
+   * @param mspID
+   */
   public async enroll (id, secret, mspID) {
     try {
       const caTLSCACerts = this.caInfo.tlsCACerts.pem;
@@ -50,6 +63,14 @@ export  class Caclient {
       return error;
     }
   }
+
+  /**
+   * Enrolls a user nd creates its wallet
+   * @param id exp user
+   * @param secret
+   * @param affiliation exp org1.department1
+   * @param mspID exp Org1MSP
+   */
 
   public async registerUser (id, secret, affiliation, mspID) {
     try {
@@ -89,12 +110,20 @@ export  class Caclient {
 
   }
 
+  /**
+   * returns the identity of a user/admin
+   * @param id
+   */
   public async fetchIdentity(id) {
     const identity = await this.wallet.getIdentity(id);
     l(`Your identity  ${id} ': ${JSON.stringify(identity)}`);
     return identity;
   }
 
+  /**
+   * Deletes the identity of a user/admin
+   * @param id
+   */
   public async deleteIdentity(id) {
     console.log('into delete')
     try{
@@ -107,6 +136,14 @@ export  class Caclient {
 
   }
 
+  /**
+   * Enrolls user/admin with the CA
+   * @param id
+   * @param secret
+   * @param wallet
+   * @param ca
+   * @param mspID
+   */
   private async doEnroll(id, secret, wallet, ca, mspID) {  //mspID : 'Org1MSP'
     const enrollment = await ca.enroll({ enrollmentID: id , enrollmentSecret: secret }); //ca.enroll({ enrollmentID: 'admin', enrollmentSecret: 'adminpw' });
     await wallet.createWallet(id, mspID, enrollment );

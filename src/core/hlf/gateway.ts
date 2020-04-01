@@ -1,6 +1,9 @@
 import { Gateway } from 'fabric-network';
 import * as FabricCAServices from 'fabric-ca-client';
 export class Gateways{
+  /**
+   * Used for user enrollement to get the CA
+   */
   gateway: any;
 
   constructor() {
