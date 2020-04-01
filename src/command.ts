@@ -26,16 +26,16 @@ const tasks = {
     return await CLI.validateAndParse(filePath, skipDownload);
   },
 
-  async enroll(type, id, secret, affiliation, mspID) {
-    return await CLI.enroll(type, id, secret, affiliation, mspID);
+  async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
+    return await CLI.enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
   },
 
-  async fetchIdentity(id) {
-    return await CLI.fetchIdentity(id);
+  async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+    return await CLI.fetchIdentity(id,caInfo, walletDirectoryName, ccpPath);
   },
 
-  async deleteIdentity(id) {
-    return await CLI.deleteIdentity(id);
+  async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+    return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   },
 
   async installChaincode() {
@@ -100,22 +100,32 @@ program
 program
   .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
+  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
+  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
+  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
   .action(async (type:string, id:string , secret:string,affiliation:string ,mspID:string,  args:string[], cmd:any ) => {
-    await tasks.enroll(type, id, secret, affiliation, mspID); // if -R is not passed cmd.rmi is true
+    await tasks.enroll(type, id, secret, affiliation, mspID, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath); // if -R is not passed cmd.rmi is true
+
   });
 
 program
   .command('fetch-identity <id> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
+  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
+  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
+  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
   .action(async (id:string, args:string[], cmd: any) => {
-    await tasks.fetchIdentity(id);
+    await tasks.fetchIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
   });
 
 program  // just for testing to be deleted
   .command('delete-identity <id> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
+  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
+  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
+  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
   .action(async (id:string, args:string[], cmd: any) => {
-    await tasks.deleteIdentity(id);
+    await tasks.deleteIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
   });
 
 program.command('start-root-ca').action(async () => {

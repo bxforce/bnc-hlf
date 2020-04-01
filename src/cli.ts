@@ -33,22 +33,22 @@ export class CLI {
     return orchEngine;
   }
 
-  static async enroll(type, id, secret, affiliation, mspID) {
+  static async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
     const enrollEngine = new Orchestrator();
     if(type == Type_User.admin){
-      await enrollEngine.enroll(id, secret, mspID);
+      await enrollEngine.enroll(id, secret, mspID, caInfo, walletDirectoryName, ccpPath);
     } else {
-      await enrollEngine.registerUser(id, secret, affiliation, mspID);
+      await enrollEngine.registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
     }
   }
 
-  static async fetchIdentity(id) {
+  static async fetchIdentity(id, caInfo, walletDirectoryName, ccpPath) {
     const enrollEngine = new Orchestrator();
-    await enrollEngine.fetchIdentity(id);
+    await enrollEngine.fetchIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
 
-  static async deleteIdentity(id) {
+  static async deleteIdentity(id, caInfo, walletDirectoryName, ccpPath) {
     const enrollEngine = new Orchestrator();
-    await enrollEngine.deleteIdentity(id);
+    await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
 }

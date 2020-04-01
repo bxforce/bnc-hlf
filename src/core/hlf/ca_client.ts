@@ -2,12 +2,13 @@
 import * as FabricCAServices from 'fabric-ca-client';
 import * as path from 'path';
 import { Wallets } from '../../models/wallet';
-import { FileSystemWallet, X509WalletMixin, Gateway } from 'fabric-network';
+import { FileSystemWallet, X509WalletMixin } from 'fabric-network';
 import { CLI } from '../../cli';
 import * as fs from 'fs';
 import {l, d, e } from '../../utils/logs';
 import {Type_User} from '../../utils/constants';
-import { Ca_Client_Path } from '../../utils/constants';
+import { Gateways } from '../../models/gateway';
+
 
 export  class Caclient {
   ccpPath:string;
@@ -17,12 +18,14 @@ export  class Caclient {
   caInfo: any;
   wallet: Wallets;
 
-  constructor() {
-    this.ccpPath = path.resolve(__dirname, Ca_Client_Path.ccpPath);
+  constructor(  caInfo: string,
+                walletDirectoryName: string,
+                ccpPath: string ) {
+    this.ccpPath = path.resolve(__dirname, ccpPath);
     this.ccpJSON = fs.readFileSync(this.ccpPath, 'utf8');
     this.ccp = JSON.parse(this.ccpJSON);
-    this.caInfo = this.ccp.certificateAuthorities[Ca_Client_Path.caInfo];
-    this.walletPath = path.join(process.cwd(), Ca_Client_Path.walletDirectoryName);
+    this.caInfo = this.ccp.certificateAuthorities[caInfo];
+    this.walletPath = path.join(process.cwd(), walletDirectoryName);
     this.wallet = new Wallets(this.walletPath);
   }
 
@@ -36,7 +39,7 @@ export  class Caclient {
         return;
       }
       // Enroll the admin user, and import the new identity into the wallet.
-      let enrollment = await doEnroll(id, secret, this.wallet, ca, mspID);
+      let enrollment = await this.doEnroll(id, secret, this.wallet, ca, mspID);
       l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
       l(`Enrollment Obj:`);
       l(enrollment)
@@ -65,16 +68,16 @@ export  class Caclient {
       }
 
       // Create a new gateway for connecting to our peer node.
-      const gateway = new Gateway();
+      const gateway = new Gateways();
       let wallet = this.wallet.getWallet();
-      await gateway.connect(this.ccpPath, { wallet , identity: Type_User.admin, discovery: { enabled: true, asLocalhost: true } });
+      await gateway.connect(this.ccpPath, Type_User.admin, wallet);
       // Get the CA client object from the gateway for interacting with the CA.
-      const client = gateway.getClient();
+      const client = gateway.getGatewayClient();
       const ca = client.getCertificateAuthority();
       const adminUser = await client.getUserContext(Type_User.admin, false);
       // Register the user, enroll the user, and import the new identity into the wallet.
       const secretRegister = await ca.register({ affiliation: affiliation, enrollmentID: id, role: 'client' }, adminUser);
-      let enrollment = await doEnroll(id, secretRegister, this.wallet, ca, mspID);
+      let enrollment = await this.doEnroll(id, secretRegister, this.wallet, ca, mspID);
       l('Successfully registered and enrolled admin user "user1" and imported it into the wallet');
       l(`Enrollment Obj:`);
       l(enrollment)
@@ -104,12 +107,12 @@ export  class Caclient {
 
   }
 
+  private async doEnroll(id, secret, wallet, ca, mspID) {  //mspID : 'Org1MSP'
+    const enrollment = await ca.enroll({ enrollmentID: id , enrollmentSecret: secret }); //ca.enroll({ enrollmentID: 'admin', enrollmentSecret: 'adminpw' });
+    await wallet.createWallet(id, mspID, enrollment );
+    l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
+    return enrollment;
+  };
+
 }
 
-
-const doEnroll = async (id, secret, wallet, ca, mspID) => {  //mspID : 'Org1MSP'
-  const enrollment = await ca.enroll({ enrollmentID: id , enrollmentSecret: secret }); //ca.enroll({ enrollmentID: 'admin', enrollmentSecret: 'adminpw' });
-  await wallet.createWallet(id, mspID, enrollment );
-  l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
-  return enrollment;
-};

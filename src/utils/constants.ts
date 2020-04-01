@@ -27,9 +27,4 @@ export enum Type_User {
   user = 'user'
 }
 
-export enum Ca_Client_Path {
-  caInfo = 'ca.org1.example.com',
-  walletDirectoryName = 'wallet',
-  ccpPath = '../../../tests/ca/connection-org1.json'
-}
 
