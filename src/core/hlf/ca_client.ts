@@ -7,7 +7,7 @@ import { CLI } from '../../cli';
 import * as fs from 'fs';
 import {l, d, e } from '../../utils/logs';
 import {Type_User} from '../../utils/constants';
-import { Gateways } from '../../models/gateway';
+import { Gateways } from './gateway';
 
 
 export  class Caclient {
