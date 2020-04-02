@@ -10,6 +10,7 @@ import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabr
 import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
+import {Caclient} from './core/hlf/ca_client';
 
 export class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -132,5 +133,26 @@ export class Orchestrator {
 
     l('************ Success!');
     l('Environment cleaned!');
+  }
+
+  public async enroll(id, secret, mspID,caInfo, walletDirectoryName, ccpPath) {
+    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
+    await caclient.enroll(id, secret, mspID);
+  }
+
+  public async registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
+
+    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
+    await caclient.registerUser (id, secret, affiliation, mspID);
+  }
+
+  public async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
+    await caclient.fetchIdentity(id);
+  }
+
+  public async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
+    await caclient.deleteIdentity(id);
   }
 }

@@ -1,4 +1,6 @@
-import { Orchestrator } from './orchestrator';
+/* tslint:disable:no-unused-variable */
+import {Orchestrator} from './orchestrator';
+import { Type_User }  from './utils/constants';
 
 export class CLI {
   static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
@@ -29,5 +31,24 @@ export class CLI {
     const orchEngine = new Orchestrator();
     await orchEngine.generateGenesis(configGenesisFilePath);
     return orchEngine;
+  }
+
+  static async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
+    const enrollEngine = new Orchestrator();
+    if(type == Type_User.admin){
+      await enrollEngine.enroll(id, secret, mspID, caInfo, walletDirectoryName, ccpPath);
+    } else {
+      await enrollEngine.registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
+    }
+  }
+
+  static async fetchIdentity(id, caInfo, walletDirectoryName, ccpPath) {
+    const enrollEngine = new Orchestrator();
+    await enrollEngine.fetchIdentity(id, caInfo, walletDirectoryName, ccpPath);
+  }
+
+  static async deleteIdentity(id, caInfo, walletDirectoryName, ccpPath) {
+    const enrollEngine = new Orchestrator();
+    await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
 }
