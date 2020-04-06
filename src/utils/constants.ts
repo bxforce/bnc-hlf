@@ -21,3 +21,10 @@ export enum HLF_VERSION {
 export enum EXTERNAL_HLF_VERSION {
   EXT_HLF_2 = '0.4.18'
 }
+
+export enum Type_User {
+  admin = 'admin',
+  user = 'user'
+}
+
+

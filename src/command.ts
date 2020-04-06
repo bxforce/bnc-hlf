@@ -22,6 +22,18 @@ const tasks = {
     return await CLI.validateAndParse(filePath, skipDownload);
   },
 
+  async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
+    return await CLI.enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
+  },
+
+  async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+    return await CLI.fetchIdentity(id,caInfo, walletDirectoryName, ccpPath);
+  },
+
+  async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+    return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
+  },
+
   async installChaincode() {
     l('[Install Chaincode] Not yet implemented');
   },
@@ -45,30 +57,30 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-  enroll(config: string, admin: boolean) {
-    if (admin) {
-      l('[enroll admin] Not yet implemented');
-    } else {
-      l('[enroll all] Not yet implemented');
-    }
-    //l('config file: ' + config;
-  },
-  start(config: string) {
+  // async enroll(config: string, admin: boolean) {
+  //   if (admin) {
+  //     l('[enroll admin] Not yet implemented');
+  //   } else {
+  //     l('[enroll all] Not yet implemented');
+  //   }
+  //   //l('config file: ' + config;
+  // },
+  async start(config: string) {
     l('[start] not yet implemented');
     //l('config file: ' + config;
   },
-  stop() {
+  async stop() {
     l('[stop] not yet implemented');
   },
-  createChannel(config: string) {
+  async createChannel(config: string) {
     l('[channel create] not yet implemented');
     //l('config file: ' + config;
   },
-  joinChannel(config: string) {
+  async joinChannel(config: string) {
     l('[channel join] not yet implemented');
     //l('config file: ' + config;
   },
-  updateChannel() {
+  async updateChannel() {
     l('[channel update] not yet implemented');
     //l('config file: ' + config;
   }
@@ -109,6 +121,37 @@ program
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
+  });
+
+program
+  .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
+  .option('-R, --no-rmi', 'Do not remove docker images')
+  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
+  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
+  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
+  .action(async (type:string, id:string , secret:string,affiliation:string ,mspID:string,  args:string[], cmd:any ) => {
+    await tasks.enroll(type, id, secret, affiliation, mspID, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath); // if -R is not passed cmd.rmi is true
+
+  });
+
+program
+  .command('fetch-identity <id> [args...]')
+  .option('-R, --no-rmi', 'Do not remove docker images')
+  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
+  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
+  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
+  .action(async (id:string, args:string[], cmd: any) => {
+    await tasks.fetchIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
+  });
+
+program  // just for testing to be deleted
+  .command('delete-identity <id> [args...]')
+  .option('-R, --no-rmi', 'Do not remove docker images')
+  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
+  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
+  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
+  .action(async (id:string, args:string[], cmd: any) => {
+    await tasks.deleteIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
   });
 
 program
