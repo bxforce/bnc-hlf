@@ -1,10 +1,11 @@
 import * as sudo from 'sudo-prompt';
-import sudoJs from 'sudo-js';
-import * as chalk from 'chalk';
+import { exec } from 'shelljs';
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { DockerEngine } from '../../agents/docker-agent';
 import { e, l } from '../../utils/logs';
+import * as chalk from 'chalk';
+import { BNC_TOOL_NAME, DOCKER_DEFAULT } from '../../utils/constants';
 
 export class DockerComposeCaGenerator extends BaseGenerator {
   contents = `
@@ -37,7 +38,7 @@ services:
   constructor(filename: string, path: string, private options?: DockerComposeYamlOptions, private readonly dockerEngine?: DockerEngine) {
     super(filename, path);
     if (!this.dockerEngine) {
-      this.dockerEngine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
+      this.dockerEngine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
     }
   }
 
@@ -54,49 +55,62 @@ services:
    * Start the CA container.
    * If already one exists stop it and restart the new one
    */
-  async startOrgCa() {
+  async startOrgCa(): Promise<Boolean> {
     try {
       const caIsRunning = await this.dockerEngine.doesContainerExist(`rca.${this.options.org.name}`);
       if (caIsRunning) {
         l('CA container is already running');
-        return;
+        return true;
       }
 
       await this.dockerEngine.composeOne(`rca.${this.options.org.name}`, { cwd: this.path, config: this.filename });
-      await this.changeOwnership(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
+
+      await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}`);
+      // await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
+      // await this.changeOwnership(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
+
+      return true;
     } catch (err) {
       e(err);
+      return false;
     }
   }
 
   private changeOwnership(folder: string) {
     const options = {
-      name: 'BNC'
+      name: BNC_TOOL_NAME
     };
 
     const command = `chown -R 1001:1001 ${folder}`;
 
-    sudoJs.setPassword('wassim');
-    sudoJs.exec(command, (err, pid, result) => {
-      if (err) {
-        e(err);
-      } else {
-        l(result);
-      }
-    });
+    return new Promise((resolved, rejected) => {
+      sudo.exec(command, options, (error, stdout, stderr) => {
+        if (error) {
+          rejected(error);
+        }
 
-    // return new Promise((resolved, rejected) => {
-    //   sudo.exec(command, options, (error, stdout, stderr) => {
-    //     if (error) {
-    //       rejected(error);
-    //     }
-    //
-    //     if (stderr) {
-    //       console.error(chalk.red(stderr));
-    //     }
-    //
-    //     resolved(true);
-    //   });
-    // });
+        if (stderr) {
+          console.error(chalk.red(stderr));
+          e(stderr);
+        }
+
+        resolved(true);
+      });
+    });
+  }
+
+  private changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<Boolean> {
+    const command = `echo 'wassim' | sudo -kS chown -R $USER:$USER ${folder}`;
+
+    return new Promise((resolved, rejected) => {
+      exec(command, {silent: true}, function(code, stdout, stderr) {
+
+        if(stderr) {
+          e(stderr);
+        }
+
+        return code === 0 ? resolved() : rejected();
+      });
+    });
   }
 }

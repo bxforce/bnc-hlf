@@ -14,10 +14,16 @@ import { DockerComposeCaGenerator } from './generators/crypto/dockerComposeCa.ya
 import { CreateOrgCertsShGenerator } from './generators/crypto/createOrgCerts.sh';
 import { SysWrapper } from './utils/sysWrapper';
 import createFolder = SysWrapper.createFolder;
+import { BNC_NETWORK, DOCKER_DEFAULT, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from './utils/constants';
 
 export class Orchestrator {
+  /* default folder to store all generated tools files and data */
   networkRootPath = './hyperledger-fabric-network';
 
+  /**
+   * Parse and validate deployment file
+   * @param configFilePath full path of the deployment configuration file
+   */
   async initNetwork(configFilePath: string) {
     // const homedir = require('os').homedir();
     // const path = join(homedir, this.networkRootPath);
@@ -33,6 +39,10 @@ export class Orchestrator {
     l('Finishing parsing the blockchain configuration file');
   }
 
+  /**
+   * Generate the Genesis template file
+   * @param configGenesisFilePath full path of the deployment configuration file
+   */
   async generateGenesis(configGenesisFilePath: string) {
     const homedir = require('os').homedir();
     const path = join(homedir, this.networkRootPath);
@@ -59,6 +69,13 @@ export class Orchestrator {
     d('Testing debugging genesis generation');
   }
 
+  /**
+   * Parse & validate the input configuration deployment file.
+   * Once done, start the CA and create all credentials for peers, orderer, admin & users
+   * Start the blockchain network (peers, orderers)
+   * @param configFilePath the full path to deployment configuration file
+   * @param skipDownload boolean to download fabric binaries (needed to create credentials)
+   */
   async validateAndParse(configFilePath: string, skipDownload = false) {
     l('[Start] Start parsing the blockchain configuration file');
     l('Validate input configuration file');
@@ -84,13 +101,14 @@ export class Orchestrator {
 
     const options: DockerComposeYamlOptions = {
       networkRootPath: path,
-      composeNetwork: 'bnc_network',
+      composeNetwork: BNC_NETWORK,
       org: organizations[0],
       envVars: {
-        FABRIC_VERSION: '2.0.0',
-        FABRIC_CA_VERSION: '1.4.4',
-        THIRDPARTY_VERSION: '0.4.18'
+        FABRIC_VERSION: HLF_VERSION.HLF_2,
+        FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+        THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
       }
+
     };
 
     if (!skipDownload) {
@@ -102,7 +120,7 @@ export class Orchestrator {
     }
 
     // create network
-    const engine = new DockerEngine({ host: '127.0.0.1', port: 2375 });
+    const engine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
     const isAlive = await engine.isAlive();
     if (!isAlive) {
       l('Docker engine is down. Please check you docker server');
@@ -117,7 +135,11 @@ export class Orchestrator {
     let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
     l('[Start] Starting ORG CA docker container...');
     await dockerComposeCA.save();
-    await dockerComposeCA.startOrgCa();
+    const isCaStarted = await dockerComposeCA.startOrgCa();
+    if(!isCaStarted) {
+      e('Docker CA not started properly - exit !!');
+      return;
+    }
     l('[End] Ran Root CA docker container...');
 
     const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
