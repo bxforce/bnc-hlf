@@ -1,5 +1,5 @@
 chains:
-  template_folder: "/home/ubuntu/hlf-files"
+  template_folder: "/mnt/c/Users/wassim.znaidi/Desktop/BNC/hyperledger-fabric-network"
   fabric: "2.0"
   tls: true
   consensus: "raft"

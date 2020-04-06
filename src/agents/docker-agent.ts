@@ -1,5 +1,5 @@
 import * as Compose from 'docker-compose';
-import { l } from '../utils/logs';
+import { e, l } from '../utils/logs';
 import {
   Container,
   ContainerCreateOptions,
@@ -66,6 +66,19 @@ export class DockerEngine {
     this.engine = new Dockerode(engineOptions);
   }
 
+  /**
+   * Check if the current configured engine is alive or not
+   */
+  async isAlive(): Promise<Boolean> {
+    try {
+      await this.engine.info();
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
   //Containers Management
   async createContainer(options: ContainerCreateOptions): Promise<Container> {
     const already = await this.doesContainerExist(options.name);
@@ -105,6 +118,8 @@ export class DockerEngine {
     }
     l(`Docker network (${options.Name}) already exists`);
   }
+
+  // TODO stop one container running
 
   getNetwork(id: string): DockerNetwork {
     let network = new DockerNetwork(this);

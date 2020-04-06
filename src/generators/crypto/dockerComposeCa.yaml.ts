@@ -1,9 +1,10 @@
+import * as sudo from 'sudo-prompt';
+import sudoJs from 'sudo-js';
+import * as chalk from 'chalk';
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { DockerEngine } from '../../agents/docker-agent';
-import { e } from '../../utils/logs';
-import * as sudo from 'sudo-prompt';
-import * as chalk from 'chalk';
+import { e, l } from '../../utils/logs';
 
 export class DockerComposeCaGenerator extends BaseGenerator {
   contents = `
@@ -49,8 +50,18 @@ services:
     }
   }
 
+  /**
+   * Start the CA container.
+   * If already one exists stop it and restart the new one
+   */
   async startOrgCa() {
     try {
+      const caIsRunning = await this.dockerEngine.doesContainerExist(`rca.${this.options.org.name}`);
+      if (caIsRunning) {
+        l('CA container is already running');
+        return;
+      }
+
       await this.dockerEngine.composeOne(`rca.${this.options.org.name}`, { cwd: this.path, config: this.filename });
       await this.changeOwnership(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
     } catch (err) {
@@ -65,18 +76,27 @@ services:
 
     const command = `chown -R 1001:1001 ${folder}`;
 
-    return new Promise((resolved, rejected) => {
-      sudo.exec(command, options, (error, stdout, stderr) => {
-        if (error) {
-          rejected(error);
-        }
-
-        if (stderr) {
-          console.error(chalk.red(stderr));
-        }
-
-        resolved(true);
-      });
+    sudoJs.setPassword('wassim');
+    sudoJs.exec(command, (err, pid, result) => {
+      if (err) {
+        e(err);
+      } else {
+        l(result);
+      }
     });
+
+    // return new Promise((resolved, rejected) => {
+    //   sudo.exec(command, options, (error, stdout, stderr) => {
+    //     if (error) {
+    //       rejected(error);
+    //     }
+    //
+    //     if (stderr) {
+    //       console.error(chalk.red(stderr));
+    //     }
+    //
+    //     resolved(true);
+    //   });
+    // });
   }
 }

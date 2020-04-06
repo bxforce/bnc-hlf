@@ -6,12 +6,15 @@ import { ConfigurationValidator } from './parser/validator/configurationValidato
 import { DockerComposeYamlOptions } from './utils/data-type';
 import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabricBinaries';
 import { Network } from './models/network';
-import { DockerEngine, Network as DockerNetwork } from './agents/docker-agent';
+import { DockerEngine } from './agents/docker-agent';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 import { DockerComposeCaGenerator } from './generators/crypto/dockerComposeCa.yaml';
 import { CreateIdentCertsShGenerator } from './generators/crypto/createIdentCerts.sh';
 import { DockerComposePeerGenerator } from './generators/crypto/dockercomposePeer.yaml';
+import { CreateOrgCertsShGenerator } from './generators/crypto/createOrgCerts.sh';
+import { SysWrapper } from './utils/sysWrapper';
+import createFolder = SysWrapper.createFolder;
 
 export class Orchestrator {
   networkRootPath = './hyperledger-fabric-network';
@@ -58,6 +61,7 @@ export class Orchestrator {
   }
 
   async validateAndParse(configFilePath: string, skipDownload = false) {
+    l('[Start] Start parsing the blockchain configuration file');
     l('Validate input configuration file');
     const validator = new ConfigurationValidator();
     const isValid = validator.isValidDeployment(configFilePath);
@@ -66,14 +70,18 @@ export class Orchestrator {
       e('Configuration file is invalid');
       return;
     }
+    l('Configuration file valid');
 
-    l('Start parsing the blockchain configuration file');
     let configParse = new DeploymentParser(configFilePath);
+    // TODO config parse should return the network instance and not an array of organizations
     const organizations = await configParse.parse();
+    l('[End] Blockchain configuration files parsed');
 
     // Generate dynamically crypto
     const homedir = require('os').homedir();
+    // const path = organizations[0].templateFolder ? organizations[0].templateFolder : join(homedir, this.networkRootPath);
     const path = join(homedir, this.networkRootPath);
+    await createFolder(path);
 
     const options: DockerComposeYamlOptions = {
       networkRootPath: path,
@@ -87,31 +95,37 @@ export class Orchestrator {
     };
 
     if (!skipDownload) {
-      l('Download fabric binaries...');
+      l('[Start] Download fabric binaries...');
       const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', path, options);
       await downloadFabricBinariesGenerator.save();
       await downloadFabricBinariesGenerator.run();
-      l('Ran Download fabric binaries');
+      l('[End] Ran Download fabric binaries');
     }
 
     // create network
-    const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
-    l('Create docker network (bnc-network)');
+    const engine = new DockerEngine({ host: '127.0.0.1', port: 2375 });
+    const isAlive = await engine.isAlive();
+    if (!isAlive) {
+      l('Docker engine is down. Please check you docker server');
+      return;
+    }
+    l('Your docker engine is running...');
+    l('[Start] Create docker network (bnc-network)');
     await engine.createNetwork({ Name: options.composeNetwork });
-    l('Docker network (bnc-network) created');
+    l('[End] Docker network (bnc-network) created');
 
     // create ca
     let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
-    l('Starting ORG CA docker container...');
+    l('[Start] Starting ORG CA docker container...');
     await dockerComposeCA.save();
     await dockerComposeCA.startOrgCa();
-    l('Ran Root CA docker container...');
+    l('[End] Ran Root CA docker container...');
 
-    // const createCaShGenerator = new CreateIdentCertsShGenerator('createCerts.sh', path, options);
-    // l('Creating certificates');
-    // await createCaShGenerator.buildCertificate();
-    // l('Ran createCerts.sh');
-    //
+    const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
+    l('[Start] Creating certificates');
+    await createCaShGenerator.buildCertificate();
+    l('[End] Certificates created');
+
     // const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
     // await dockerComposePeer.save();
   }
