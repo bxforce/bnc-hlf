@@ -57,14 +57,16 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-  // async enroll(config: string, admin: boolean) {
-  //   if (admin) {
-  //     l('[enroll admin] Not yet implemented');
-  //   } else {
-  //     l('[enroll all] Not yet implemented');
-  //   }
-  //   //l('config file: ' + config;
-  // },
+
+  async enrollCommand(config: string, admin: boolean) {
+    if (admin) {
+      l('[enroll admin] Not yet implemented');
+    } else {
+      l('[enroll all] Not yet implemented');
+    }
+    //l('config file: ' + config;
+  },
+
   async start(config: string) {
     l('[start] not yet implemented');
     //l('config file: ' + config;
@@ -169,7 +171,7 @@ program
   .option('--admin', 'enroll admin')
   .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .action(async cmd => {
-    await tasks.enroll(cmd.config, cmd.admin);
+    await tasks.enrollCommand(cmd.config, cmd.admin);
   });
 
 program
