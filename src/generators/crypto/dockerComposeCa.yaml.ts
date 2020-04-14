@@ -3,9 +3,11 @@ import { exec } from 'shelljs';
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { DockerEngine } from '../../agents/docker-agent';
-import { e, l } from '../../utils/logs';
+import { d, e, l } from '../../utils/logs';
 import * as chalk from 'chalk';
-import { BNC_TOOL_NAME, DOCKER_DEFAULT } from '../../utils/constants';
+import { BNC_TOOL_NAME, DOCKER_CA_DELAY, DOCKER_DEFAULT } from '../../utils/constants';
+import { Utils } from '../../utils/utils';
+import delay = Utils.delay;
 
 export class DockerComposeCaGenerator extends BaseGenerator {
   contents = `
@@ -65,9 +67,20 @@ services:
 
       await this.dockerEngine.composeOne(`rca.${this.options.org.name}`, { cwd: this.path, config: this.filename });
 
+      // Check the container is running
+      await delay(DOCKER_CA_DELAY);
+      // const isCaRunning = await this.dockerEngine.doesContainerExist(`rca.${this.options.org.name}`);
+      // if(!isCaRunning) {
+      //   d('CA container not yet running - waiting more');
+      //   await delay(DOCKER_CA_DELAY * 2);
+      // }
+
+      // check if CA crypto generated
       await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}`);
       // await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
       // await this.changeOwnership(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
+
+      d('Folder OwnerShip updated successfully');
 
       return true;
     } catch (err) {
@@ -100,15 +113,10 @@ services:
   }
 
   private changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<Boolean> {
-    const command = `echo 'wassim' | sudo -kS chown -R $USER:$USER ${folder}`;
+    const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
 
     return new Promise((resolved, rejected) => {
       exec(command, {silent: true}, function(code, stdout, stderr) {
-
-        if(stderr) {
-          e(stderr);
-        }
-
         return code === 0 ? resolved() : rejected();
       });
     });

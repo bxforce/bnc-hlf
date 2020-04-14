@@ -38,3 +38,5 @@ export enum DOCKER_DEFAULT {
 
 export const BNC_TOOL_NAME = 'BNC';
 export const BNC_NETWORK = 'bnc_network';
+
+export const DOCKER_CA_DELAY = 3000;

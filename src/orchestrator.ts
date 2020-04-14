@@ -108,7 +108,6 @@ export class Orchestrator {
         FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
         THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
       }
-
     };
 
     if (!skipDownload) {
