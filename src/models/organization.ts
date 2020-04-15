@@ -69,4 +69,12 @@ export class Organization {
     const peer = this.peers.find(p => p.options.number === pIndex);
     return `${peer.name}.${this.fullName}`;
   }
+
+  ordererName(orderer: Orderer ): string {
+    return `${orderer.name}.${this.domainName}`;
+  }
+
+  ordererFullName(orderer: Orderer ): string {
+    return `${orderer.name}.${this.fullName}`;
+  }
 }

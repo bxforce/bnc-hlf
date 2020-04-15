@@ -15,6 +15,7 @@ import { CreateOrgCertsShGenerator } from './generators/crypto/createOrgCerts.sh
 import { SysWrapper } from './utils/sysWrapper';
 import createFolder = SysWrapper.createFolder;
 import { BNC_NETWORK, DOCKER_DEFAULT, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from './utils/constants';
+import { CreateOrdererCertsGenerator } from './generators/crypto/createOrdererCerts.sh';
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
@@ -131,20 +132,29 @@ export class Orchestrator {
     l('[End] Docker network (bnc-network) created');
 
     // create ca
-    let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
-    l('[Start] Starting ORG CA docker container...');
-    await dockerComposeCA.save();
-    const isCaStarted = await dockerComposeCA.startOrgCa();
-    if(!isCaStarted) {
-      e('Docker CA not started properly - exit !!');
-      return;
-    }
-    l('[End] Ran Root CA docker container...');
+    // let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
+    // l('[Start] Starting ORG CA docker container...');
+    // await dockerComposeCA.save();
+    // const isCaStarted = await dockerComposeCA.startOrgCa();
+    // if(!isCaStarted) {
+    //   e('Docker CA not started properly - exit !!');
+    //   return;
+    // }
+    // l('[End] Ran Root CA docker container...');
+    //
+    // const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
+    // l('[Start] Creating certificates');
+    // await createCaShGenerator.buildCertificate();
+    // l('[End] Certificates created');
 
-    const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
-    l('[Start] Creating certificates');
-    await createCaShGenerator.buildCertificate();
-    l('[End] Certificates created');
+    // Orderers
+    let dockerComposeOrdCA = new CreateOrdererCertsGenerator('docker-compose-ca-orderer.yaml', path, options, engine);
+    await dockerComposeOrdCA.startOrdererCa();
+    const isGenerated = await dockerComposeOrdCA.buildOrdererCertificates();
+    // if(!isGenerated) {
+    //   e('Error while generating the Orderer crypto credentials');
+    //   return;
+    // }
 
     // const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
     // await dockerComposePeer.save();
