@@ -84,9 +84,11 @@ const tasks = {
     //l('config file: ' + config;
     return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
   },
-  joinChannel(config: string) {
+  joinChannel(nameChannel, nameOrg, listPeers) {
     l('[channel join] not yet implemented');
     //l('config file: ' + config;
+    let arr = listPeers.split(",").map(String)
+    console.log(nameOrg, nameChannel, listPeers, arr.length, arr[0])
   },
   updateChannel() {
     l('[channel update] not yet implemented');
@@ -230,9 +232,12 @@ channelCmd
 channelCmd
   .command('join')
   .description('join channel')
-  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  //.requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+  .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+  .option('-p, --list <items>', 'comma separated list')
   .action(async cmd => {
-    await tasks.joinChannel(cmd.config);
+    await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list);
   });
 channelCmd
   .command('update')

@@ -4,7 +4,6 @@ import log4js = require('log4js');
 import * as path from 'path';
 import * as fs from 'fs';
 import * as util from 'util';
-import networkConfigFile from './config';
 import Client = require('fabric-client');
 //import { User, UserOpts, Channel } from 'fabric-client';
 // tslint:disable-next-line:no-var-requires
