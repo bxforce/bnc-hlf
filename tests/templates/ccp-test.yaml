@@ -1,0 +1,30 @@
+name: bnc_network
+version: 2.0.0
+certificateAuthorities:
+  rca-org1:
+    url: https://localhost:7054
+    caName: rca.org1
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      pem:
+        -----BEGIN CERTIFICATE-----
+        MIICVTCCAfygAwIBAgIUeS/tl/PN1qYqNsppvsTvoz9qlCUwCgYIKoZIzj0EAwIw
+        XjELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK
+        EwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMQ8wDQYDVQQDEwZjYS50bHMw
+        HhcNMjAwNDE2MTI1NzAwWhcNMjEwNDE2MTI1NzAwWjBkMQswCQYDVQQGEwJVUzEX
+        MBUGA1UECBMOTm9ydGggQ2Fyb2xpbmExFDASBgNVBAoTC0h5cGVybGVkZ2VyMQ8w
+        DQYDVQQLEwZGYWJyaWMxFTATBgNVBAMTDDU3OThjOWM0YjE2YjBZMBMGByqGSM49
+        AgEGCCqGSM49AwEHA0IABA4h3o7f71IblaHMLfIaq9DGkpHy1gMXEwm+KAIklCAG
+        Rcr2a254WzI/29HIX1mXIF2J8SuOwebUqpZ3jUAhknOjgZEwgY4wDgYDVR0PAQH/
+        BAQDAgOoMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8E
+        AjAAMB0GA1UdDgQWBBScvZV2xVa3pBjWO67PybTPxjaHxDAfBgNVHSMEGDAWgBQ6
+        gfFI9yq8+qHuI/ErPwkyrLS7sDAPBgNVHREECDAGhwQAAAAAMAoGCCqGSM49BAMC
+        A0cAMEQCIC3fbaQXwLH68hZN12u1vAavJ1M6Ivz/ajKu7qJKN7ZdAiB4IE3KQuZ9
+        C4mDS9W0lJFRUCLgZpLTLYQSkh1+SuxFhw==
+        -----END CERTIFICATE-----
+
+
+
+
+

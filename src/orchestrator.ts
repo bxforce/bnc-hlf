@@ -16,6 +16,7 @@ import { SysWrapper } from './utils/sysWrapper';
 import createFolder = SysWrapper.createFolder;
 import { BNC_NETWORK, DOCKER_DEFAULT, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from './utils/constants';
 import { CreateOrdererCertsGenerator } from './generators/crypto/createOrdererCerts.sh';
+import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
@@ -120,37 +121,39 @@ export class Orchestrator {
     }
 
     // create network
-    const engine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
-    const isAlive = await engine.isAlive();
-    if (!isAlive) {
-      l('Docker engine is down. Please check you docker server');
-      return;
-    }
-    l('Your docker engine is running...');
-    l('[Start] Create docker network (bnc-network)');
-    await engine.createNetwork({ Name: options.composeNetwork });
-    l('[End] Docker network (bnc-network) created');
+    //   const engine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
+    //   const isAlive = await engine.isAlive();
+    //   if (!isAlive) {
+    //     l('Docker engine is down. Please check you docker server');
+    //     return;
+    //   }
+    //   l('Your docker engine is running...');
+    //   l('[Start] Create docker network (bnc-network)');
+    //   await engine.createNetwork({ Name: options.composeNetwork });
+    //   l('[End] Docker network (bnc-network) created');
 
-    // create ca
-    // let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
-    // l('[Start] Starting ORG CA docker container...');
-    // await dockerComposeCA.save();
-    // const isCaStarted = await dockerComposeCA.startOrgCa();
-    // if(!isCaStarted) {
-    //   e('Docker CA not started properly - exit !!');
-    //   return;
-    // }
-    // l('[End] Ran Root CA docker container...');
-    //
-    // const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
-    // l('[Start] Creating certificates');
-    // await createCaShGenerator.buildCertificate();
-    // l('[End] Certificates created');
+    //   // create ca
+    //   let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
+    //   l('[Start] Starting ORG CA docker container...');
+    //   await dockerComposeCA.save();
+    //   const isCaStarted = await dockerComposeCA.startOrgCa();
+    //   if(!isCaStarted) {
+    //     e('Docker CA not started properly - exit !!');
+    //     return;
+    //   }
+    //   l('[End] Ran Root CA docker container...');
+
+    l('[Start] Creating certificates');
+    //const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
+    //await createCaShGenerator.buildCertificate();
+    const orgCertsGenerator = new OrgCertsGenerator(options);
+    await orgCertsGenerator.buildCertificate();
+    l('[End] Certificates created');
 
     // Orderers
-    let dockerComposeOrdCA = new CreateOrdererCertsGenerator('docker-compose-ca-orderer.yaml', path, options, engine);
-    await dockerComposeOrdCA.startOrdererCa();
-    const isGenerated = await dockerComposeOrdCA.buildOrdererCertificates();
+    // let dockerComposeOrdCA = new CreateOrdererCertsGenerator('docker-compose-ca-orderer.yaml', path, options, engine);
+    // await dockerComposeOrdCA.startOrdererCa();
+    // const isGenerated = await dockerComposeOrdCA.buildOrdererCertificates();
     // if(!isGenerated) {
     //   e('Error while generating the Orderer crypto credentials');
     //   return;

@@ -3,7 +3,7 @@ import { FileSystemWallet, X509WalletMixin, Wallet } from 'fabric-network';
 export class Wallets {
     wallet: Wallet;
     constructor(public walletPath: string) {
-        this.wallet = new FileSystemWallet(walletPath)
+        this.wallet = new FileSystemWallet(walletPath);
     }
 
     async createWallet(id, mspid , enrollment ) {

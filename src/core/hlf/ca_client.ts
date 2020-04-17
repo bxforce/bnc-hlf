@@ -8,12 +8,15 @@ import * as fs from 'fs';
 import {l, d, e } from '../../utils/logs';
 import {Type_User} from '../../utils/constants';
 import { Gateways } from './gateway';
+import {SysWrapper} from '../../utils/sysWrapper';
+import {safeLoad} from 'js-yaml';
+import {IEnrollResponse} from 'fabric-ca-client';
 
 
 export  class Caclient {
   ccpPath:string;
   walletPath: string;
-  ccpJSON: string;
+  ccpYAML: string;
   ccp: any;
   caInfo: any;
   wallet: Wallets;
@@ -29,8 +32,8 @@ export  class Caclient {
                 walletDirectoryName: string,
                 ccpPath: string ) {
     this.ccpPath = path.resolve(__dirname, ccpPath);
-    this.ccpJSON = fs.readFileSync(this.ccpPath, 'utf8');
-    this.ccp = JSON.parse(this.ccpJSON);
+    this.ccpYAML = fs.readFileSync(this.ccpPath, 'utf8');
+    this.ccp = safeLoad(this.ccpYAML);
     this.caInfo = this.ccp.certificateAuthorities[caInfo];
     this.walletPath = path.join(process.cwd(), walletDirectoryName);
     this.wallet = new Wallets(this.walletPath);
@@ -45,7 +48,8 @@ export  class Caclient {
   public async enroll (id, secret, mspID) {
     try {
       const caTLSCACerts = this.caInfo.tlsCACerts.pem;
-      const ca = new FabricCAServices(this.caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, this.caInfo.caName);
+      const httpVerify = this.caInfo.httpOptions.verify;
+      const ca = new FabricCAServices(this.caInfo.url, { trustedRoots: caTLSCACerts, verify: httpVerify }, this.caInfo.caName);
       const identity = await this.wallet.exists(id);
       if (identity) {
         l(`An identity for the admin user ${id} already exists in the wallet`);
@@ -55,7 +59,12 @@ export  class Caclient {
       let enrollment = await this.doEnroll(id, secret, this.wallet, ca, mspID);
       l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
       l(`Enrollment Obj:`);
-      l(enrollment)
+      //l(enrollment);
+      /*l('isPrivate\n' + enrollment.key.isPrivate());
+      l('PubKey\n' + enrollment.key.getPublicKey().toBytes());
+      l('certificate\n' + enrollment.certificate);
+      l('rootCertificate\n' + enrollment.rootCertificate);
+      l('toBytes\n' + enrollment.key.toBytes());*/
       return enrollment;
 
     } catch (error) {
@@ -144,12 +153,11 @@ export  class Caclient {
    * @param ca
    * @param mspID
    */
-  private async doEnroll(id, secret, wallet, ca, mspID) {  //mspID : 'Org1MSP'
+  private async doEnroll(id, secret, wallet, ca, mspID): Promise<IEnrollResponse> {  //mspID : 'Org1MSP'
     const enrollment = await ca.enroll({ enrollmentID: id , enrollmentSecret: secret }); //ca.enroll({ enrollmentID: 'admin', enrollmentSecret: 'adminpw' });
     await wallet.createWallet(id, mspID, enrollment );
     l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
     return enrollment;
-  };
+  }
 
 }
-

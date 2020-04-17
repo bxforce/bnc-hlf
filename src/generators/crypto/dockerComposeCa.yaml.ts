@@ -69,11 +69,12 @@ services:
 
       // Check the container is running
       await delay(DOCKER_CA_DELAY);
-      // const isCaRunning = await this.dockerEngine.doesContainerExist(`rca.${this.options.org.name}`);
-      // if(!isCaRunning) {
-      //   d('CA container not yet running - waiting more');
-      //   await delay(DOCKER_CA_DELAY * 2);
-      // }
+       const isCaRunning = await this.dockerEngine.doesContainerExist(`rca.${this.options.org.name}`);
+       if(!isCaRunning) {
+         d('CA container not yet running - waiting more');
+         await delay(DOCKER_CA_DELAY * 2);
+       }
+      d('CA running');
 
       // check if CA crypto generated
       await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}`);
