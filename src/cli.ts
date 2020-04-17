@@ -1,7 +1,7 @@
 /* tslint:disable:no-unused-variable */
 import {Orchestrator} from './orchestrator';
 import { Type_User }  from './utils/constants';
-import * as channel from './tester/channel';
+import * as channel from './core/hlf/channel';
 
 export class CLI {
   static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
