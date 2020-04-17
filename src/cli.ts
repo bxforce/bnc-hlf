@@ -1,6 +1,7 @@
 /* tslint:disable:no-unused-variable */
 import {Orchestrator} from './orchestrator';
 import { Type_User }  from './utils/constants';
+import * as channel from './tester/channel';
 
 export class CLI {
   static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
@@ -50,5 +51,11 @@ export class CLI {
   static async deleteIdentity(id, caInfo, walletDirectoryName, ccpPath) {
     const enrollEngine = new Orchestrator();
     await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
+  }
+
+  static async createChannel(channeltxPath, nameChannel, nameOrg) {
+    const enrollEngine = new Orchestrator();
+    console.log('into cli')
+    channel.createChannel(nameChannel, channeltxPath, nameOrg);
   }
 }

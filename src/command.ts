@@ -62,7 +62,7 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-  enroll(config: string, admin: boolean) {
+ /* enroll(config: string, admin: boolean) {
     if (admin) {
       l('[enroll admin] Not yet implemented');
     } else {
@@ -70,6 +70,8 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
+
+  */
   start(config: string) {
     l('[start] not yet implemented');
     //l('config file: ' + config;
@@ -77,9 +79,10 @@ const tasks = {
   stop() {
     l('[stop] not yet implemented');
   },
-  createChannel(config: string) {
+  async createChannel(channeltxPath, nameChannel, nameOrg) {
     l('[channel create] not yet implemented');
     //l('config file: ' + config;
+    return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
   },
   joinChannel(config: string) {
     l('[channel join] not yet implemented');
@@ -186,7 +189,16 @@ program
   .option('--admin', 'enroll admin')
   .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .action(async cmd => {
-    await tasks.enroll(cmd.config, cmd.admin);
+   // await tasks.enroll(cmd.config, cmd.admin);
+  });
+
+program
+  .command('createch')
+  .option('--admin', 'enroll admin')
+//  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  .action(async cmd => {
+    // await tasks.enroll(cmd.config, cmd.admin);
+    console.log('ok')
   });
 
 program
@@ -207,9 +219,13 @@ const channelCmd = program.command('channel');
 channelCmd
   .command('create')
   .description('create channel if it does not exist')
-  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+//  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
+  .requiredOption('-t, --channel-tx <channel-path>', 'configurationTemplateFilePath')
+  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+  .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
   .action(async cmd => {
-    await tasks.createChannel(cmd.config);
+    //await tasks.createChannel(cmd.config);
+    await tasks.createChannel(cmd.channelTx, cmd.namech, cmd.nameorg );
   });
 channelCmd
   .command('join')
