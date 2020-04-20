@@ -8,11 +8,12 @@ import {Type_User} from '../../utils/constants';
 import { Gateways } from './gateway';
 import {safeLoad} from 'js-yaml';
 import {IEnrollResponse} from 'fabric-ca-client';
+import Client = require('fabric-client');
 
 export  class Caclient {
   ccpPath:string;
   walletPath: string;
-  ccpYAML: string;
+  ccpJSON: string;
   ccp: any;
   caInfo: any;
   wallet: Wallets;
@@ -28,8 +29,8 @@ export  class Caclient {
                 walletDirectoryName: string,
                 ccpPath: string ) {
     this.ccpPath = path.resolve(__dirname, ccpPath);
-    this.ccpYAML = fs.readFileSync(this.ccpPath, 'utf8');
-    this.ccp = safeLoad(this.ccpYAML);
+    this.ccpJSON = fs.readFileSync(this.ccpPath, 'utf8');
+    this.ccp = JSON.parse(this.ccpJSON);
     this.caInfo = this.ccp.certificateAuthorities[caInfo];
     this.walletPath = path.join(process.cwd(), walletDirectoryName);
     this.wallet = new Wallets(this.walletPath);
@@ -40,12 +41,19 @@ export  class Caclient {
    * @param id
    * @param secret
    * @param mspID
+   * @param caCertPath
    */
-  public async enrollAdmin (id, secret, mspID) {
+  public async enrollAdmin (id, secret, mspID, caCertPath: string = null) {
     try {
-      const caTLSCACerts = this.caInfo.tlsCACerts.pem;
+      let caTLSCACerts = caCertPath == null? this.caInfo.tlsCACerts.pem : fs.readFileSync(caCertPath, 'utf8');
       const httpVerify = this.caInfo.httpOptions.verify;
-      const ca = new FabricCAServices(this.caInfo.url, { trustedRoots: caTLSCACerts, verify: httpVerify }, this.caInfo.caName);
+      const ca = new FabricCAServices(this.caInfo.url,
+        {
+          trustedRoots: caTLSCACerts,
+          verify: httpVerify
+        },
+        this.caInfo.caName
+      );
       const identity = await this.wallet.exists(id);
       if (identity) {
         l(`An identity for the admin user ${id} already exists in the wallet`);
@@ -94,6 +102,7 @@ export  class Caclient {
       // Create a new gateway for connecting to our peer node.
       const gateway = new Gateways();
       let wallet = this.wallet.getWallet();
+      d(this.ccpPath);
       await gateway.connect(this.ccpPath, adminId, wallet);
       // Get the CA client object from the gateway for interacting with the CA.
       const client = gateway.getGatewayClient();
@@ -108,7 +117,7 @@ export  class Caclient {
       //  return enrollment;
       return;
     } catch (error) {
-      e(`Failed to register user "user1": ${error}`);
+      e(`Failed to register user ${id}: ${error}`);
       return error;
     }
 

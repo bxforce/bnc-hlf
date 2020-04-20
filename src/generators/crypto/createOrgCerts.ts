@@ -5,6 +5,7 @@ import {SysWrapper} from '../../utils/sysWrapper';
 import {Caclient} from '../../core/hlf/ca_client';
 
 export class OrgCertsGenerator {
+  // replaced or to be replaced commands
   contents = `
 export PATH=${this.options.networkRootPath}/fabric-binaries/${this.options.envVars.FABRIC_VERSION}/bin:${this.options.networkRootPath}:$PATH
 export FABRIC_CFG_PATH=${this.options.networkRootPath}  
@@ -15,7 +16,7 @@ echo "Enroll the CA admin"
 fabric-ca-client enroll 
   -u https://rca-${this.options.org.name}-admin:rca-${this.options.org.name}-adminpw@0.0.0.0:7054 \
   --caname rca.${this.options.org.name} \
-*--------* --tls.certfiles ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem
+  --tls.certfiles ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem
 
 
 ${this.options.org.peers
@@ -37,7 +38,7 @@ fabric-ca-client register -u https://0.0.0.0:7054 \
 
   async registerPeers(caclient: Caclient) {
     for (const peer of this.options.org.peers) {
-      const id = peer.name + this.options.org.fullName;
+      const id = peer.name + '.' + this.options.org.fullName;
       const secret = peer.name + 'pw';
       const affiliation = this.options.org.fullName; // TODO to be verified
       const role = 'peer';
@@ -52,7 +53,8 @@ fabric-ca-client register -u https://0.0.0.0:7054 \
     const id = 'rca-' + this.options.org.name + '-admin';
     const secret = 'rca-' + this.options.org.name + '-adminpw';
     const mspId = this.options.org.name + 'MSP'; // TODO to be verified
-    const enrollment = await caclient.enrollAdmin(id, secret, mspId);
+    const caCertPath = this.options.networkRootPath + '/organizations/fabric-ca/' + this.options.org.name + '/crypto/tls-cert.pem';
+    const enrollment = await caclient.enrollAdmin(id, secret, mspId, caCertPath);
     // TODO build the crypto tree based on the enrollment object
     /*l('certificate\n' + enrollment.certificate); // admin certificate
     l('rootCertificate\n' + enrollment.rootCertificate); // ca certificate

@@ -121,28 +121,28 @@ export class Orchestrator {
     }
 
     // create network
-    //   const engine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
-    //   const isAlive = await engine.isAlive();
-    //   if (!isAlive) {
-    //     l('Docker engine is down. Please check you docker server');
-    //     return;
-    //   }
-    //   l('Your docker engine is running...');
-    //   l('[Start] Create docker network (bnc-network)');
-    //   await engine.createNetwork({ Name: options.composeNetwork });
-    //   l('[End] Docker network (bnc-network) created');
-
-    //   // create ca
-    //   let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
-    //   l('[Start] Starting ORG CA docker container...');
-    //   await dockerComposeCA.save();
-    //   const isCaStarted = await dockerComposeCA.startOrgCa();
-    //   if(!isCaStarted) {
-    //     e('Docker CA not started properly - exit !!');
-    //     return;
-    //   }
-    //   l('[End] Ran Root CA docker container...');
-
+//     const engine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
+//     const isAlive = await engine.isAlive();
+//     if (!isAlive) {
+//       l('Docker engine is down. Please check you docker server');
+//       return;
+//     }
+//     l('Your docker engine is running...');
+//     l('[Start] Create docker network (bnc-network)');
+//     await engine.createNetwork({ Name: options.composeNetwork });
+//     l('[End] Docker network (bnc-network) created');
+//
+//     // create ca
+//     let dockerComposeCA = new DockerComposeCaGenerator('docker-compose-ca.yaml', path, options, engine);
+//     l('[Start] Starting ORG CA docker container...');
+//     await dockerComposeCA.save();
+//     const isCaStarted = await dockerComposeCA.startOrgCa();
+//     if(!isCaStarted) {
+//       e('Docker CA not started properly - exit !!');
+//       return;
+//     }
+//     l('[End] Ran Root CA docker container...');
+//
     l('[Start] Creating certificates');
     //const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
     //await createCaShGenerator.buildCertificate();
