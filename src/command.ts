@@ -62,7 +62,7 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-  enroll(config: string, admin: boolean) {
+  enrollConfig(config: string, admin: boolean) {
     if (admin) {
       l('[enroll admin] Not yet implemented');
     } else {
@@ -186,7 +186,7 @@ program
   .option('--admin', 'enroll admin')
   .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .action(async cmd => {
-    await tasks.enroll(cmd.config, cmd.admin);
+    await tasks.enrollConfig(cmd.config, cmd.admin);
   });
 
 program
