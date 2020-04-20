@@ -1,5 +1,5 @@
 genesis:
-  template_folder: "/home/ubuntu/hlf-files"
+  template_folder: "/home/ahmed/hlf-files"
   consensus: "raft"
   organisations:
     - organisation: "Org1"

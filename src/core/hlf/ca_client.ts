@@ -2,16 +2,12 @@
 import * as FabricCAServices from 'fabric-ca-client';
 import * as path from 'path';
 import { Wallets } from '../../models/wallet';
-import { FileSystemWallet, X509WalletMixin } from 'fabric-network';
-import { CLI } from '../../cli';
 import * as fs from 'fs';
 import {l, d, e } from '../../utils/logs';
 import {Type_User} from '../../utils/constants';
 import { Gateways } from './gateway';
-import {SysWrapper} from '../../utils/sysWrapper';
 import {safeLoad} from 'js-yaml';
 import {IEnrollResponse} from 'fabric-ca-client';
-
 
 export  class Caclient {
   ccpPath:string;
@@ -45,7 +41,7 @@ export  class Caclient {
    * @param secret
    * @param mspID
    */
-  public async enroll (id, secret, mspID) {
+  public async enrollAdmin (id, secret, mspID) {
     try {
       const caTLSCACerts = this.caInfo.tlsCACerts.pem;
       const httpVerify = this.caInfo.httpOptions.verify;
@@ -59,12 +55,7 @@ export  class Caclient {
       let enrollment = await this.doEnroll(id, secret, this.wallet, ca, mspID);
       l(`Successfully enrolled admin user ${id} and imported it into the wallet`);
       l(`Enrollment Obj:`);
-      //l(enrollment);
-      /*l('isPrivate\n' + enrollment.key.isPrivate());
-      l('PubKey\n' + enrollment.key.getPublicKey().toBytes());
-      l('certificate\n' + enrollment.certificate);
-      l('rootCertificate\n' + enrollment.rootCertificate);
-      l('toBytes\n' + enrollment.key.toBytes());*/
+      l(enrollment);
       return enrollment;
 
     } catch (error) {
@@ -79,9 +70,12 @@ export  class Caclient {
    * @param secret
    * @param affiliation exp org1.department1
    * @param mspID exp Org1MSP
+   * @param role
+   * @param adminId
+   * @param attrs
    */
 
-  public async registerUser (id, secret, affiliation, mspID) {
+  public async registerUser(id, secret, affiliation, mspID, role = 'client', adminId: String = Type_User.admin, attrs = null) {
     try {
       // Check to see if we've already enrolled the user.
       const userIdentity = await this.wallet.exists(id);
@@ -90,7 +84,7 @@ export  class Caclient {
         return;
       }
       // Check to see if we've already enrolled the admin user.
-      const adminIdentity = await this.wallet.exists(Type_User.admin);
+      const adminIdentity = await this.wallet.exists(adminId);
       if (!adminIdentity) {
         l('An identity for the admin user "admin" does not exist in the wallet');
         l('Run the enrollAdmin.ts application before retrying');
@@ -100,18 +94,19 @@ export  class Caclient {
       // Create a new gateway for connecting to our peer node.
       const gateway = new Gateways();
       let wallet = this.wallet.getWallet();
-      await gateway.connect(this.ccpPath, Type_User.admin, wallet);
+      await gateway.connect(this.ccpPath, adminId, wallet);
       // Get the CA client object from the gateway for interacting with the CA.
       const client = gateway.getGatewayClient();
       const ca = client.getCertificateAuthority();
-      const adminUser = await client.getUserContext(Type_User.admin, false);
-      // Register the user, enroll the user, and import the new identity into the wallet.
-      const secretRegister = await ca.register({ affiliation: affiliation, enrollmentID: id, role: 'client' }, adminUser);
-      let enrollment = await this.doEnroll(id, secretRegister, this.wallet, ca, mspID);
-      l('Successfully registered and enrolled admin user "user1" and imported it into the wallet');
-      l(`Enrollment Obj:`);
-      l(enrollment)
-      return enrollment;
+      //const adminUser = await client.getUserContext(adminId, false);
+      //  // Register the user, enroll the user, and import the new identity into the wallet.
+      //  const secretRegister = await ca.register({ affiliation: affiliation, enrollmentID: id, role: role, attrs: attrs}, adminUser);
+      //  let enrollment = await this.doEnroll(id, secretRegister, this.wallet, ca, mspID);
+      //  l(`Successfully registered and enrolled admin user ${id} and imported it into the wallet`);
+      //  l(`Enrollment Obj:`);
+      //  l(enrollment)
+      //  return enrollment;
+      return;
     } catch (error) {
       e(`Failed to register user "user1": ${error}`);
       return error;
@@ -134,7 +129,7 @@ export  class Caclient {
    * @param id
    */
   public async deleteIdentity(id) {
-    console.log('into delete')
+    console.log('into delete');
     try{
       const identity = await this.wallet.deleteIdentity(id);
       l(`Your identity  ${id} ':'  ${JSON.stringify(identity)}`);

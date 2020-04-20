@@ -176,7 +176,7 @@ export class Orchestrator {
 
   public async enroll(id, secret, mspID,caInfo, walletDirectoryName, ccpPath) {
     const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
-    await caclient.enroll(id, secret, mspID);
+    await caclient.enrollAdmin(id, secret, mspID);
   }
 
   public async registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {

@@ -17,6 +17,18 @@ fabric-ca-client enroll -u https://rca-${this.options.org.name}-admin:rca-${this
   --caname rca.${this.options.org.name} \
   --tls.certfiles ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem
     
+${this.options.org.peers
+    .map(peer => `
+echo "Register ${peer.name}"
+fabric-ca-client register -u https://0.0.0.0:7054 \
+  --caname rca.${this.options.org.name} \
+  --id.name ${peer.name}.${this.options.org.fullName} \
+  --id.secret ${peer.name}pw \
+  --id.type peer \
+  --id.attrs '"hf.Registrar.Roles=peer"' \
+  --tls.certfiles ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem
+`).join(' ')}
+
  `;
 /*
 echo 'NodeOUs:
@@ -33,18 +45,6 @@ echo 'NodeOUs:
   OrdererOUIdentifier:
     Certificate: cacerts/0.0.0.0-7054-rca.${this.options.org.name}.pem
     OrganizationalUnitIdentifier: orderer' > ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/msp/config.yaml
-
-${this.options.org.peers
-    .map(peer => `
-echo "Register ${peer.name}"
-fabric-ca-client register -u https://0.0.0.0:7054 \
-  --caname rca.${this.options.org.name} \
-  --id.name ${peer.name}.${this.options.org.fullName} \
-  --id.secret ${peer.name}pw \
-  --id.type peer \
-  --id.attrs '"hf.Registrar.Roles=peer"' \
-  --tls.certfiles ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem
-`).join(' ')}
 
 echo "Register user"
 fabric-ca-client register \
