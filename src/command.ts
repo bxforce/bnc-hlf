@@ -62,7 +62,7 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
- /* enroll(config: string, admin: boolean) {
+  enrollConfig(config: string, admin: boolean) {
     if (admin) {
       l('[enroll admin] Not yet implemented');
     } else {
@@ -70,8 +70,6 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-
-  */
   start(config: string) {
     l('[start] not yet implemented');
     //l('config file: ' + config;
@@ -192,16 +190,7 @@ program
   .option('--admin', 'enroll admin')
   .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .action(async cmd => {
-   // await tasks.enroll(cmd.config, cmd.admin);
-  });
-
-program
-  .command('createch')
-  .option('--admin', 'enroll admin')
-//  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
-  .action(async cmd => {
-    // await tasks.enroll(cmd.config, cmd.admin);
-    console.log('ok')
+    await tasks.enrollConfig(cmd.config, cmd.admin);
   });
 
 program
