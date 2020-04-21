@@ -84,11 +84,12 @@ const tasks = {
     //l('config file: ' + config;
     return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
   },
-  joinChannel(nameChannel, nameOrg, listPeers) {
+  async joinChannel(nameChannel, nameOrg, listPeers) {
     l('[channel join] not yet implemented');
     //l('config file: ' + config;
-    let arr = listPeers.split(",").map(String)
-    console.log(nameOrg, nameChannel, listPeers, arr.length, arr[0])
+    let arrPeers = listPeers.split(",").map(String)
+    console.log('before call ! ', arrPeers)
+    return await CLI.joinChannel(nameChannel, nameOrg, arrPeers);
   },
   updateChannel() {
     l('[channel update] not yet implemented');

@@ -54,8 +54,12 @@ export class CLI {
   }
 
   static async createChannel(channeltxPath, nameChannel, nameOrg) {
-    const enrollEngine = new Orchestrator();
-    console.log('into cli')
-    channel.createChannel(nameChannel, channeltxPath, nameOrg);
+    const channelEngine = new Orchestrator();
+    await channelEngine.createChannel(nameChannel, channeltxPath, nameOrg)
+  }
+
+  static async joinChannel(nameChannel, nameOrg, peers) {
+    const channelEngine = new Orchestrator();
+    await channelEngine.joinChannel(nameChannel, nameOrg, peers)
   }
 }
