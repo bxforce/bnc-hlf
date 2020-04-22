@@ -27,4 +27,12 @@ export enum Type_User {
   user = 'user'
 }
 
+export enum DOCKER_DEFAULT {
+  IP = '127.0.0.1',
+  PORT = 2375
+}
 
+export const BNC_TOOL_NAME = 'BNC';
+export const BNC_NETWORK = 'bnc_network';
+
+export const DOCKER_CA_DELAY = 3000;

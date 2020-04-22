@@ -6,6 +6,7 @@ import { Engine } from '../models/engine';
 import { Peer } from '../models/peer';
 import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
+import { Ca } from '../models/ca';
 
 export class DeploymentParser extends BaseParser {
   constructor(public fullFilePath: string) {
@@ -55,6 +56,10 @@ export class DeploymentParser extends BaseParser {
     organisations.forEach(org => {
       const { organisation, engineOrg, domain_name, ca, orderers, peers } = org;
 
+      // parse CA
+      const { name: caName, engine_name: caEngineName } = ca;
+      const caEntity = new Ca(caName, caEngineName);
+
       // parse & store orderers
       const ords = [];
       orderers.forEach(ord => {
@@ -87,6 +92,7 @@ export class DeploymentParser extends BaseParser {
 
       organizations.push(
         new Organization(organisation, {
+          ca: caEntity,
           orderers: ords,
           peers: parsedPeers,
           templateFolder: template_folder,

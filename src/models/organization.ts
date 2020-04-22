@@ -3,10 +3,12 @@ import { User } from './user';
 import { Peer } from './peer';
 import { Orderer } from './orderer';
 import { Engine } from './engine';
+import { Ca } from './ca';
 
 export class OrganizationOptions {
   peers: Peer[];
   orderers: Orderer[];
+  ca?: Ca;
   engines?: Engine[];
   channels?: Channel[];
   users?: User[];
@@ -19,6 +21,7 @@ export class OrganizationOptions {
 
 export class Organization {
   channels: Channel[];
+  ca: Ca;
   peers: Peer[];
   orderers: Orderer[];
   users: User[];
@@ -32,6 +35,7 @@ export class Organization {
   constructor(public name: string, options?: OrganizationOptions) {
     if (options) {
       this.channels = options.channels;
+      this.ca = options.ca;
       this.peers = options.peers;
       this.orderers = options.orderers;
       this.users = options.users;
@@ -55,5 +59,35 @@ export class Organization {
 
     const peer0 = this.peers.filter(peer => peer.options.number === 0)[0];
     return `${peer0.name}.${this.fullName}`;
+  }
+
+  get mspName(): string {
+    return `${this.name}MSP`;
+  }
+
+  get caName(): string {
+    return `${this.ca.name}.${this.name}`;
+  }
+
+  peerFullName(pIndex): string {
+    if (!!this.peers && this.peers.length === 0) {
+      throw new Error(`No peers available for organisation ${this.name}`);
+    }
+
+    const peer = this.peers.find(p => p.options.number === pIndex);
+    return `${peer.name}.${this.fullName}`;
+  }
+
+  ordererName(orderer: Orderer ): string {
+    return `${orderer.name}.${this.domainName}`;
+  }
+
+  ordererFullName(orderer: Orderer ): string {
+    return `${orderer.name}.${this.fullName}`;
+  }
+
+  engineHost(engineName: string): string {
+    const engine = this.engines.find(eng => eng.name === engineName);
+    return engine ? engine.options.url : 'undefined';
   }
 }
