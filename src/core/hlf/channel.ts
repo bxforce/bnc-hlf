@@ -11,12 +11,12 @@ import { ChannelEventHub, Peer, ProposalResponse, ChaincodeInvokeRequest,
 import {l, d, e } from '../../utils/logs';
 
 
-export async function createChannel(channelName, channelConfigPath, orgName) {
-  l('\n====== Creating Channel \'' + channelName + '\' ======\n');
+export async function createChannel(channelName, channelConfigPath, orgName) : Promise<Boolean> {
+   d('\n====== Creating Channel \'' + channelName + '\' ======\n');
   try {
     // first setup the client for this org
     let client = await helper.getClientForOrg(orgName);
-    l('Successfully got the fabric client for the organization ');
+     d('Successfully got the fabric client for the organization ');
 
     // read in the envelope for the channel config raw bytes
     let envelope = fs.readFileSync(path.join(__dirname,'../', channelConfigPath));
@@ -53,19 +53,19 @@ export async function createChannel(channelName, channelConfigPath, orgName) {
 };
 
 
-export async function joinChannel (channel_name, peers, org_name) {
-  l('\n\n============ Join Channel start ============\n');
+export async function joinChannel (channel_name, peers, org_name) : Promise<Boolean> {
+   d('\n\n============ Join Channel start ============\n');
   let error_message = null;
   let all_eventhubs = [];
   try {
-    l('Calling peers in organization "%s" to join the channel');
+     d('Calling peers in organization "%s" to join the channel');
 
     // first setup the client for this org
     let client = await helper.getClientForOrg(org_name);
-    l('Successfully got the fabric client for the organization "%s"');
+     d('Successfully got the fabric client for the organization "%s"');
     let channel = client.getChannel(channel_name);
     if(!channel) {
-      l('no channle found ')
+       d('no channle found ')
       let message = util.format('Channel %s was not defined in the connection profile', channel_name);
       l(message);
       throw new Error(message);
@@ -103,7 +103,7 @@ export async function joinChannel (channel_name, peers, org_name) {
         error_message = util.format('Failed to join peer to the channel with error :: %s', peer_result.toString());
         e(error_message);
       } else if(peer_result.response && peer_result.response.status == 200) {
-        l('Successfully joined peer to the channel %s');
+         d('Successfully joined peer to the channel %s');
       } else {
         error_message = util.format('Failed to join peer to the channel %s',channel_name);
         e(error_message);

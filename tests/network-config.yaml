@@ -80,9 +80,9 @@ organizations:
     # this way. The SDK should allow applications to set the org admin identity via APIs, and only use
     # this route as an alternative when it exists.
     adminPrivateKey:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/5890f0061619c06fb29dea8cb304edecc020fe63f41a6db109f1e227cc1cb2a8_sk
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/5890f0061619c06fb29dea8cb304edecc020fe63f41a6db109f1e227cc1cb2a8_sk
     signedCert:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem
 
   # the profile will contain public information about organizations other than the one it belongs to.
   # These are necessary information to make transaction lifecycles work, including MSP IDs and
@@ -97,9 +97,9 @@ organizations:
     certificateAuthorities:
       - ca-org2
     adminPrivateKey:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/1995b11d6573ed3be52fcd7a5fa477bc0f183e1f5f398c8281d0ce7c2c75a076_sk
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/1995b11d6573ed3be52fcd7a5fa477bc0f183e1f5f398c8281d0ce7c2c75a076_sk
     signedCert:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem
 
 #
 # List of orderers to send transaction and channel create/update requests to. For the time
@@ -117,7 +117,7 @@ orderers:
       grpc-max-send-message-length: 15
 
     tlsCACerts:
-      path: tests/artifacts/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
+      path:  tests/artifacts/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
 
 #
 # List of peers to send various requests to, including endorsement, query
@@ -131,21 +131,21 @@ peers:
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
     tlsCACerts:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
 
   peer1.org1.example.com:
     url: grpcs://localhost:7056
     grpcOptions:
       ssl-target-name-override: peer1.org1.example.com
     tlsCACerts:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
 
   peer0.org2.example.com:
     url: grpcs://localhost:8051
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
     tlsCACerts:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
 
   peer1.org2.example.com:
     url: grpcs://localhost:8056
@@ -153,7 +153,7 @@ peers:
     grpcOptions:
       ssl-target-name-override: peer1.org2.example.com
     tlsCACerts:
-      path: tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+      path:  tests/artifacts/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
 
 
 
