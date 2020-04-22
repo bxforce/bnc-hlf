@@ -78,20 +78,14 @@ const tasks = {
     l('[stop] not yet implemented');
   },
   async createChannel(channeltxPath, nameChannel, nameOrg) {
-    l('[channel create] not yet implemented');
-    //l('config file: ' + config;
     return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
   },
   async joinChannel(nameChannel, nameOrg, listPeers) {
-    l('[channel join] not yet implemented');
-    //l('config file: ' + config;
     let arrPeers = listPeers.split(",").map(String)
-    console.log('before call ! ', arrPeers)
     return await CLI.joinChannel(nameChannel, nameOrg, arrPeers);
   },
   updateChannel() {
     l('[channel update] not yet implemented');
-    //l('config file: ' + config;
   }
 };
 

@@ -3,6 +3,7 @@ import * as util from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as helper from './helper';
+import {channelTimeout} from '../../utils/constants';
 import { ChannelEventHub, Peer, ProposalResponse, ChaincodeInvokeRequest,
   ChaincodeQueryRequest, ChannelInfo } from 'fabric-client';
 
@@ -11,16 +12,16 @@ import {l, d, e } from '../../utils/logs';
 
 
 export async function createChannel(channelName, channelConfigPath, orgName) {
-  console.log('\n====== Creating Channel \'' + channelName + '\' ======\n');
+  l('\n====== Creating Channel \'' + channelName + '\' ======\n');
   try {
     // first setup the client for this org
-    var client = await helper.getClientForOrg(orgName);
-    console.log('Successfully got the fabric client for the organization "%s"', orgName);
+    let client = await helper.getClientForOrg(orgName);
+    l('Successfully got the fabric client for the organization ');
 
     // read in the envelope for the channel config raw bytes
-    var envelope = fs.readFileSync(path.join(__dirname,'../', channelConfigPath));
+    let envelope = fs.readFileSync(path.join(__dirname,'../', channelConfigPath));
     // extract the channel config bytes from the envelope to be signed
-    var channelConfig = client.extractChannelConfig(envelope);
+    let channelConfig = client.extractChannelConfig(envelope);
 
     //Acting as a client in the given organization provided with "orgName" param
     // sign the channel config bytes as "endorsement", this is required by
@@ -36,38 +37,33 @@ export async function createChannel(channelName, channelConfigPath, orgName) {
     };
 
     // send to orderer
-    var response = await client.createChannel(request)
-    console.log(' response ::%j', response);
+    let response = await client.createChannel(request)
     if (response && response.status === 'SUCCESS') {
-      console.log('Successfully created the channel.');
-      let response = {
-        success: true,
-        message: 'Channel \'' + channelName + '\' created Successfully'
-      };
-      return response;
+      d('Successfully created the channel.');
+      return true;
     } else {
-      console.log('\n!!!!!!!!! Failed to create the channel \'' + channelName +
+      d('\n!!!!!!!!! Failed to create the channel \'' + channelName +
         '\' !!!!!!!!!\n\n');
-      throw new Error('Failed to create the channel \'' + channelName + '\'');
+      return false;
     }
   } catch (err) {
-    console.log('Failed to initialize the channel: ' + err.stack ? err.stack :	err);
-    throw new Error('Failed to initialize the channel: ' + err.toString());
+    d('Failed to initialize the channel: ' + err.stack ? err.stack :	err);
+    return false;
   }
 };
 
 
 export async function joinChannel (channel_name, peers, org_name) {
   l('\n\n============ Join Channel start ============\n');
-  var error_message = null;
-  var all_eventhubs = [];
+  let error_message = null;
+  let all_eventhubs = [];
   try {
     l('Calling peers in organization "%s" to join the channel');
 
     // first setup the client for this org
-    var client = await helper.getClientForOrg(org_name);
+    let client = await helper.getClientForOrg(org_name);
     l('Successfully got the fabric client for the organization "%s"');
-    var channel = client.getChannel(channel_name);
+    let channel = client.getChannel(channel_name);
     if(!channel) {
       l('no channle found ')
       let message = util.format('Channel %s was not defined in the connection profile', channel_name);
@@ -84,8 +80,8 @@ export async function joinChannel (channel_name, peers, org_name) {
 
     // tell each peer to join and wait 10 seconds
     // for the channel to be created on each peer
-    var promises = [];
-    promises.push(new Promise(resolve => setTimeout(resolve, 10000)));
+    let promises = [];
+    promises.push(new Promise(resolve => setTimeout(resolve, channelTimeout)));
 
     let join_request = {
       targets: peers, //using the peer names which only is allowed when a connection profile is loaded
@@ -95,7 +91,7 @@ export async function joinChannel (channel_name, peers, org_name) {
     let join_promise = channel.joinChannel(join_request);
     promises.push(join_promise);
     let results = await Promise.all(promises);
-    console.log(util.format('Join Channel R E S P O N S E : %j', results));
+    d(util.format('Join Channel R E S P O N S E : %j', results));
 
     // lets check the results of sending to the peers which is
     // last in the results array
@@ -114,7 +110,7 @@ export async function joinChannel (channel_name, peers, org_name) {
       }
     }
   } catch(error) {
-    console.log('Failed to join channel due to error: ' + error.stack ? error.stack : error);
+    d('Failed to join channel due to error: ' + error.stack ? error.stack : error);
     error_message = error.toString();
   }
 
@@ -129,24 +125,12 @@ export async function joinChannel (channel_name, peers, org_name) {
       org_name, channel_name);
     l(message);
     // build a response to send back to the REST caller
-    const response = {
-      success: true,
-      message: message
-    };
-    return response;
+    return true;
   } else {
     let message = util.format('Failed to join all peers to channel. cause:%s',error_message);
     e(message);
     // build a response to send back to the REST caller
-    const response = {
-      success: false,
-      message: message
-    };
-    return response;
-
-
+    return false;
   }
-
-
 };
 

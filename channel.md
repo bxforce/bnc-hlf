@@ -1,6 +1,6 @@
 **Command to create channel:** 
 
-bnc channel create -t '../../artifacts/channel/mychannel.tx' -n mychannel -o Org1
+bnc channel create -t '../../tests/artifacts/channel/mychannel.tx' -n mychannel -o Org1
 
 **Command to join channel:**
 
@@ -16,7 +16,7 @@ https://github.com/hyperledger/fabric-samples/tree/v1.4.6/balance-transfer
 `cd fabric-samples/balance-transfer
 docker-compose -f artifacts/docker-compose.yaml up`
 
-PS: the folder bnc-tools/artifacts is the same : balance-transfer/artifacts
+PS: the folder bnc-tools/tests/artifacts is the same : balance-transfer/artifacts
 
 If you want to create a new channel with a new name you have to do :
 
@@ -28,6 +28,6 @@ If you want to create a new channel with a new name you have to do :
 
 this will create the file newnamechannel.tx
 
-copy that file and put it under bnc-tools/artifacts/channel
+copy that file and put it under bnc-tools/tests/artifacts/channel
 
 2- Update section channels in the file network-config.yaml

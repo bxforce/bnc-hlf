@@ -158,11 +158,11 @@ export class Orchestrator {
   }
 
   public async createChannel(nameChannel, channeltxPath, nameOrg) {
-    channel.createChannel(nameChannel, channeltxPath, nameOrg);
+    await channel.createChannel(nameChannel, channeltxPath, nameOrg);
   }
 
   public async joinChannel(nameChannel, nameOrg, peers) {
-    channel.joinChannel(nameChannel, peers, nameOrg);
+    await channel.joinChannel(nameChannel, peers, nameOrg);
   }
 
 
