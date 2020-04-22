@@ -42,7 +42,7 @@ export async function createChannel(channelName, channelConfigPath, orgName) : P
       d('Successfully created the channel.');
       return true;
     } else {
-      d('\n!!!!!!!!! Failed to create the channel \'' + channelName +
+      d(`\n!!!!!!!!! Failed to create the channel ${channelName} \'` +
         '\' !!!!!!!!!\n\n');
       return false;
     }
@@ -62,7 +62,7 @@ export async function joinChannel (channel_name, peers, org_name) : Promise<Bool
 
     // first setup the client for this org
     let client = await helper.getClientForOrg(org_name);
-     d('Successfully got the fabric client for the organization "%s"');
+     d(`Successfully got the fabric client for the organization ${org_name}`);
     let channel = client.getChannel(channel_name);
     if(!channel) {
        d('no channle found ')
@@ -103,7 +103,7 @@ export async function joinChannel (channel_name, peers, org_name) : Promise<Bool
         error_message = util.format('Failed to join peer to the channel with error :: %s', peer_result.toString());
         e(error_message);
       } else if(peer_result.response && peer_result.response.status == 200) {
-         d('Successfully joined peer to the channel %s');
+         d(`Successfully joined peer to the channel ${channel_name}`);
       } else {
         error_message = util.format('Failed to join peer to the channel %s',channel_name);
         e(error_message);
