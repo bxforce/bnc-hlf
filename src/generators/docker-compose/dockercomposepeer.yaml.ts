@@ -19,20 +19,35 @@ networks:
 
 services:
 ${this.options.org.peers
-    .map(peer => `
+    .map((peer, index) => `
   ${peer.name}.${this.options.org.fullName}:
     container_name: ${peer.name}.${this.options.org.fullName}
     extends:
       file:  ${this.options.networkRootPath}/docker-compose/base/docker-compose-base.yaml
-      service: peer-base.com
+      service: peer-base
     environment:
+      - CORE_PEER_ID=${peer.name}.${this.options.org.fullName}
+      - CORE_PEER_ADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[0]}
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:${peer.options.ports[0]}
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.example.com:${peer.options.ports[1]}
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:${peer.options.ports[1]}
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=${this.options.org.gossipPeer(index)}
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peer.name}.${this.options.org.fullName}:${peer.options.ports[0]}
+      - CORE_PEER_LOCALMSPID=${this.options.org.mspName}
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=COUCHDB_NAME:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=${peer.name}.${this.options.org.fullName}.couchdb:${peer.options.couchDbPort}
       # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
       # provide the credentials for ledger to connect to CouchDB.  The username and password must
       # match the username and password set for the associated CouchDB.
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=${peer.name}User
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${peer.name}Pwd
+    ports:
+      - ${peer.options.ports[0]}:${peer.options.ports[0]}
+    volumes:
+      - /var/run/:/host/var/run/
+      - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/msp:/etc/hyperledger/fabric/msp
+      - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
+      - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
     extra_hosts:
 ${this.options.org.peers
       .map(peerHost => `

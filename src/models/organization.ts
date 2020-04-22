@@ -69,6 +69,10 @@ export class Organization {
     return `${this.ca.name}.${this.name}`;
   }
 
+  /**
+   * return the peer full name
+   * @param pIndex
+   */
   peerFullName(pIndex): string {
     if (!!this.peers && this.peers.length === 0) {
       throw new Error(`No peers available for organisation ${this.name}`);
@@ -76,6 +80,24 @@ export class Organization {
 
     const peer = this.peers.find(p => p.options.number === pIndex);
     return `${peer.name}.${this.fullName}`;
+  }
+
+  /**
+   * return the address of the gossip peer (needed to generate the peer docker compose file)
+   * @param pIndex
+   */
+  gossipPeer(pIndex): string {
+    if (!!this.peers && this.peers.length === 0) {
+      throw new Error(`No peers available for organisation ${this.name}`);
+    }
+
+    if(this.peers.length === 1) {
+      return `${this.peers[0].name}.${this.fullName}:${this.peers[0].options.ports[0]}`;
+    }
+
+    const index = pIndex === 0 ? 1 : 0;
+    const peer = this.peers.find(p => p.options.number === index);
+    return `${peer.name}.${this.fullName}:${peer.options.ports[0]}`;
   }
 
   ordererName(orderer: Orderer ): string {
