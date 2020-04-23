@@ -1,6 +1,7 @@
 /* tslint:disable:no-unused-variable */
 import {Orchestrator} from './orchestrator';
 import { Type_User }  from './utils/constants';
+import * as channel from './core/hlf/channel';
 
 export class CLI {
   static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
@@ -50,5 +51,17 @@ export class CLI {
   static async deleteIdentity(id, caInfo, walletDirectoryName, ccpPath) {
     const enrollEngine = new Orchestrator();
     await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
+  }
+
+  static async createChannel(channeltxPath, nameChannel, nameOrg) {
+    const channelEngine = new Orchestrator();
+    await channelEngine.createChannel(nameChannel, channeltxPath, nameOrg)
+    return channelEngine;
+  }
+
+  static async joinChannel(nameChannel, nameOrg, peers) {
+    const channelEngine = new Orchestrator();
+    await channelEngine.joinChannel(nameChannel, nameOrg, peers)
+    return channelEngine;
   }
 }
