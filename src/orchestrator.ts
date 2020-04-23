@@ -165,5 +165,9 @@ export class Orchestrator {
     await channel.joinChannel(nameChannel, peers, nameOrg);
   }
 
+  public async updateChannel(anchortx, namech, nameorg) {
+    await channel.updateChannel(anchortx, namech, nameorg);
+  }
+
 
 }

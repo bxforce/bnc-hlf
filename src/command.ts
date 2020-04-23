@@ -84,8 +84,8 @@ const tasks = {
     let arrPeers = listPeers.split(",").map(String)
     return await CLI.joinChannel(nameChannel, nameOrg, arrPeers);
   },
-  updateChannel() {
-    l('[channel update] not yet implemented');
+  async updateChannel(anchortx, namech, nameorg) {
+    return await CLI.updateChannel(anchortx, namech, nameorg);
   }
 };
 
@@ -205,18 +205,15 @@ const channelCmd = program.command('channel');
 channelCmd
   .command('create')
   .description('create channel if it does not exist')
-//  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .requiredOption('-t, --channel-tx <channel-path>', 'configurationTemplateFilePath')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
   .action(async cmd => {
-    //await tasks.createChannel(cmd.config);
     await tasks.createChannel(cmd.channelTx, cmd.namech, cmd.nameorg );
   });
 channelCmd
   .command('join')
   .description('join channel')
-  //.requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
   .option('-p, --list <items>', 'comma separated list')
@@ -226,9 +223,11 @@ channelCmd
 channelCmd
   .command('update')
   .description('update channel')
-  .requiredOption('--anchortx')
-  .action(async () => {
-    await tasks.updateChannel();
+  .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
+  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+  .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+  .action(async (cmd) => {
+    await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.nameorg);
   });
 
 program.version(pkg.version);
