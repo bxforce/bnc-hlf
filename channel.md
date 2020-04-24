@@ -31,3 +31,17 @@ this will create the file newnamechannel.tx
 copy that file and put it under bnc-tools/tests/artifacts/channel
 
 2- Update section channels in the file network-config.yaml
+
+##############################
+
+update channel command: 
+
+`bnc channel update -t '../../tests/artifacts/channel/Org1MSPanchors.tx' -n mychannel -o Org1`
+
+you need to create first the file :
+
+`cd fabric-samples/balance-transfer/artifacts/channel`
+
+`../../../bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./Org1MSPanchors.tx -channelID mychannel -asOrg Org1MSP`
+
+copy the file Org1MSPanchors.tx and put it under bnc-tools/tests/artifacts/channel
