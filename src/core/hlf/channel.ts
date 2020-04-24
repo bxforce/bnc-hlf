@@ -137,12 +137,12 @@ export async function joinChannel (channel_name, peers, org_name) : Promise<Bool
 
 export async function updateChannel(configUpdatePath, channelName, org_name) : Promise<Boolean> {
   d('\n====== Updating Anchor Peers on ======\n');
-  var error_message = null;
+  let error_message = null;
   try {
     // first setup the client for this org
-    var client = await helper.getClientForOrg(org_name);
+    let client = await helper.getClientForOrg(org_name);
     d('Successfully got the fabric client for the organization ');
-    var channel = client.getChannel(channelName);
+    let channel = client.getChannel(channelName);
     if(!channel) {
       let message = util.format('Channel %s was not defined in the connection profile', channelName);
       l(message);
@@ -150,9 +150,9 @@ export async function updateChannel(configUpdatePath, channelName, org_name) : P
     }
 
     // read in the envelope for the channel config raw bytes
-    var envelope = fs.readFileSync(path.join(__dirname,'../', configUpdatePath));
+    let envelope = fs.readFileSync(path.join(__dirname,'../', configUpdatePath));
     // extract the channel config bytes from the envelope to be signed
-    var channelConfig = client.extractChannelConfig(envelope);
+    let channelConfig = client.extractChannelConfig(envelope);
 
     //Acting as a client in the given organization provided with "orgName" param
     // sign the channel config bytes as "endorsement", this is required by
@@ -167,7 +167,7 @@ export async function updateChannel(configUpdatePath, channelName, org_name) : P
       txId: client.newTransactionID(true) // get an admin based transactionID
     };
 
-    var promises = [];
+    let promises = [];
     let event_hubs = channel.getChannelEventHubsForOrg();
     d(`found ${event_hubs.length} eventhubs for this organization ${org_name}`);
     event_hubs.forEach((eh) => {
@@ -198,7 +198,7 @@ export async function updateChannel(configUpdatePath, channelName, org_name) : P
       promises.push(anchorUpdateEventPromise);
     });
 
-    var sendPromise = client.updateChannel(request);
+    let sendPromise = client.updateChannel(request);
     // put the send to the orderer last so that the events get registered and
     // are ready for the orderering and committing
     promises.push(sendPromise);
