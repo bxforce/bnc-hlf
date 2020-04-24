@@ -29,4 +29,6 @@ export enum Type_User {
 
 export const channelTimeout = 10000;
 
+export const updateTimeout = 60000;
+
 

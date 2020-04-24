@@ -3,7 +3,8 @@ import * as util from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as helper from './helper';
-import {channelTimeout} from '../../utils/constants';
+import { channelTimeout } from '../../utils/constants';
+import { updateTimeout } from '../../utils/constants';
 import { ChannelEventHub, Peer, ProposalResponse, ChaincodeInvokeRequest,
   ChaincodeQueryRequest, ChannelInfo } from 'fabric-client';
 
@@ -176,7 +177,7 @@ export async function updateChannel(configUpdatePath, channelName, org_name) : P
           let message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
           e(message);
           eh.disconnect();
-        }, 60000);
+        }, updateTimeout);
         eh.registerBlockEvent((block) => {
             d(`The config update has been committed on peer ${eh.getPeerAddr()}`);
             clearTimeout(event_timeout);
@@ -231,7 +232,7 @@ export async function updateChannel(configUpdatePath, channelName, org_name) : P
       success: true,
       message: message
     };
-    d("SUCCESSFULLY updaated peeeeers")
+    d("SUCCESSFULLY updaated peers")
     return true;
   } else {
     let message = util.format('Failed to update anchor peers. cause:%s',error_message);
@@ -240,7 +241,7 @@ export async function updateChannel(configUpdatePath, channelName, org_name) : P
       success: false,
       message: message
     };
-    d("FAIIIIIIIIIIIIIIIILED")
+    d("FAILED to update peers")
     return false;
   }
 
