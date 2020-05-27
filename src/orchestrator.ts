@@ -174,13 +174,11 @@ export class Orchestrator {
     // l('Executing createCA.sh');
     // await createCaShGenerator.run();
     // l('Ran createCA.sh');
-  }
-
     // const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
     // await dockerComposePeer.save();
   }
 
-  public async cleanDocker(rmi: boolean) {
+  async cleanDocker(rmi: boolean) {
     const options = new NetworkCleanShOptions();
     options.removeImages = rmi;
 
@@ -191,25 +189,25 @@ export class Orchestrator {
     l('Environment cleaned!');
   }
 
-  public async enroll(id, secret, mspID,caInfo, walletDirectoryName, ccpPath) {
+  async enroll(id, secret, mspID,caInfo, walletDirectoryName, ccpPath) {
     // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
     // await caclient.enrollAdmin(id, secret, mspID);
     d('Need to be activated');
   }
 
-  public async registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
+  async registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
     // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
     // await caclient.registerUser (id, secret, affiliation, mspID);
     d('Need to be activated');
   }
 
-  public async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+  async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
     // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
     // await caclient.fetchIdentity(id);
     d('Need to be activated');
   }
 
-  public async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+  async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
     // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
     // await caclient.deleteIdentity(id);
     d('Need to be activated');
