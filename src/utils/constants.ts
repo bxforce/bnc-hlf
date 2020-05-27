@@ -32,7 +32,8 @@ export enum DOCKER_DEFAULT {
   PORT = 2375
 }
 
+export const channelTimeout = 10000;
+export const updateTimeout = 60000;
 export const BNC_TOOL_NAME = 'BNC';
 export const BNC_NETWORK = 'bnc_network';
-
 export const DOCKER_CA_DELAY = 3000;
