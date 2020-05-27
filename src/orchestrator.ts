@@ -96,19 +96,19 @@ export class Orchestrator {
 
     // create ca
 
-    let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-ca.yaml', path, options);
-    l('Saving compose Root CA');
-    await dockerComposeRootCA.save();
-    l('Starting Root CA docker container...');
-    await dockerComposeRootCA.startRootCa();
-    l('Ran Root CA docker container...');
-
-    const createCaShGenerator = new CreateCAShGenerator('createCa.sh', path, options);
-    l('Saving createCA.sh');
-    await createCaShGenerator.save();
-    l('Executing createCA.sh');
-    await createCaShGenerator.run();
-    l('Ran createCA.sh');
+    // let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-ca.yaml', path, options);
+    // l('Saving compose Root CA');
+    // await dockerComposeRootCA.save();
+    // l('Starting Root CA docker container...');
+    // await dockerComposeRootCA.startRootCa();
+    // l('Ran Root CA docker container...');
+    //
+    // const createCaShGenerator = new CreateCAShGenerator('createCa.sh', path, options);
+    // l('Saving createCA.sh');
+    // await createCaShGenerator.save();
+    // l('Executing createCA.sh');
+    // await createCaShGenerator.run();
+    // l('Ran createCA.sh');
   }
 
   public async startRootCa() {
