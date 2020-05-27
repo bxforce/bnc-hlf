@@ -1,11 +1,11 @@
-import {ensureDir} from 'fs-extra';
-import {DockerComposeYamlOptions} from '../../utils/data-type';
+import { ensureDir } from 'fs-extra';
+import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { d, e } from '../../utils/logs';
-import {SysWrapper} from '../../utils/sysWrapper';
+import { SysWrapper } from '../../utils/sysWrapper';
 // import {CaClient} from '../../core/hlf/ca_client';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
-import { Membership } from '../../core/hlf/membership';
+import { Membership, UserParams } from '../../core/hlf/membership';
 
 export interface AdminCAAccount {
   name: string;
@@ -46,7 +46,7 @@ certificateAuthorities:
   constructor(filename: string,
               path: string,
               private options?: DockerComposeYamlOptions,
-              private admin: AdminCAAccount = { name: 'admin', password: 'adminpw'}) {
+              private admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }) {
     super(filename, path);
   }
 
@@ -84,7 +84,7 @@ certificateAuthorities:
         networkProfile: this.filePath,
         admin: {
           name: this.admin.name,
-          secret: this.admin.password,
+          secret: this.admin.password
         }
       };
       const membership = new Membership(config);
@@ -93,7 +93,31 @@ certificateAuthorities:
       const isEnrolled = await membership.enrollCaAdmin();
       d(`The admin account is enrolled ${isEnrolled}`);
 
-      // await this.registerPeers(caClient);
+      // Enroll the peers
+      // const orgMspId = ;
+      // for (const peer of this.options.org.peers) {
+      //   const params: UserParams = {
+      //     enrollmentID: x,
+      //     enrollmentSecret:,
+      //     role: ,
+      //     affiliation: ,
+      //     attrs: ,
+      //   };
+      //   await membership.addUser()
+      //
+      //
+      //
+      //
+      //   const id = peer.name + '.' + this.options.org.fullName;
+      //   const secret = peer.name + 'pw';
+      //   const affiliation = this.options.org.fullName; // TODO to be verified
+      //   const role = 'peer';
+      //   const mspId = this.options.org.name + 'MSP'; // TODO to be verified
+      //   const attrs = [{ hf: { Registrar: { Roles: 'peer' } } }];
+      //   const adminId = 'rca-' + this.options.org.name + '-admin';
+      //   await caClient.registerUser(id, secret, affiliation, mspId, role, adminId, attrs);
+      // }
+
       return true;
     } catch (err) {
       e(err);
