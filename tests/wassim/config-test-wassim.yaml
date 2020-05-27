@@ -29,7 +29,7 @@ engines:
         settings: [ "default" ]
       - host: "host2"
         type: "docker"
-        url: "192.168.208.204"
+        url: "localhost"
         port: 2375
         settings: [ "default" ]
   - engine: "engineOrg2"

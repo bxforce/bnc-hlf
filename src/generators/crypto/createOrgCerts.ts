@@ -31,8 +31,8 @@ client:
       path: ${this.options.networkRootPath}/wallets/organizations/${this.options.org.fullName}
 
 certificateAuthorities:
-  rca.${this.options.org.name}:
-    url: http://localhost:7054
+  ${this.options.org.caName}:
+    url: http://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.ports}
     httpOptions:
       verify: false
     tlsCACerts:
@@ -40,7 +40,7 @@ certificateAuthorities:
     registrar:
       - enrollId: ${this.admin.name}
         enrollSecret: ${this.admin.password}
-    caName: rca.${this.options.org.name}    
+    caName: ${this.options.org.caName}    
  `;
 
   constructor(filename: string,
@@ -88,7 +88,7 @@ certificateAuthorities:
         }
       };
       const membership = new Membership(config);
-      await membership.initCaClient(`rca.${this.options.org.name}`);
+      await membership.initCaClient(this.options.org.caName);
 
       const isEnrolled = await membership.enrollCaAdmin();
       d(`The admin account is enrolled ${isEnrolled}`);

@@ -58,7 +58,11 @@ export class DeploymentParser extends BaseParser {
 
       // parse CA
       const { name: caName, engine_name: caEngineName } = ca;
-      const caEntity = new Ca(caName, caEngineName);
+      const caEntity = new Ca(caName, {
+        engineName: caEngineName,
+        ports: '7054',
+        number: 0,
+      });
 
       // parse & store orderers
       const ords = [];

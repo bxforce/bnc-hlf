@@ -1,7 +1,7 @@
 export class CaOptions {
   engineName?: string;
   number?: number;
-  ports?: string;
+  ports?: '7054';
   host?: string;
   user?: 'admin';
   password?: 'adminpw';

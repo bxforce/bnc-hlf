@@ -4,13 +4,13 @@ networks:
   byfn:
 
 services:
-  rca.org1:
+  ca1.org1:
     image: hyperledger/fabric-ca
-    container_name: rca.org1
+    container_name: ca1.org1
     environment:
 #      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_HOME=/tmp/hyperledger/fabric-ca/crypto
-      - FABRIC_CA_SERVER_CA_NAME=rca.org1
+      - FABRIC_CA_SERVER_CA_NAME=ca1.org1
       - FABRIC_CA_SERVER_TLS_ENABLED=false
 #      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.example.com-cert.pem
 #      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
