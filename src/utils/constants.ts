@@ -15,7 +15,7 @@ export enum ConsensusType {
 }
 
 export enum HLF_VERSION {
-  HLF_2 = '2.0.0'
+  HLF_2 = '2.0'
 }
 
 export enum EXTERNAL_HLF_VERSION {
@@ -31,10 +31,20 @@ export enum Type_User {
   user = 'user'
 }
 
+export enum HLF_CLIENT_ACCOUNT_ROLE {
+  peer = 'peers',
+  client = 'client',
+}
+
 export enum DOCKER_DEFAULT {
   IP = '127.0.0.1',
   PORT = 2375
 }
+
+export const channelTimeout = 10000;
+
+export const updateTimeout = 60000;
+
 
 export const BNC_TOOL_NAME = 'BNC';
 export const BNC_NETWORK = 'bnc_network';

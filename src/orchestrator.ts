@@ -6,16 +6,17 @@ import { ConfigurationValidator } from './parser/validator/configurationValidato
 import { DockerComposeYamlOptions } from './utils/data-type';
 import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabricBinaries';
 import { Network } from './models/network';
-import { DockerEngine } from './agents/docker-agent';
+// import { DockerEngine } from './agents/docker-agent';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
-import {Caclient} from './core/hlf/ca_client';
-import { DockerComposeCaGenerator } from './generators/crypto/dockerComposeCa.yaml';
-import { CreateOrgCertsShGenerator } from './generators/crypto/createOrgCerts.sh';
+// import {CaClient} from './core/hlf/ca_client';
+// import * as channel from './core/hlf/channel';
+// import { DockerComposeCaGenerator } from './generators/crypto/dockerComposeCa.yaml';
+// import { CreateOrgCertsShGenerator } from './generators/crypto/createOrgCerts.sh';
 import { SysWrapper } from './utils/sysWrapper';
 import createFolder = SysWrapper.createFolder;
 import { BNC_NETWORK, DOCKER_DEFAULT, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from './utils/constants';
-import { CreateOrdererCertsGenerator } from './generators/crypto/createOrdererCerts.sh';
+// import { CreateOrdererCertsGenerator } from './generators/crypto/createOrdererCerts.sh';
 import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
 
 export class Orchestrator {
@@ -146,7 +147,7 @@ export class Orchestrator {
     l('[Start] Creating certificates');
     //const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
     //await createCaShGenerator.buildCertificate();
-    const orgCertsGenerator = new OrgCertsGenerator(options);
+    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, options);
     await orgCertsGenerator.buildCertificate();
     l('[End] Certificates created');
 
@@ -175,23 +176,39 @@ export class Orchestrator {
   }
 
   public async enroll(id, secret, mspID,caInfo, walletDirectoryName, ccpPath) {
-    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
-    await caclient.enrollAdmin(id, secret, mspID);
+    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
+    // await caclient.enrollAdmin(id, secret, mspID);
+    d('Need to be activated');
   }
 
   public async registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
-
-    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
-    await caclient.registerUser (id, secret, affiliation, mspID);
+    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
+    // await caclient.registerUser (id, secret, affiliation, mspID);
+    d('Need to be activated');
   }
 
   public async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
-    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
-    await caclient.fetchIdentity(id);
+    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
+    // await caclient.fetchIdentity(id);
+    d('Need to be activated');
   }
 
   public async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
-    const caclient = new Caclient(caInfo, walletDirectoryName, ccpPath);
-    await caclient.deleteIdentity(id);
+    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
+    // await caclient.deleteIdentity(id);
+    d('Need to be activated');
   }
+
+  // public async createChannel(nameChannel, channeltxPath, nameOrg) {
+  //   await channel.createChannel(nameChannel, channeltxPath, nameOrg);
+  // }
+  //
+  // public async joinChannel(nameChannel, nameOrg, peers) {
+  //   await channel.joinChannel(nameChannel, peers, nameOrg);
+  // }
+  //
+  // public async updateChannel(anchortx, namech, nameorg) {
+  //   await channel.updateChannel(anchortx, namech, nameorg);
+  // }
+
 }

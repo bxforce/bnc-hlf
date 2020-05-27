@@ -1,75 +1,99 @@
 import {ensureDir} from 'fs-extra';
 import {DockerComposeYamlOptions} from '../../utils/data-type';
-import {e} from '../../utils/logs';
+import { d, e } from '../../utils/logs';
 import {SysWrapper} from '../../utils/sysWrapper';
-import {Caclient} from '../../core/hlf/ca_client';
+// import {CaClient} from '../../core/hlf/ca_client';
+import { BaseGenerator } from '../base';
+import { ClientConfig } from '../../core/hlf/helpers';
+import { Membership } from '../../core/hlf/membership';
 
-export class OrgCertsGenerator {
-  // replaced or to be replaced commands
+export interface AdminCAAccount {
+  name: string;
+  password: string;
+}
+
+// TODO update the ca name from the config input file
+/**
+ *
+ */
+export class OrgCertsGenerator extends BaseGenerator {
   contents = `
-export PATH=${this.options.networkRootPath}/fabric-binaries/${this.options.envVars.FABRIC_VERSION}/bin:${this.options.networkRootPath}:$PATH
-export FABRIC_CFG_PATH=${this.options.networkRootPath}  
-  
-echo "Enroll the CA admin"
-*--------* mkdir -p ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/
-*--------* export FABRIC_CA_CLIENT_HOME=${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/
-fabric-ca-client enroll 
-  -u https://rca-${this.options.org.name}-admin:rca-${this.options.org.name}-adminpw@0.0.0.0:7054 \
-  --caname rca.${this.options.org.name} \
-  --tls.certfiles ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem
+name: "bnc"
+x-type: "hlfv1"
+description: "Blockchain network composer"
+version: "1.0"
 
+client:
+  # organization: Org1
+  credentialStore:
+    path: ${this.options.networkRootPath}/wallets/organizations/${this.options.org.fullName}
+    cryptoStore:
+      path: ${this.options.networkRootPath}/wallets/organizations/${this.options.org.fullName}
 
-${this.options.org.peers
-    .map(peer => `
-echo "Register ${peer.name}"
-fabric-ca-client register -u https://0.0.0.0:7054 \
-  --caname rca.${this.options.org.name} \
-  --id.name ${peer.name}.${this.options.org.fullName} \
-  --id.secret ${peer.name}pw \
-  --id.type peer \
-  --id.attrs '"hf.Registrar.Roles=peer"' \
-  --tls.certfiles ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem
-`).join(' ')}
-
-    
+certificateAuthorities:
+  rca.${this.options.org.name}:
+    url: http://localhost:7054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      path: ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/ca
+    registrar:
+      - enrollId: ${this.admin.name}
+        enrollSecret: ${this.admin.password}
+    caName: rca.${this.options.org.name}    
  `;
 
-  constructor(private options?: DockerComposeYamlOptions) { }
-
-  async registerPeers(caclient: Caclient) {
-    for (const peer of this.options.org.peers) {
-      const id = peer.name + '.' + this.options.org.fullName;
-      const secret = peer.name + 'pw';
-      const affiliation = this.options.org.fullName; // TODO to be verified
-      const role = 'peer';
-      const mspId = this.options.org.name + 'MSP'; // TODO to be verified
-      const attrs = [{hf: {Registrar: {Roles: 'peer'}}}];
-      const adminId = 'rca-' + this.options.org.name + '-admin';
-      await caclient.registerUser(id, secret, affiliation, mspId, role, adminId, attrs);
-    }
+  constructor(filename: string,
+              path: string,
+              private options?: DockerComposeYamlOptions,
+              private admin: AdminCAAccount = { name: 'admin', password: 'adminpw'}) {
+    super(filename, path);
   }
 
-  async enrollCaAdmin(caclient: Caclient){
-    const id = 'rca-' + this.options.org.name + '-admin';
-    const secret = 'rca-' + this.options.org.name + '-adminpw';
-    const mspId = this.options.org.name + 'MSP'; // TODO to be verified
-    const caCertPath = this.options.networkRootPath + '/organizations/fabric-ca/' + this.options.org.name + '/crypto/tls-cert.pem';
-    const enrollment = await caclient.enrollAdmin(id, secret, mspId, caCertPath);
-    // TODO build the crypto tree based on the enrollment object
-    /*l('certificate\n' + enrollment.certificate); // admin certificate
-    l('rootCertificate\n' + enrollment.rootCertificate); // ca certificate
-    l('toBytes\n' + enrollment.key.toBytes()); // admin private key */
-  }
+  // async registerPeers(caClient: CaClient) {
+  //   for (const peer of this.options.org.peers) {
+  //     const id = peer.name + '.' + this.options.org.fullName;
+  //     const secret = peer.name + 'pw';
+  //     const affiliation = this.options.org.fullName; // TODO to be verified
+  //     const role = 'peer';
+  //     const mspId = this.options.org.name + 'MSP'; // TODO to be verified
+  //     const attrs = [{hf: {Registrar: {Roles: 'peer'}}}];
+  //     const adminId = 'rca-' + this.options.org.name + '-admin';
+  //     await caClient.registerUser(id, secret, affiliation, mspId, role, adminId, attrs);
+  //   }
+  // }
+  //
+  // async enrollCaAdmin(caClient: CaClient, adminId: string, adminSecret: string){
+  //   const id = adminId ? adminId : 'rca-' + this.options.org.name + '-admin';
+  //   const secret = adminSecret ? adminSecret : 'rca-' + this.options.org.name + '-adminpw';
+  //   const mspId = this.options.org.name + 'MSP'; // TODO to be verified
+  //   const caCertPath = this.options.networkRootPath + '/organizations/fabric-ca/' + this.options.org.name + '/crypto/tls-cert.pem';
+  //   const enrollment = await caClient.enrollAdmin(id, secret, mspId, caCertPath);
+  //   // TODO build the crypto tree based on the enrollment object
+  //   /*l('certificate\n' + enrollment.certificate); // admin certificate
+  //   l('rootCertificate\n' + enrollment.rootCertificate); // ca certificate
+  //   l('toBytes\n' + enrollment.key.toBytes()); // admin private key */
+  // }
 
   async buildCertificate(): Promise<Boolean> {
     try {
+      await this.save();
       await this.createDirectories();
-      const ccpPath = '/home/ahmed/projects/bnc-tools/tests/templates/ccp-test.yaml';
-      const walletDirectoryName = 'wallets';
-      const caclient = new Caclient('rca-'+this.options.org.name, walletDirectoryName, ccpPath);
-      await this.enrollCaAdmin(caclient);
-      await this.registerPeers(caclient);
 
+      const config: ClientConfig = {
+        networkProfile: this.filePath,
+        admin: {
+          name: this.admin.name,
+          secret: this.admin.password,
+        }
+      };
+      const membership = new Membership(config);
+      await membership.initCaClient(`rca.${this.options.org.name}`);
+
+      const isEnrolled = await membership.enrollCaAdmin();
+      d(`The admin account is enrolled ${isEnrolled}`);
+
+      // await this.registerPeers(caClient);
       return true;
     } catch (err) {
       e(err);
@@ -79,7 +103,6 @@ fabric-ca-client register -u https://0.0.0.0:7054 \
 
   async createDirectories(): Promise<Boolean> {
     try {
-      // await createFolder(`${this.options.networkRootPath}/organizations`);
       await ensureDir(`${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers`);
 
       for (let peer of this.options.org.peers) {

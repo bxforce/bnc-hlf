@@ -45,4 +45,22 @@ export class CLI {
     const enrollEngine = new Orchestrator();
     await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
+
+  // static async createChannel(channeltxPath, nameChannel, nameOrg) {
+  //   const channelEngine = new Orchestrator();
+  //   await channelEngine.createChannel(nameChannel, channeltxPath, nameOrg);
+  //   return channelEngine;
+  // }
+  //
+  // static async joinChannel(nameChannel, nameOrg, peers) {
+  //   const channelEngine = new Orchestrator();
+  //   await channelEngine.joinChannel(nameChannel, nameOrg, peers);
+  //   return channelEngine;
+  // }
+  //
+  // static async updateChannel(anchortx, namech, nameorg) {
+  //   const channelEngine = new Orchestrator();
+  //   await channelEngine.updateChannel(anchortx, namech, nameorg);
+  //   return channelEngine;
+  // }
 }

@@ -57,8 +57,7 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-
-  async enrollCommand(config: string, admin: boolean) {
+  enrollConfig(config: string, admin: boolean) {
     if (admin) {
       l('[enroll admin] Not yet implemented');
     } else {
@@ -66,26 +65,23 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-
-  async start(config: string) {
+  start(config: string) {
     l('[start] not yet implemented');
     //l('config file: ' + config;
   },
   async stop() {
     l('[stop] not yet implemented');
   },
-  async createChannel(config: string) {
-    l('[channel create] not yet implemented');
-    //l('config file: ' + config;
-  },
-  async joinChannel(config: string) {
-    l('[channel join] not yet implemented');
-    //l('config file: ' + config;
-  },
-  async updateChannel() {
-    l('[channel update] not yet implemented');
-    //l('config file: ' + config;
-  }
+  // async createChannel(channeltxPath, nameChannel, nameOrg) {
+  //   return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
+  // },
+  // async joinChannel(nameChannel, nameOrg, listPeers) {
+  //   let arrPeers = listPeers.split(",").map(String)
+  //   return await CLI.joinChannel(nameChannel, nameOrg, arrPeers);
+  // },
+  // async updateChannel(anchortx, namech, nameorg) {
+  //   return await CLI.updateChannel(anchortx, namech, nameorg);
+  // }
 };
 
 program
@@ -171,7 +167,7 @@ program
   .option('--admin', 'enroll admin')
   .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .action(async cmd => {
-    await tasks.enrollCommand(cmd.config, cmd.admin);
+    await tasks.enrollConfig(cmd.config, cmd.admin);
   });
 
 program
@@ -189,27 +185,33 @@ program
   });
 
 const channelCmd = program.command('channel');
-channelCmd
-  .command('create')
-  .description('create channel if it does not exist')
-  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
-  .action(async cmd => {
-    await tasks.createChannel(cmd.config);
-  });
-channelCmd
-  .command('join')
-  .description('join channel')
-  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
-  .action(async cmd => {
-    await tasks.joinChannel(cmd.config);
-  });
-channelCmd
-  .command('update')
-  .description('update channel')
-  .requiredOption('--anchortx')
-  .action(async () => {
-    await tasks.updateChannel();
-  });
+// channelCmd
+//   .command('create')
+//   .description('create channel if it does not exist')
+//   .requiredOption('-t, --channel-tx <channel-path>', 'configurationTemplateFilePath')
+//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+//   .action(async cmd => {
+//     await tasks.createChannel(cmd.channelTx, cmd.namech, cmd.nameorg );
+//   });
+// channelCmd
+//   .command('join')
+//   .description('join channel')
+//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+//   .option('-p, --list <items>', 'comma separated list')
+//   .action(async cmd => {
+//     await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list);
+//   });
+// channelCmd
+//   .command('update')
+//   .description('update channel')
+//   .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
+//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+//   .action(async (cmd) => {
+//     await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.nameorg);
+//   });
 
 program.version(pkg.version);
 

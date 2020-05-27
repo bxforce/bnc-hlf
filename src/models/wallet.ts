@@ -1,30 +1,64 @@
-import { FileSystemWallet, X509WalletMixin, Wallet } from 'fabric-network';
+import { Wallet, Wallets, Identity, X509Identity } from 'fabric-network';
 
-export class Wallets {
+export class WalletStore {
     wallet: Wallet;
-    constructor(public walletPath: string) {
-        this.wallet = new FileSystemWallet(walletPath);
+
+    constructor(public walletPath: string) { }
+
+    async init() {
+        this.wallet = await Wallets.newFileSystemWallet(this.walletPath);
     }
 
-    async createWallet(id, mspid , enrollment ) {
-        const x509Identity = X509WalletMixin.createIdentity(mspid, enrollment.certificate, enrollment.key.toBytes());
-        await this.wallet.import(id, x509Identity);
-        return this.wallet;
+    /**
+     * Add the identity into the Wallet
+     * @param id
+     * @param mspId
+     * @param key
+     * @param certificate
+     */
+    async addIdentity(id, mspId, key, certificate): Promise<void> {
+        const x509Identity: X509Identity = {
+            credentials: {
+                certificate,
+                privateKey: key.toBytes()
+            },
+            mspId,
+            type: 'X.509'
+        };
+
+        await this.wallet.put(id, x509Identity);
     }
 
-    async exists (id) {  //rename this to exists
-        return await this.wallet.exists(id);
+    /**
+     * return a boolean if the username/id exists on the wallet
+     * @param id
+     */
+    async exists (id): Promise<boolean> {
+        const identity =  await this.wallet.get(id);
+        return !!identity;
     }
 
-    async getIdentity (id) {
-        return await this.wallet.export(id);   // or export ?
+    /**
+     * return the identity from the wallet
+     * @param id
+     */
+    async getIdentity (id: string): Promise<Identity> {
+        return await this.wallet.get(id);
     }
 
-    async deleteIdentity (id) {
-        return await this.wallet.delete(id);
+    /**
+     * Remove the identity from the wallet
+     * @param id
+     */
+    async deleteIdentity (id: string): Promise<void> {
+        return await this.wallet.remove(id);
     }
 
-    getWallet () {
+    /**
+     * Return the wallet object
+     * @return Promise<Wallet>
+     */
+    getWallet (): Wallet {
         return this.wallet;
     }
 }
