@@ -159,6 +159,22 @@ export class Orchestrator {
     //   e('Error while generating the Orderer crypto credentials');
     //   return;
     // }
+    // create ca
+
+    // let dockerComposeRootCA = new DockercomposeRootCAYamlGenerator('docker-compose-ca.yaml', path, options);
+    // l('Saving compose Root CA');
+    // await dockerComposeRootCA.save();
+    // l('Starting Root CA docker container...');
+    // await dockerComposeRootCA.startRootCa();
+    // l('Ran Root CA docker container...');
+    //
+    // const createCaShGenerator = new CreateCAShGenerator('createCa.sh', path, options);
+    // l('Saving createCA.sh');
+    // await createCaShGenerator.save();
+    // l('Executing createCA.sh');
+    // await createCaShGenerator.run();
+    // l('Ran createCA.sh');
+  }
 
     // const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
     // await dockerComposePeer.save();

@@ -8,4 +8,8 @@ export class OrdererOptions {
 
 export class Orderer {
   constructor(public name: string, public options: OrdererOptions) {}
+
+  get mspName(): string {
+    return `${this.name}MSP`;
+  }
 }
