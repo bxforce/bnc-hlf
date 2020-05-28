@@ -45,7 +45,7 @@ export class Membership extends ClientHelper {
   /**
    * Enroll the admin account
    */
-  async enrollCaAdmin(): Promise<boolean> {
+  async enrollCaAdmin(orgMspId?: string): Promise<boolean> {
     try {
       // check if the admin exists & enrolled in the Wallet
       const adminIdentity = await this.wallet.getIdentity(this.clientConfig.admin.name);
@@ -60,10 +60,11 @@ export class Membership extends ClientHelper {
         enrollmentSecret: this.clientConfig.admin.secret
       });
 
-      // import the identity into the wallet
+      // get the client mspId
+      const mspId = this.client.getMspid() ?? orgMspId;
 
-      // TODO get the mspid from config as client no yet configured with the network
-      await this.wallet.addIdentity(this.clientConfig.admin.name, this.client.getMspid(), key, certificate);
+      // import the identity into the wallet
+      await this.wallet.addIdentity(this.clientConfig.admin.name, mspId, key, certificate);
       d(`Successfully enrolled admin user "${this.clientConfig.admin.name} and imported it into the wallet`);
 
       return true;

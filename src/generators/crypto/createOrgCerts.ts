@@ -25,7 +25,7 @@ description: "Blockchain network composer"
 version: "1.0"
 
 client:
-  # organization: Org1
+  organization: ${this.options.org.name}
   credentialStore:
     path: ${this.options.networkRootPath}/wallets/organizations/${this.options.org.fullName}
     cryptoStore:
@@ -56,6 +56,8 @@ certificateAuthorities:
       await this.save();
       await this.createDirectories();
 
+      const orgMspId = this.options.org.mspName;
+
       const config: ClientConfig = {
         networkProfile: this.filePath,
         admin: {
@@ -66,11 +68,10 @@ certificateAuthorities:
       const membership = new Membership(config);
       await membership.initCaClient(this.options.org.caName);
 
-      const isEnrolled = await membership.enrollCaAdmin();
+      const isEnrolled = await membership.enrollCaAdmin(orgMspId);
       d(`The admin account is enrolled (${isEnrolled})`);
 
       // register normal user
-      const orgMspId = this.options.org.mspName;
       const userParams: UserParams = {
         enrollmentID: `user@${this.options.org.fullName}`,
         enrollmentSecret: `userPw`,
