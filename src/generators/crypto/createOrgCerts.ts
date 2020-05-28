@@ -2,7 +2,6 @@ import { ensureDir } from 'fs-extra';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { d, e } from '../../utils/logs';
 import { SysWrapper } from '../../utils/sysWrapper';
-// import {CaClient} from '../../core/hlf/ca_client';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Membership, UserParams } from '../../core/hlf/membership';
@@ -13,7 +12,6 @@ export interface AdminCAAccount {
   password: string;
 }
 
-// TODO update the ca name from the config input file
 /**
  *
  */
@@ -51,6 +49,9 @@ certificateAuthorities:
     super(filename, path);
   }
 
+  /**
+   * Build all certificates for the network to be started
+   */
   async buildCertificate(): Promise<Boolean> {
     try {
       await this.save();

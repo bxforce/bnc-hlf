@@ -1,8 +1,8 @@
-import { ClientConfig, ClientHelper } from './helpers';
-import { d, e } from '../../utils/logs';
+import { ChannelRequest, Orderer } from 'fabric-client';
 import { ensureFile } from 'fs-extra';
 import * as fs from 'fs';
-import { ChannelRequest, Orderer } from 'fabric-client';
+import { ClientConfig, ClientHelper } from './helpers';
+import { d, e } from '../../utils/logs';
 
 export class Channels extends ClientHelper {
   public orderers: Orderer[];
@@ -11,10 +11,18 @@ export class Channels extends ClientHelper {
     super(config);
   }
 
+  /**
+   * Initialize the fabric client from the config
+   */
   async init() {
     await super.init();
   }
 
+  /**
+   * Create a channel
+   * @param channelName
+   * @param channelConfigPath
+   */
   async createChannel(channelName: string, channelConfigPath: string): Promise<boolean> {
     try {
       // ensure the channel config path
@@ -24,7 +32,7 @@ export class Channels extends ClientHelper {
       let envelope = fs.readFileSync(channelConfigPath);
       let channelConfig = this.client.extractChannelConfig(envelope);
 
-      //Acting as a client in the given organization provided with "orgName" param
+      // Acting as a client in the given organization provided with "orgName" param
       // sign the channel config bytes as "endorsement", this is required by
       // the orderer's channel creation policy
       // this will use the admin identity assigned to the client when the connection profile was loaded
@@ -54,6 +62,9 @@ export class Channels extends ClientHelper {
     }
   }
 
+  /**
+   * Load the list of orderer from the config file
+   */
   private async loadOrderersFromConfig() {
     const orderers = this.client.getConfigSetting('orderers');
     for(const key in orderers) {
@@ -72,7 +83,6 @@ export class Channels extends ClientHelper {
 
         orderers.push(orderer);
       }
-
     }
   }
 

@@ -41,6 +41,7 @@ export enum HLF_CLIENT_ACCOUNT_ROLE {
   client = 'client',
   user = 'user',
   admin= 'admin',
+  orderer = 'orderer',
 }
 
 export const channelTimeout = 10000;
