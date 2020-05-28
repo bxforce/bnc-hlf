@@ -37,8 +37,10 @@ export enum DOCKER_DEFAULT {
 }
 
 export enum HLF_CLIENT_ACCOUNT_ROLE {
-  peer = 'peers',
+  peer = 'peer',
   client = 'client',
+  user = 'user',
+  admin= 'admin',
 }
 
 export const channelTimeout = 10000;

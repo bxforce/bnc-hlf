@@ -6,6 +6,7 @@ import { SysWrapper } from '../../utils/sysWrapper';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Membership, UserParams } from '../../core/hlf/membership';
+import { HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
 
 export interface AdminCAAccount {
   name: string;
@@ -50,31 +51,6 @@ certificateAuthorities:
     super(filename, path);
   }
 
-  // async registerPeers(caClient: CaClient) {
-  //   for (const peer of this.options.org.peers) {
-  //     const id = peer.name + '.' + this.options.org.fullName;
-  //     const secret = peer.name + 'pw';
-  //     const affiliation = this.options.org.fullName; // TODO to be verified
-  //     const role = 'peer';
-  //     const mspId = this.options.org.name + 'MSP'; // TODO to be verified
-  //     const attrs = [{hf: {Registrar: {Roles: 'peer'}}}];
-  //     const adminId = 'rca-' + this.options.org.name + '-admin';
-  //     await caClient.registerUser(id, secret, affiliation, mspId, role, adminId, attrs);
-  //   }
-  // }
-  //
-  // async enrollCaAdmin(caClient: CaClient, adminId: string, adminSecret: string){
-  //   const id = adminId ? adminId : 'rca-' + this.options.org.name + '-admin';
-  //   const secret = adminSecret ? adminSecret : 'rca-' + this.options.org.name + '-adminpw';
-  //   const mspId = this.options.org.name + 'MSP'; // TODO to be verified
-  //   const caCertPath = this.options.networkRootPath + '/organizations/fabric-ca/' + this.options.org.name + '/crypto/tls-cert.pem';
-  //   const enrollment = await caClient.enrollAdmin(id, secret, mspId, caCertPath);
-  //   // TODO build the crypto tree based on the enrollment object
-  //   /*l('certificate\n' + enrollment.certificate); // admin certificate
-  //   l('rootCertificate\n' + enrollment.rootCertificate); // ca certificate
-  //   l('toBytes\n' + enrollment.key.toBytes()); // admin private key */
-  // }
-
   async buildCertificate(): Promise<Boolean> {
     try {
       await this.save();
@@ -91,31 +67,29 @@ certificateAuthorities:
       await membership.initCaClient(this.options.org.caName);
 
       const isEnrolled = await membership.enrollCaAdmin();
-      d(`The admin account is enrolled ${isEnrolled}`);
+      d(`The admin account is enrolled (${isEnrolled})`);
+
+      // register normal user
+      const orgMspId = this.options.org.mspName;
+      const userParams: UserParams = {
+        enrollmentID: `user@${this.options.org.fullName}`,
+        enrollmentSecret: `userPw`,
+        role: HLF_CLIENT_ACCOUNT_ROLE.user,
+        affiliation: this.options.org.fullName,
+      };
+      await membership.addUser(userParams, orgMspId);
 
       // Enroll the peers
-      // const orgMspId = ;
+      // const orgMspId = this.options.org.mspName;
       // for (const peer of this.options.org.peers) {
       //   const params: UserParams = {
-      //     enrollmentID: x,
-      //     enrollmentSecret:,
-      //     role: ,
-      //     affiliation: ,
-      //     attrs: ,
+      //     enrollmentID: `${peer.name}.${this.options.org.fullName}`,
+      //     enrollmentSecret: `${peer.name}pw`,
+      //     role: HLF_CLIENT_ACCOUNT_ROLE.peer,
+      //     affiliation: this.options.org.fullName,
       //   };
-      //   await membership.addUser()
       //
-      //
-      //
-      //
-      //   const id = peer.name + '.' + this.options.org.fullName;
-      //   const secret = peer.name + 'pw';
-      //   const affiliation = this.options.org.fullName; // TODO to be verified
-      //   const role = 'peer';
-      //   const mspId = this.options.org.name + 'MSP'; // TODO to be verified
-      //   const attrs = [{ hf: { Registrar: { Roles: 'peer' } } }];
-      //   const adminId = 'rca-' + this.options.org.name + '-admin';
-      //   await caClient.registerUser(id, secret, affiliation, mspId, role, adminId, attrs);
+        // await membership.addUser(params, orgMspId);
       // }
 
       return true;

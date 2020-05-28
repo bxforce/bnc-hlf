@@ -51,7 +51,7 @@ export class Membership extends ClientHelper {
       const adminIdentity = await this.wallet.getIdentity(this.clientConfig.admin.name);
       if (adminIdentity) {
         d(`An identity for the admin user (${this.clientConfig.admin.name}) already exists in the wallet`);
-        return;
+        return true;
       }
 
       // enroll the admin account
@@ -61,6 +61,8 @@ export class Membership extends ClientHelper {
       });
 
       // import the identity into the wallet
+
+      // TODO get the mspid from config as client no yet configured with the network
       await this.wallet.addIdentity(this.clientConfig.admin.name, this.client.getMspid(), key, certificate);
       d(`Successfully enrolled admin user "${this.clientConfig.admin.name} and imported it into the wallet`);
 
