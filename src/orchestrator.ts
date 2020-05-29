@@ -197,10 +197,35 @@ export class Orchestrator {
     l('Environment cleaned!');
   }
 
-  async enroll(id, secret, mspID,caInfo, walletDirectoryName, ccpPath) {
-    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
-    // await caclient.enrollAdmin(id, secret, mspID);
-    d('Need to be activated');
+  /**
+   * enroll default CA admin
+   * @param id
+   * @param secret
+   * @param mspId
+   * @param caName
+   * @param walletDirectoryPath
+   * @param networkProfilePath
+   */
+  async enroll(id: string,
+               secret: string,
+               mspId: string,
+               caName: string,
+               walletDirectoryPath: string,
+               networkProfilePath: string): Promise<boolean> {
+    d(`Request to enroll admin identity ${id}`);
+    const config: ClientConfig = {
+      networkProfile: networkProfilePath,
+      keyStore: walletDirectoryPath,
+      admin: {
+        name: id,
+        secret: secret
+      }
+    };
+    const membership = new Membership(config);
+    await membership.initCaClient(caName);
+
+    const enrollment = await membership.enrollCaAdmin(mspId);
+    return !!enrollment;
   }
 
   /**
@@ -240,7 +265,9 @@ export class Orchestrator {
       affiliation,
     };
 
-    return await membership.addUser(userParams, mspId);
+    const enrollment = await membership.addUser(userParams, mspId);
+
+    return !!enrollment;
   }
 
   /**
