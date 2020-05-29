@@ -1,12 +1,31 @@
 import { Wallet, Wallets, Identity, X509Identity } from 'fabric-network';
+import { d, e } from '../../utils/logs';
+import { HLF_WALLET_TYPE } from '../../utils/constants';
 
 export class WalletStore {
     wallet: Wallet;
 
-    constructor(public walletPath: string) { }
+    /**
+     * constructor
+     * @param walletPath folder path where to store filesystem
+     */
+    constructor(public walletPath: string) {}
 
-    async init() {
-        this.wallet = await Wallets.newFileSystemWallet(this.walletPath);
+    /**
+     * Initialize the wallet using filesystem
+     * TODO support other type of wallet (memory or couchdb)
+     */
+    async init(walletType: HLF_WALLET_TYPE = HLF_WALLET_TYPE.FileSystem) {
+        switch (walletType) {
+            case HLF_WALLET_TYPE.FileSystem:
+                this.wallet = await Wallets.newFileSystemWallet(this.walletPath);
+                break;
+            case HLF_WALLET_TYPE.CouchDB:
+            case HLF_WALLET_TYPE.Memory:
+                throw new Error('Wallet type not yet supported');
+            default:
+                break;
+        }
     }
 
     /**
@@ -50,8 +69,14 @@ export class WalletStore {
      * Remove the identity from the wallet
      * @param id
      */
-    async deleteIdentity (id: string): Promise<void> {
-        return await this.wallet.remove(id);
+    async deleteIdentity (id: string): Promise<boolean> {
+        try {
+            await this.wallet.remove(id);
+            return true;
+        } catch(err) {
+            e(err);
+            return false;
+        }
     }
 
     /**

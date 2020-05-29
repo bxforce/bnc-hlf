@@ -13,6 +13,8 @@ export class Membership extends ClientHelper {
   /* instance of the CA service*/
   public ca: FabricCAServices;
 
+  // TODO should we create a singleton or not ??
+
   /**
    * Constructor
    * @param config

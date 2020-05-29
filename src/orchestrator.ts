@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { l, d, e } from './utils/logs';
+import { d, e, l } from './utils/logs';
 import { DeploymentParser } from './parser/deploymentParser';
 import { NetworkCleanShGenerator, NetworkCleanShOptions } from './generators/networkClean.sh';
 import { ConfigurationValidator } from './parser/validator/configurationValidator';
@@ -14,14 +14,22 @@ import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 // import { DockerComposeCaGenerator } from './generators/crypto/dockerComposeCa.yaml';
 // import { CreateOrgCertsShGenerator } from './generators/crypto/createOrgCerts.sh';
 import { SysWrapper } from './utils/sysWrapper';
-import createFolder = SysWrapper.createFolder;
-import { BNC_NETWORK, DOCKER_DEFAULT, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from './utils/constants';
+import { BNC_NETWORK, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
 // import { CreateOrdererCertsGenerator } from './generators/crypto/createOrdererCerts.sh';
-import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
+import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
+import { ClientConfig } from './core/hlf/helpers';
+import { Membership, UserParams } from './core/hlf/membership';
+import { Identity } from 'fabric-network';
+import createFolder = SysWrapper.createFolder;
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
   networkRootPath = './hyperledger-fabric-network';
+
+  defaultCAAdmin = {
+    name: 'admin',
+    password: 'adminpw'
+  };
 
   /**
    * Parse and validate deployment file
@@ -195,22 +203,90 @@ export class Orchestrator {
     d('Need to be activated');
   }
 
-  async registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
-    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
-    // await caclient.registerUser (id, secret, affiliation, mspID);
-    d('Need to be activated');
+  /**
+   * Register a new user
+   * @param id
+   * @param secret
+   * @param affiliation
+   * @param mspId
+   * @param caName
+   * @param walletDirectoryPath
+   * @param networkProfilePath
+   */
+  async registerUser(id: string,
+                     secret: string,
+                     affiliation: string,
+                     mspId: string,
+                     caName: string,
+                     walletDirectoryPath: string,
+                     networkProfilePath: string): Promise<boolean> {
+    d(`Request to create new identity ${id}`);
+    const config: ClientConfig = {
+      networkProfile: networkProfilePath,
+      keyStore: walletDirectoryPath,
+      admin: {
+        name: this.defaultCAAdmin.name,
+        secret: this.defaultCAAdmin.password
+      }
+    };
+    const membership = new Membership(config);
+    await membership.initCaClient(caName);
+
+    // register normal user
+    const userParams: UserParams = {
+      enrollmentID: id,
+      enrollmentSecret: secret,
+      role: HLF_CLIENT_ACCOUNT_ROLE.client,
+      affiliation,
+    };
+
+    return await membership.addUser(userParams, mspId);
   }
 
-  async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
-    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
-    // await caclient.fetchIdentity(id);
-    d('Need to be activated');
+  /**
+   * fetch an existing identity
+   * @param id
+   * @param caName
+   * @param walletDirectoryPath
+   * @param networkProfilePath
+   */
+  async fetchIdentity(id: string, caName: string, walletDirectoryPath: string, networkProfilePath: string): Promise<Identity> {
+    d(`Request to fetch identity ${id}`);
+    const config: ClientConfig = {
+      networkProfile: networkProfilePath,
+      keyStore: walletDirectoryPath,
+      admin: {
+        name: this.defaultCAAdmin.name,
+        secret: this.defaultCAAdmin.password
+      }
+    };
+    const membership = new Membership(config);
+    await membership.initCaClient(caName);
+
+    return await membership.wallet.getIdentity(id);
   }
 
-  async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
-    // const caclient = new CaClient(caInfo, walletDirectoryName, ccpPath);
-    // await caclient.deleteIdentity(id);
-    d('Need to be activated');
+  /**
+   * delete entity from wallet
+   * @param id
+   * @param caName
+   * @param walletDirectoryPath
+   * @param networkProfilePath
+   */
+  async deleteIdentity(id: string, caName: string, walletDirectoryPath: string, networkProfilePath: string): Promise<boolean> {
+    d(`Request to delete identity ${id}`);
+    const config: ClientConfig = {
+      networkProfile: networkProfilePath,
+      keyStore: walletDirectoryPath,
+      admin: {
+        name: this.defaultCAAdmin.name,
+        secret: this.defaultCAAdmin.password
+      }
+    };
+    const membership = new Membership(config);
+    await membership.initCaClient(caName);
+
+    return await membership.wallet.deleteIdentity(id);
   }
 
   // public async createChannel(nameChannel, channeltxPath, nameOrg) {

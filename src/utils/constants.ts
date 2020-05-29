@@ -44,6 +44,12 @@ export enum HLF_CLIENT_ACCOUNT_ROLE {
   orderer = 'orderer',
 }
 
+export const enum HLF_WALLET_TYPE {
+  FileSystem = 'filesystem',
+  CouchDB = 'couchdb',
+  Memory = 'memory'
+}
+
 export const channelTimeout = 10000;
 export const updateTimeout = 60000;
 export const BNC_TOOL_NAME = 'BNC';
