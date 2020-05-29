@@ -5,6 +5,7 @@ export class CaOptions {
   host?: string;
   user?: 'admin';
   password?: 'adminpw';
+  isSecure?: false;
 }
 
 export class Ca {

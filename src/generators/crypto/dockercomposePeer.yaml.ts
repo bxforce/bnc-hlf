@@ -1,6 +1,7 @@
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { DockerEngine } from '../../agents/docker-agent';
+import { DOCKER_DEFAULT } from '../../utils/constants';
 
 export class DockerComposePeerGenerator extends BaseGenerator {
   contents = `
@@ -48,8 +49,7 @@ ${this.options.org.peers
     super(filename, path);
 
     if (!this.dockerEngine) {
-      // TODO fix the default local docker engine
-      this.dockerEngine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
+      this.dockerEngine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
     }
   }
 

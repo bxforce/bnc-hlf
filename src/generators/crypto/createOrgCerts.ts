@@ -76,23 +76,22 @@ certificateAuthorities:
       const userParams: UserParams = {
         enrollmentID: `user@${this.options.org.fullName}`,
         enrollmentSecret: `userPw`,
-        role: HLF_CLIENT_ACCOUNT_ROLE.user,
-        affiliation: this.options.org.fullName,
+        role: HLF_CLIENT_ACCOUNT_ROLE.client,
+        affiliation: '',
       };
       await membership.addUser(userParams, orgMspId);
 
       // Enroll the peers
-      // const orgMspId = this.options.org.mspName;
-      // for (const peer of this.options.org.peers) {
-      //   const params: UserParams = {
-      //     enrollmentID: `${peer.name}.${this.options.org.fullName}`,
-      //     enrollmentSecret: `${peer.name}pw`,
-      //     role: HLF_CLIENT_ACCOUNT_ROLE.peer,
-      //     affiliation: this.options.org.fullName,
-      //   };
-      //
-        // await membership.addUser(params, orgMspId);
-      // }
+      for (const peer of this.options.org.peers) {
+        const params: UserParams = {
+          enrollmentID: `${peer.name}.${this.options.org.fullName}`,
+          enrollmentSecret: `${peer.name}pw`,
+          role: HLF_CLIENT_ACCOUNT_ROLE.peer,
+          affiliation: '',
+        };
+
+        await membership.addUser(params, orgMspId);
+      }
 
       return true;
     } catch (err) {

@@ -4,7 +4,7 @@ import * as Client from 'fabric-client';
 import { resolve, join } from 'path';
 import { ensureDir, ensureFile, readdir, readFile } from 'fs-extra';
 import { e } from '../../utils/logs';
-import { WalletStore } from '../../models/wallet';
+import { WalletStore } from './wallet';
 
 export interface ClientConfig {
   networkProfile: string|object;

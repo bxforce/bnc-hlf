@@ -18,19 +18,19 @@ networks:
     external: true
 
 services:
-  rca.${this.options.org.name}:
-    container_name: rca.${this.options.org.name}
+  ${this.options.org.caName}:
+    container_name: ${this.options.org.caName}
     image: hyperledger/fabric-ca
-    command: sh -c 'fabric-ca-server start -d -b rca-${this.options.org.name}-admin:rca-${this.options.org.name}-adminpw --port 7054 --cfg.identities.allowremove'
+    command: sh -c 'fabric-ca-server start -d -b ${this.options.org.ca.options.user}:${this.options.org.ca.options.password} --port ${this.options.org.ca.options.ports} --cfg.identities.allowremove'
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
-      - FABRIC_CA_SERVER_CA_NAME=rca.${this.options.org.name}
-      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_CA_NAME=${this.options.org.caName}
+      - FABRIC_CA_SERVER_TLS_ENABLED=${this.options.org.ca.options.isSecure}
       - FABRIC_CA_SERVER_CSR_CN=ca.tls
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
     ports:
-      - "7054:7054"
+      - "${this.options.org.ca.options.ports}:${this.options.org.ca.options.ports}"
     volumes:
       - ${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}:/tmp/hyperledger/fabric-ca
     networks:
@@ -46,7 +46,7 @@ services:
 
   async startTlsCa() {
     try {
-      await this.dockerEngine.composeOne(`ca.${this.options.org.name}.tls`, { cwd: this.path, config: this.filename });
+      await this.dockerEngine.composeOne(`${this.options.org.caName}`, { cwd: this.path, config: this.filename });
       await this.changeOwnership(`${this.options.networkRootPath}/${this.options.org.name}`);
     } catch (err) {
       e(err);
@@ -69,7 +69,7 @@ services:
 
       // Check the container is running
       await delay(DOCKER_CA_DELAY);
-       const isCaRunning = await this.dockerEngine.doesContainerExist(`rca.${this.options.org.name}`);
+       const isCaRunning = await this.dockerEngine.doesContainerExist(`${this.options.org.caName}`);
        if(!isCaRunning) {
          d('CA container not yet running - waiting more');
          await delay(DOCKER_CA_DELAY * 2);
