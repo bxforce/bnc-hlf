@@ -21,6 +21,7 @@ import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
 import { Identity } from 'fabric-network';
 import createFolder = SysWrapper.createFolder;
+import { Peer } from './models/peer';
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
