@@ -89,32 +89,19 @@ export class Orchestrator {
    * @param skipDownload boolean to download fabric binaries (needed to create credentials)
    */
   async validateAndParse(configFilePath: string, skipDownload = false) {
-    l('[Start] Start parsing the blockchain configuration file');
-    l('Validate input configuration file');
-    const validator = new ConfigurationValidator();
-    const isValid = validator.isValidDeployment(configFilePath);
-
-    if (!isValid) {
-      e('Configuration file is invalid');
-      return;
-    }
-    l('Configuration file valid');
-
-    let configParse = new DeploymentParser(configFilePath);
-    // TODO config parse should return the network instance and not an array of organizations
-    const organizations = await configParse.parse();
+    const network: Network = await this._parse(configFilePath);
     l('[End] Blockchain configuration files parsed');
 
     // Generate dynamically crypto
     const homedir = require('os').homedir();
-    // const path = organizations[0].templateFolder ? organizations[0].templateFolder : join(homedir, this.networkRootPath);
+    // const path = network.options.networkConfigPath ? network.options.networkConfigPath : join(homedir, this.networkRootPath);
     const path = join(homedir, this.networkRootPath);
     await createFolder(path);
 
     const options: DockerComposeYamlOptions = {
       networkRootPath: path,
       composeNetwork: BNC_NETWORK,
-      org: organizations[0],
+      org: network.organizations[0],
       envVars: {
         FABRIC_VERSION: HLF_VERSION.HLF_2,
         FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
@@ -123,11 +110,7 @@ export class Orchestrator {
     };
 
     if (!skipDownload) {
-      l('[Start] Download fabric binaries...');
-      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', path, options);
-      await downloadFabricBinariesGenerator.save();
-      await downloadFabricBinariesGenerator.run();
-      l('[End] Ran Download fabric binaries');
+      await this._downloadBinaries(path, options);
     }
 
     // create network
@@ -187,6 +170,10 @@ export class Orchestrator {
     // await dockerComposePeer.save();
   }
 
+  /**
+   * Clean all docker
+   * @param rmi remove image also
+   */
   async cleanDocker(rmi: boolean) {
     const options = new NetworkCleanShOptions();
     options.removeImages = rmi;
@@ -263,7 +250,7 @@ export class Orchestrator {
       enrollmentID: id,
       enrollmentSecret: secret,
       role: HLF_CLIENT_ACCOUNT_ROLE.client,
-      affiliation,
+      affiliation
     };
 
     const enrollment = await membership.addUser(userParams, mspId);
@@ -278,7 +265,10 @@ export class Orchestrator {
    * @param walletDirectoryPath
    * @param networkProfilePath
    */
-  async fetchIdentity(id: string, caName: string, walletDirectoryPath: string, networkProfilePath: string): Promise<Identity> {
+  async fetchIdentity(id: string,
+                      caName: string,
+                      walletDirectoryPath:
+                        string, networkProfilePath: string): Promise<Identity> {
     d(`Request to fetch identity ${id}`);
     const config: ClientConfig = {
       networkProfile: networkProfilePath,
@@ -301,7 +291,10 @@ export class Orchestrator {
    * @param walletDirectoryPath
    * @param networkProfilePath
    */
-  async deleteIdentity(id: string, caName: string, walletDirectoryPath: string, networkProfilePath: string): Promise<boolean> {
+  async deleteIdentity(id: string,
+                       caName: string,
+                       walletDirectoryPath: string,
+                       networkProfilePath: string): Promise<boolean> {
     d(`Request to delete identity ${id}`);
     const config: ClientConfig = {
       networkProfile: networkProfilePath,
@@ -328,5 +321,50 @@ export class Orchestrator {
   // public async updateChannel(anchortx, namech, nameorg) {
   //   await channel.updateChannel(anchortx, namech, nameorg);
   // }
+
+  /**
+   * Parse & validate deployment configuration file
+   * @param deploymentConfigPath
+   * @private
+   */
+  private async _parse(deploymentConfigPath: string): Promise<Network> {
+    l('[Start] Start parsing the blockchain configuration file');
+    l('Validate input configuration file');
+    const validator = new ConfigurationValidator();
+    const isValid = validator.isValidDeployment(deploymentConfigPath);
+
+    if (!isValid) {
+      e('Configuration file is invalid');
+      return;
+    }
+    l('Configuration file valid');
+
+    let configParse = new DeploymentParser(deploymentConfigPath);
+    const network = await configParse.parse();
+    l('[End] Blockchain configuration files parsed');
+
+    return network;
+  }
+
+  /**
+   * download hyperledger fabric binaries
+   * @param folderPath folder where to store files
+   * @param options options to generate script files
+   * @private
+   */
+  private async _downloadBinaries(folderPath: string, options: DockerComposeYamlOptions): Promise<boolean> {
+    try {
+      l('[Start] Download fabric binaries...');
+      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, options);
+      await downloadFabricBinariesGenerator.save();
+      await downloadFabricBinariesGenerator.run();
+      l('[End] Ran Download fabric binaries');
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
 
 }

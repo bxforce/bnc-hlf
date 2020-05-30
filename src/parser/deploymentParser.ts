@@ -1,5 +1,3 @@
-import { safeLoad } from 'js-yaml';
-import { SysWrapper } from '../utils/sysWrapper';
 import { l } from '../utils/logs';
 import { Organization } from '../models/organization';
 import { Engine } from '../models/engine';
@@ -7,13 +5,24 @@ import { Peer } from '../models/peer';
 import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
 import { Ca } from '../models/ca';
+import { Network } from '../models/network';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_VERSION } from '../utils/constants';
 
+/**
+ * Parser class for the deployment configuration file
+ * @author wassim.znaidi@gmail.com
+ */
 export class DeploymentParser extends BaseParser {
+
+  /**
+   * Constructor
+   * @param fullFilePath deployment configuration full path
+   */
   constructor(public fullFilePath: string) {
     super(fullFilePath);
   }
 
-  async parse(): Promise<Organization[]> {
+  async parse(): Promise<Network> {
     l('Starting Parsing configuration file');
 
     const parsedYaml = await this.parseRaw();
@@ -31,9 +40,24 @@ export class DeploymentParser extends BaseParser {
 
     l('Finish Parsing configuration file');
 
-    return organizations;
+    // build the network instance
+    const { template_folder, fabric, consensus } = parsedYaml['chains'];
+    const network: Network = new Network(this.fullFilePath, {
+      hyperledgerVersion: fabric as HLF_VERSION,
+      externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
+      consensus: consensus as ConsensusType,
+      inside: false,
+      networkConfigPath: template_folder,
+    });
+    network.buildFromSave(organizations, []);
+
+    return network;
   }
 
+  /**
+   *
+   * @param yamlEngine
+   */
   private buildEngine(yamlEngine): Engine[] {
     const engines = [];
 
@@ -49,6 +73,10 @@ export class DeploymentParser extends BaseParser {
     return engines;
   }
 
+  /**
+   *
+   * @param yamlOrganisations
+   */
   private buildOrganisations(yamlOrganisations): Organization[] {
     const organizations: Organization[] = [];
     const { template_folder, fabric, tls, consensus, db, organisations } = yamlOrganisations;

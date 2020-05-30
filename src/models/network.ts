@@ -2,16 +2,20 @@
 import { Organization } from './organization';
 import { Channel } from './channel';
 import { User } from './user';
-import { ConsensusType } from '../utils/constants';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_VERSION } from '../utils/constants';
 
 export class NetworkOptions {
-  hyperledgerVersion?: string;
-  externalHyperledgerVersion?: string;
+  hyperledgerVersion?: HLF_VERSION;
+  externalHyperledgerVersion?: EXTERNAL_HLF_VERSION;
   inside?: boolean = false;
   networkConfigPath?: string;
   consensus?: ConsensusType;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class Network {
   organizations: Organization[] = [];
   channels: Channel[];
@@ -26,7 +30,7 @@ export class Network {
     return;
   }
 
-  buildFromSave(organizations: Organization[] = [], channels: Channel[] = [], users: User[]) {
+  buildFromSave(organizations: Organization[] = [], channels: Channel[] = []) {
     this.organizations = organizations;
     this.channels = channels;
   }
