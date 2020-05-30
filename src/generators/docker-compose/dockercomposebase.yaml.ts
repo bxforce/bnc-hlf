@@ -2,6 +2,11 @@ import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { BaseGenerator } from '../base';
 import { e } from '../../utils/logs';
 
+/**
+ * Class responsible to generate base Peer and Orderer compose file
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class DockerComposeEntityBaseGenerator extends BaseGenerator {
   /* docker compose template content */
   contents = `

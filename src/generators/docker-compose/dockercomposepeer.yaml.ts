@@ -2,6 +2,11 @@ import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { e } from '../../utils/logs';
 
+/**
+ * Class responsible to generate Peer compose file
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class DockerComposePeerGenerator extends BaseGenerator {
   /* docker compose content for peers */
   contents = `

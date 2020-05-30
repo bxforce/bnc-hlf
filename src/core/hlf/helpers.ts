@@ -16,6 +16,10 @@ export interface ClientConfig {
   userMsp?: string;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class ClientHelper {
 
   public wallet: WalletStore;

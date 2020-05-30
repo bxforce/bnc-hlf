@@ -1,6 +1,10 @@
 import { join } from 'path';
 import { SysWrapper } from '../utils/sysWrapper';
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export abstract class BaseGenerator {
   /** file contents */
   contents: string;

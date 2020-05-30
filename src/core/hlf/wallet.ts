@@ -2,6 +2,12 @@ import { Wallet, Wallets, Identity, X509Identity } from 'fabric-network';
 import { d, e } from '../../utils/logs';
 import { HLF_WALLET_TYPE } from '../../utils/constants';
 
+/**
+ * Class to handle HLF Wallet
+ *
+ * @author sahar.fehri@irt-systemx.fr
+ * @author wassim.znaidi@gmail.com
+ */
 export class WalletStore {
     wallet: Wallet;
 
@@ -13,7 +19,6 @@ export class WalletStore {
 
     /**
      * Initialize the wallet using filesystem
-     * TODO support other type of wallet (memory or couchdb)
      */
     async init(walletType: HLF_WALLET_TYPE = HLF_WALLET_TYPE.FileSystem) {
         switch (walletType) {

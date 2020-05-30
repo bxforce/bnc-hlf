@@ -17,6 +17,8 @@ export interface AdminCAAccount {
 
 /**
  *
+ * @author wassim.znaidi@gmail.com
+ * @author ahmed.souissi@irt-systemx.fr
  */
 export class OrgCertsGenerator extends BaseGenerator {
   contents = `
@@ -74,54 +76,30 @@ certificateAuthorities:
       const membership = new Membership(config);
       await membership.initCaClient(this.options.org.caName);
 
-      // add config.yaml file
-      const peer = this.options.org.peers[0];
-      const peerMspPath = this._getPeerMspPath(peer);
-      await this.generateConfigOUFile(peer);
-
       // Generate & store admin certificate
-      const adminEnrollment: IEnrollResponse = await membership.enrollCaAdmin(orgMspId);
-      d(`The admin account is enrolled (${!!adminEnrollment})`);
-      const { key, certificate, rootCertificate } = adminEnrollment;
-      await createFile(`${peerMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, certificate);
-      await createFile(`${peerMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, rootCertificate);
-
-      // enroll & store peer crypto credentials
-      const params: UserParams = {
-        enrollmentID: `${peer.name}.${this.options.org.fullName}`,
-        enrollmentSecret: `${peer.name}pw`,
-        role: HLF_CLIENT_ACCOUNT_ROLE.peer,
-        affiliation: ''
-      };
-      const peerEnrollment = await membership.addUser(params, orgMspId);
+      const caAdminEnrollment = await this._generateCAAdminOrgMspFiles(membership, orgMspId);
       const {
-        key: peerKey,
-        certificate: peerCertificate,
-        rootCertificate: peerRootCertificate
-      } = peerEnrollment;
-      await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
-      await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
+        key: caAdminKey,
+        certificate: caAdminCertificate,
+        rootCertificate: caAdminRootCertificate
+      } = caAdminEnrollment;
 
-      // register normal user
-      // const userParams: UserParams = {
-      //   enrollmentID: `user@${this.options.org.fullName}`,
-      //   enrollmentSecret: `userPw`,
-      //   role: HLF_CLIENT_ACCOUNT_ROLE.client,
-      //   affiliation: '',
-      // };
-      // await membership.addUser(userParams, orgMspId);
+      // generate NodeOU & enroll & store peer crypto credentials
+      for (const peer of this.options.org.peers) {
+        const peerMspPath = this._getPeerMspPath(peer);
+        const peerEnrollment = await this._generateMspFiles(peer, membership, orgMspId);
+        const {
+          key: peerKey,
+          certificate: peerCertificate,
+          rootCertificate: peerRootCertificate
+        } = peerEnrollment;
 
-      // Enroll the peers
-      // for (const peer of this.options.org.peers) {
-      //   const params: UserParams = {
-      //     enrollmentID: `${peer.name}.${this.options.org.fullName}`,
-      //     enrollmentSecret: `${peer.name}pw`,
-      //     role: HLF_CLIENT_ACCOUNT_ROLE.peer,
-      //     affiliation: '',
-      //   };
-      //
-      //   await membership.addUser(params, orgMspId);
-      // }
+        await createFile(`${peerMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
+        await createFile(`${peerMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
+
+        await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
+        await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
+      }
 
       return true;
     } catch (err) {
@@ -172,6 +150,7 @@ certificateAuthorities:
       // create msp folder for every peer
       for (let peer of this.options.org.peers) {
         await SysWrapper.createFolder(`${basePeerPath}/${peer.name}.${this.options.org.fullName}`);
+        await SysWrapper.createFolder(`${basePeerPath}/${peer.name}.${this.options.org.fullName}/tls`);
         await SysWrapper.createFolder(`${basePeerPath}/${peer.name}.${this.options.org.fullName}/msp`);
         await SysWrapper.createFolder(`${basePeerPath}/${peer.name}.${this.options.org.fullName}/msp/admincerts`);
         await SysWrapper.createFolder(`${basePeerPath}/${peer.name}.${this.options.org.fullName}/msp/cacerts`);
@@ -224,8 +203,80 @@ NodeOUs:
     }
   }
 
+  /**
+   * Generate MSP files for the CA Admin
+   * @param membership
+   * @param mspId
+   * @private
+   */
+  private async _generateCAAdminOrgMspFiles(membership: Membership, mspId: string): Promise<IEnrollResponse> {
+    try {
+      // Generate & store admin certificate
+      const adminEnrollment: IEnrollResponse = await membership.enrollCaAdmin(mspId);
+
+      d(`The admin account is enrolled (${!!adminEnrollment})`);
+
+      return adminEnrollment;
+    } catch(err) {
+      e(err);
+      return null;
+    }
+  }
+
+  /**
+   * Generate the MSP Files for the selected peer
+   * Generate and store the NodeOU's files into peer MSP Path
+   * @param peer
+   * @param membership
+   * @param mspId
+   * @private
+   */
+  private async _generateMspFiles(peer: Peer, membership: Membership, mspId: string): Promise<IEnrollResponse> {
+    try {
+      // add config.yaml file
+      await this.generateConfigOUFile(peer);
+
+      // enroll & store peer crypto credentials
+      const params: UserParams = {
+        enrollmentID: `${peer.name}.${this.options.org.fullName}`,
+        enrollmentSecret: `${peer.name}pw`,
+        role: HLF_CLIENT_ACCOUNT_ROLE.peer,
+        affiliation: ''
+      };
+      const peerEnrollment = await membership.addUser(params, mspId);
+      d(`Peer ${peer.name} is enrolled successfully`);
+
+      // const {
+      //   key: peerKey,
+      //   certificate: peerCertificate,
+      //   rootCertificate: peerRootCertificate
+      // } = peerEnrollment;
+      // await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
+      // await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
+
+      return peerEnrollment;
+    } catch(err) {
+      e(`Error enrolling the peer ${peer.name}`);
+      e(err);
+      throw err;
+    }
+  }
+
+  /**
+   * Retrieve the peer msp path
+   * @param peer
+   * @private
+   */
   private _getPeerMspPath(peer: Peer): string {
-    const basePeerPath = `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers`;
+    const basePeerPath = this._getMspPath();
     return `${basePeerPath}/${peer.name}.${this.options.org.fullName}/msp`;
+  }
+
+  /**
+   * Get the root msp path of peers
+   * @private
+   */
+  private _getMspPath(): string {
+    return `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers`;
   }
 }

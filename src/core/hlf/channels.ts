@@ -4,6 +4,11 @@ import * as fs from 'fs';
 import { ClientConfig, ClientHelper } from './helpers';
 import { d, e } from '../../utils/logs';
 
+/**
+ *
+ * @author sahar.fehri@irt-systemx.fr
+ * @author wassim.znaidi@gmail.com
+ */
 export class Channels extends ClientHelper {
   public orderers: Orderer[];
 

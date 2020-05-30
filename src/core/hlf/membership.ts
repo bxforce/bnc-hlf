@@ -8,6 +8,9 @@ export type AdminParams = IEnrollmentRequest;
 
 /**
  * Class responsible to create user & admin accounts
+ *
+ * @author sahar.fehri@irt-systemx.fr
+ * @author wassim.znaidi@gmail.com
  */
 export class Membership extends ClientHelper {
   /* instance of the CA service*/
