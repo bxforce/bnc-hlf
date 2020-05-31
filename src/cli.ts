@@ -2,10 +2,22 @@
 import {Orchestrator} from './orchestrator';
 import { Type_User }  from './utils/constants';
 
+/**
+ *
+ * @author wassim.znaidi
+ * @author sahar
+ * @author ahmed
+ */
 export class CLI {
   static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
     const orchEngine = new Orchestrator();
     await orchEngine.validateAndParse(configFilePath, skipDownload);
+    return orchEngine;
+  }
+
+  static async deployPeers(configFilePath: string, skipDownload?: boolean) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.deployPeerContainer(configFilePath, skipDownload);
     return orchEngine;
   }
 

@@ -1,7 +1,7 @@
 chains:
   template_folder: "/mnt/c/Users/wassim.znaidi/Desktop/BNC/hyperledger-fabric-network"
   fabric: "2.0"
-  tls: true
+  tls: false
   consensus: "raft"
   db: "couchdb"
   organisations:
@@ -24,18 +24,18 @@ engines:
     hosts:
       - host: "host1"
         type: "docker"
-        url: "192.168.208.13"
+        url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]
       - host: "host2"
         type: "docker"
-        url: "localhost"
+        url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]
   - engine: "engineOrg2"
     hosts:
       - host: "host1"
         type: "docker"
-        url: "192.168.208.13"
+        url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]

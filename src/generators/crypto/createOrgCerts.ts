@@ -88,6 +88,7 @@ certificateAuthorities:
       for (const peer of this.options.org.peers) {
         const peerMspPath = this._getPeerMspPath(peer);
         const peerEnrollment = await this._generateMspFiles(peer, membership, orgMspId);
+        // TODO check enrollment
         const {
           key: peerKey,
           certificate: peerCertificate,

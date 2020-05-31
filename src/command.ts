@@ -22,6 +22,10 @@ const tasks = {
     return await CLI.validateAndParse(filePath, skipDownload);
   },
 
+  async deployPeers(filePath: string, skipDownload?: boolean) {
+    return await CLI.deployPeers(filePath, skipDownload);
+  },
+
   async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
     return await CLI.enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
   },
@@ -111,6 +115,16 @@ program
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.validateAndParse(cmd.config, !!cmd.skipDownload);
+    }
+  });
+
+program
+  .command('deploy-peers')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.deployPeers(cmd.config, !!cmd.skipDownload);
     }
   });
 

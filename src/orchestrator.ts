@@ -6,22 +6,19 @@ import { ConfigurationValidator } from './parser/validator/configurationValidato
 import { DockerComposeYamlOptions } from './utils/data-type';
 import { DownloadFabricBinariesGenerator } from './generators/utils/downloadFabricBinaries';
 import { Network } from './models/network';
-// import { DockerEngine } from './agents/docker-agent';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
-// import {CaClient} from './core/hlf/ca_client';
-// import * as channel from './core/hlf/channel';
-// import { DockerComposeCaGenerator } from './generators/crypto/dockerComposeCa.yaml';
-// import { CreateOrgCertsShGenerator } from './generators/crypto/createOrgCerts.sh';
 import { SysWrapper } from './utils/sysWrapper';
 import { BNC_NETWORK, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
-// import { CreateOrdererCertsGenerator } from './generators/crypto/createOrdererCerts.sh';
 import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
 import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
 import { Identity } from 'fabric-network';
 import createFolder = SysWrapper.createFolder;
-import { Peer } from './models/peer';
+import { DockerComposeEntityBaseGenerator } from './generators/docker-compose/dockercomposebase.yaml';
+import { DockerComposePeerGenerator } from './generators/docker-compose/dockercomposepeer.yaml';
+import { Organization } from './models/organization';
+import { DockerEngine } from './agents/docker-agent';
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
@@ -168,6 +165,52 @@ export class Orchestrator {
     // l('Ran createCA.sh');
     // const dockerComposePeer = new DockerComposePeerGenerator('docker-compose-peer.yaml', path, options, engine);
     // await dockerComposePeer.save();
+  }
+
+  /**
+   * deploy peer container
+   * @param configFilePath
+   * @param skipDownload
+   */
+  async deployPeerContainer(configFilePath: string, skipDownload = false) {
+    const network: Network = await this._parse(configFilePath);
+    const organization: Organization = network.organizations[0];
+    l('[End] Blockchain configuration files parsed');
+
+    // Generate dynamically crypto
+    const homedir = require('os').homedir();
+    const path = join(homedir, this.networkRootPath);
+    await createFolder(path);
+
+    const options: DockerComposeYamlOptions = {
+      networkRootPath: path,
+      composeNetwork: BNC_NETWORK,
+      org: network.organizations[0],
+      envVars: {
+        FABRIC_VERSION: HLF_VERSION.HLF_2,
+        FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+        THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+      }
+    };
+
+    l('Creating Peer base');
+    const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options);
+    await peerBaseGenerator.createTemplateBase();
+
+    l('Creating Docker network');
+    const peer = organization.peers[0];
+    const engineModel = organization.getEngine(peer.options.engineName);
+    // const engine: DockerEngine = new DockerEngine({ host: engineModel.options.url, port: engineModel.options.port });
+    const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+    await engine.createNetwork({ Name: options.composeNetwork });
+
+    l('Creating Peer container & deploy');
+    const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options, engine);
+    l(`'Creating Peer ${peer.name} container template`);
+    await peerGenerator.createTemplatePeers();
+    l(`'Starting Peer ${peer.name} container`);
+    const started = await peerGenerator.startPeer(peer);
+    l(`Peer ${peer.name} started (${started})`);
   }
 
   /**
