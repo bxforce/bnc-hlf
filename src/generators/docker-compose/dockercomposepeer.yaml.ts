@@ -2,7 +2,6 @@ import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { e } from '../../utils/logs';
 import { DockerEngine } from '../../agents/docker-agent';
-import { DOCKER_DEFAULT } from '../../utils/constants';
 import { Peer } from '../../models/peer';
 
 /**
@@ -91,14 +90,9 @@ ${this.options.org.orderers
    * Constructor
    * @param filename
    * @param options
-   * @param dockerEngine
    */
-  constructor(filename: string, private options: DockerComposeYamlOptions, private readonly dockerEngine?: DockerEngine) {
+  constructor(filename: string, private options: DockerComposeYamlOptions) {
     super(filename, `${options.networkRootPath}/docker-compose`);
-
-    if (!this.dockerEngine) {
-      this.dockerEngine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
-    }
   }
 
   /**
@@ -122,11 +116,12 @@ ${this.options.org.orderers
    */
   async startPeer(peer: Peer): Promise<boolean> {
     try {
-      await this.dockerEngine.composeOne(`${peer.name}.${this.options.org.fullName}`, {
-        cwd: this.path,
-        config: this.filename,
-        log: true
-      });
+      const serviceName =  `${peer.name}.${this.options.org.fullName}`;
+
+      const engine = this.options.org.getEngine(peer.options.engineName);
+      const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+
+      await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: true });
 
       return true;
     } catch(err) {

@@ -4,11 +4,18 @@ import { d, e } from '../../utils/logs';
 import { SysWrapper } from '../../utils/sysWrapper';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
-import { Membership, UserParams } from '../../core/hlf/membership';
+import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
 import { HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
 import { Peer } from '../../models/peer';
-import { IEnrollResponse } from 'fabric-ca-client';
+import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import createFile = SysWrapper.createFile;
+import { Orderer } from '../../models/orderer';
+import { Utils } from '../../utils/utils';
+import getPeerMspPath = Utils.getPeerMspPath;
+import getOrdererMspPath = Utils.getOrdererMspPath;
+import getPeerTlsPath = Utils.getPeerTlsPath;
+import getOrganizationMspPath = Utils.getOrganizationMspPath;
+import getOrdererTlsPath = Utils.getOrdererTlsPath;
 
 export interface AdminCAAccount {
   name: string;
@@ -61,10 +68,10 @@ certificateAuthorities:
     try {
       // Generate connection-profile & MSP folder structure
       await this.save();
-      // await this.createDirectories();
       await this.createMSPDirectories();
 
       // Instantiate Membership instance
+      d('Initiate CA Client services');
       const orgMspId = this.options.org.mspName;
       const config: ClientConfig = {
         networkProfile: this.filePath,
@@ -75,61 +82,85 @@ certificateAuthorities:
       };
       const membership = new Membership(config);
       await membership.initCaClient(this.options.org.caName);
+      d('Initiate CA Client services done !!!');
 
       // Generate & store admin certificate
+      d('Enroll CA Registrar');
       const caAdminEnrollment = await this._generateCAAdminOrgMspFiles(membership, orgMspId);
       const {
         key: caAdminKey,
         certificate: caAdminCertificate,
         rootCertificate: caAdminRootCertificate
       } = caAdminEnrollment;
+      d('Enroll CA Registrar done !!!');
+
+      d('Create Organization MSP');
+      const orgMspPath = getOrganizationMspPath(this.options.networkRootPath, this.options.org);
+      await createFile(`${orgMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
+      await this.generateConfigOUFile(`${orgMspPath}/config.yaml`);
 
       // generate NodeOU & enroll & store peer crypto credentials
+      d('Register & Enroll Organization peers');
       for (const peer of this.options.org.peers) {
-        const peerMspPath = this._getPeerMspPath(peer);
-        const peerEnrollment = await this._generateMspFiles(peer, membership, orgMspId);
+        const peerMspPath = getPeerMspPath(this.options.networkRootPath, this.options.org, peer);
+        const peerEnrollment = await this._generatePeerMspFiles(peer, membership, orgMspId);
         // TODO check enrollment
         const {
           key: peerKey,
           certificate: peerCertificate,
           rootCertificate: peerRootCertificate
-        } = peerEnrollment;
+        } = peerEnrollment.enrollment;
 
+        const peerTlsEnrollment = await this._generatePeerTlsFiles(peer, membership, peerEnrollment.secret);
+        const {
+          key: peerTlsKey,
+          certificate: peerTlsCertificate,
+          rootCertificate: peerTlsRootCertificate
+        } = peerTlsEnrollment;
+
+        // Store all generated files
         await createFile(`${peerMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
         await createFile(`${peerMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
-
         await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
         await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
+
+        const peerTlsPath = getPeerTlsPath(this.options.networkRootPath, this.options.org, peer);
+        await createFile(`${peerTlsPath}/ca.crt`, peerTlsRootCertificate);
+        await createFile(`${peerTlsPath}/server.crt`, peerTlsCertificate);
+        await createFile(`${peerTlsPath}/server.key`, peerTlsKey.toBytes());
       }
+      d('Register & Enroll Organization peers done !!!');
 
-      return true;
-    } catch (err) {
-      e(err);
-      return false;
-    }
-  }
+      // enroll & store orderer crypto credentials
+      d('Register & Enroll Organization orderers');
+      for (const orderer of this.options.org.orderers) {
+        const ordererMspPath = getOrdererMspPath(this.options.networkRootPath, this.options.org, orderer);
+        const ordererEnrollment = await this._generateOrdererMspFiles(orderer, membership, orgMspId);
+        // TODO check enrollment
+        const {
+          key: ordererKey,
+          certificate: ordererCertificate,
+          rootCertificate: ordererRootCertificate
+        } = ordererEnrollment.enrollment;
 
-  async createDirectories(): Promise<Boolean> {
-    try {
-      await ensureDir(`${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers`);
+        const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
+        const {
+          key: ordererTlsKey,
+          certificate: ordererTlsCertificate,
+          rootCertificate: ordererTlsRootCertificate
+        } = ordererTlsEnrollment;
 
-      for (let peer of this.options.org.peers) {
-        await SysWrapper.createFolder(
-          `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}`
-        );
-        await SysWrapper.createFolder(
-          `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/msp/tlscacerts`
-        );
-        await SysWrapper.createFolder(`${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/tlsca`);
-        await SysWrapper.createFolder(`${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/ca`);
+        await createFile(`${ordererMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
+        await createFile(`${ordererMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
+        await createFile(`${ordererMspPath}/keystore/priv_sk`, ordererKey.toBytes());
+        await createFile(`${ordererMspPath}/signcerts/${orderer.name}.${this.options.org.fullName}-cert.pem`, ordererCertificate);
+
+        const ordererTlsPath = getOrdererTlsPath(this.options.networkRootPath, this.options.org, orderer);
+        await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
+        await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
+        await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
       }
-
-      await SysWrapper.createFolder(
-        `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/users/${this.options.org.name}User1@${this.options.org.fullName}`
-      );
-      await SysWrapper.createFolder(
-        `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/users/${this.options.org.name}Admin@${this.options.org.fullName}`
-      );
+      d('Register & Enroll Organization orderers done !!!');
 
       return true;
     } catch (err) {
@@ -163,6 +194,40 @@ certificateAuthorities:
         await SysWrapper.createFolder(`${basePeerPath}/${peer.name}.${this.options.org.fullName}/msp/tlsintermediatecerts`);
       }
 
+      // create organization msp folder
+      const organizationMspPath = getOrganizationMspPath(this.options.networkRootPath, this.options.org);
+      await SysWrapper.createFolder(`${organizationMspPath}`);
+      await SysWrapper.createFolder(`${organizationMspPath}/admincerts`);
+      await SysWrapper.createFolder(`${organizationMspPath}/cacerts`);
+      await SysWrapper.createFolder(`${organizationMspPath}/tlscacerts`);
+
+      // Orderer section
+      const baseOrdererPath = `${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers`;
+
+      // create base peer
+      await ensureDir(baseOrdererPath);
+
+      await SysWrapper.createFolder(`${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/ca`);
+      await SysWrapper.createFolder(`${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/msp`);
+      await SysWrapper.createFolder(`${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/msp/admincerts`);
+      await SysWrapper.createFolder(`${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/msp/cacerts`);
+      await SysWrapper.createFolder(`${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/msp/tlscacerts`);
+
+      // create msp folder for every orderer
+      for (let orderer of this.options.org.orderers) {
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/tls`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/admincerts`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/cacerts`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/intermediatecerts`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/crls`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/keystore`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/signcerts`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/tlscacerts`);
+        await SysWrapper.createFolder(`${baseOrdererPath}/${orderer.name}.${this.options.org.fullName}/msp/tlsintermediatecerts`);
+      }
+
       return true;
     } catch (err) {
       e(err);
@@ -172,26 +237,23 @@ certificateAuthorities:
 
   /**
    * File defining NoeOU configuration
-   * @param peer
+   * @param filePath
    */
-  async generateConfigOUFile(/*filePath: string,*/ peer: Peer): Promise<boolean> {
-    const peerMspPath = this._getPeerMspPath(peer);
-    const filePath = `${peerMspPath}/config.yaml`;
-
+  async generateConfigOUFile(filePath: string): Promise<boolean> {
     const content = `
 NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: cacerts/0.0.0.0-7054-${this.options.org.caName}.pem
+    Certificate: cacerts/ca.${this.options.org.fullName}-cert.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: cacerts/0.0.0.0-7054-${this.options.org.caName}.pem
+    Certificate: cacerts/ca.${this.options.org.fullName}-cert.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: cacerts/0.0.0.0-7054-${this.options.org.caName}.pem
+    Certificate: cacerts/ca.${this.options.org.fullName}-cert.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: cacerts/0.0.0.0-7054-${this.options.org.caName}.pem
+    Certificate: cacerts/ca.${this.options.org.fullName}-cert.pem
     OrganizationalUnitIdentifier: orderer
         `;
 
@@ -218,7 +280,7 @@ NodeOUs:
       d(`The admin account is enrolled (${!!adminEnrollment})`);
 
       return adminEnrollment;
-    } catch(err) {
+    } catch (err) {
       e(err);
       return null;
     }
@@ -232,10 +294,10 @@ NodeOUs:
    * @param mspId
    * @private
    */
-  private async _generateMspFiles(peer: Peer, membership: Membership, mspId: string): Promise<IEnrollResponse> {
+  private async _generatePeerMspFiles(peer: Peer, membership: Membership, mspId: string): Promise<EnrollmentResponse> {
     try {
       // add config.yaml file
-      await this.generateConfigOUFile(peer);
+      await this.generateConfigOUFile(`${getPeerMspPath(this.options.networkRootPath, this.options.org, peer)}/config.yaml`);
 
       // enroll & store peer crypto credentials
       const params: UserParams = {
@@ -244,19 +306,10 @@ NodeOUs:
         role: HLF_CLIENT_ACCOUNT_ROLE.peer,
         affiliation: ''
       };
-      const peerEnrollment = await membership.addUser(params, mspId);
+      const peerEnrollmentResponse = await membership.addUser(params, mspId);
       d(`Peer ${peer.name} is enrolled successfully`);
-
-      // const {
-      //   key: peerKey,
-      //   certificate: peerCertificate,
-      //   rootCertificate: peerRootCertificate
-      // } = peerEnrollment;
-      // await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
-      // await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
-
-      return peerEnrollment;
-    } catch(err) {
+      return peerEnrollmentResponse;
+    } catch (err) {
       e(`Error enrolling the peer ${peer.name}`);
       e(err);
       throw err;
@@ -264,20 +317,76 @@ NodeOUs:
   }
 
   /**
-   * Retrieve the peer msp path
+   * Generate the TLS Files for the selected peer
+   * Generate and store the NodeOU's files into peer MSP Path
    * @param peer
+   * @param membership
+   * @param secret
    * @private
    */
-  private _getPeerMspPath(peer: Peer): string {
-    const basePeerPath = this._getMspPath();
-    return `${basePeerPath}/${peer.name}.${this.options.org.fullName}/msp`;
+  private async _generatePeerTlsFiles(peer: Peer, membership: Membership, secret: string): Promise<IEnrollResponse> {
+    try {
+      // enroll & store peer crypto credentials
+      const request: IEnrollmentRequest = {
+        enrollmentID: `${peer.name}.${this.options.org.fullName}`,
+        enrollmentSecret: secret,
+        profile: 'tls'
+      };
+      const peerTlsEnrollment = await membership.enrollTls(request);
+      d(`Peer TLS ${peer.name} is enrolled successfully`);
+
+      return peerTlsEnrollment;
+    } catch (err) {
+      e(`Error tls enrolling the peer ${peer.name}`);
+      e(err);
+      throw err;
+    }
   }
 
   /**
-   * Get the root msp path of peers
+   * Generate the MSP Files for the selected orderer
+   * Generate and store the NodeOU's files into peer MSP Path
+   * @param orderer
+   * @param membership
+   * @param mspId
    * @private
    */
-  private _getMspPath(): string {
-    return `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers`;
+  private async _generateOrdererMspFiles(orderer: Orderer, membership: Membership, mspId: string): Promise<EnrollmentResponse> {
+    try {
+      // enroll & store orderer crypto credentials
+      const params: UserParams = {
+        enrollmentID: `${orderer.name}.${this.options.org.fullName}`,
+        enrollmentSecret: `${orderer.name}pw`,
+        role: HLF_CLIENT_ACCOUNT_ROLE.orderer,
+        affiliation: ''
+      };
+      const ordererEnrollmentResponse = await membership.addUser(params, mspId);
+      d(`Orderer ${orderer.name} is enrolled successfully`);
+
+      return ordererEnrollmentResponse;
+    } catch (err) {
+      e(`Error enrolling the orderer ${orderer.name}`);
+      e(err);
+      throw err;
+    }
+  }
+
+  private async _generateOrdererTlsFiles(orderer: Orderer, membership: Membership, secret: string): Promise<IEnrollResponse> {
+    try {
+      // enroll & store peer crypto credentials
+      const request: IEnrollmentRequest = {
+        enrollmentID: `${orderer.name}.${this.options.org.fullName}`,
+        enrollmentSecret: secret,
+        profile: 'tls'
+      };
+      const ordererTlsEnrollment = await membership.enrollTls(request);
+      d(`Orderer TLS ${orderer.name} is enrolled successfully`);
+
+      return ordererTlsEnrollment;
+    } catch (err) {
+      e(`Error tls enrolling the orderer ${orderer.name}`);
+      e(err);
+      throw err;
+    }
   }
 }

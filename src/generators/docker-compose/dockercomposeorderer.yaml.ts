@@ -1,6 +1,7 @@
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { e } from '../../utils/logs';
+import { DockerEngine } from '../../agents/docker-agent';
 
 /**
  * Class responsible to generate Orderer compose file
@@ -8,7 +9,7 @@ import { e } from '../../utils/logs';
  * @author wassim.znaidi@gmail.com
  */
 
-export class DockerComposePeerGenerator extends BaseGenerator {
+export class DockerComposeOrdererGenerator extends BaseGenerator {
   /* docker-compose template content text */
   contents = `
 version: '2'
@@ -58,11 +59,10 @@ ${this.options.org.orderers
   /**
    * Constructor
    * @param filename
-   * @param path
    * @param options
    */
-  constructor(filename: string, path: string,  private options: DockerComposeYamlOptions) {
-    super(filename, path);
+  constructor(filename: string, private options: DockerComposeYamlOptions) {
+    super(filename, `${options.networkRootPath}/docker-compose`);
   }
 
   /**
@@ -74,6 +74,22 @@ ${this.options.org.orderers
 
       return true;
     } catch(err) {
+      e(err);
+      return false;
+    }
+  }
+
+  async deployOrdererContainers(): Promise<boolean> {
+    try {
+      for(const orderer of this.options.org.orderers) {
+        const serviceName =  `${orderer.name}.${this.options.org.fullName}`;
+        const engine = this.options.org.getEngine(orderer.options.engineName);
+        const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+        await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: true });
+      }
+
+      return true;
+    } catch (err) {
       e(err);
       return false;
     }

@@ -11,7 +11,7 @@ ${this.network.organizations
     Name: ${org.name}
     SkipAsForeign: false
     ID: ${org.name}
-    MSPDir: ${this.network.options.networkConfigPath}/crypto-config/peerOrganizations/${org.fullName.toLowerCase()}/msp
+    MSPDir: ${this.network.options.networkConfigPath}/organizations/peerOrganizations/${org.fullName}/msp
     Policies: &${org.name}POLICIES
             Readers:
                 Type: Signature
@@ -124,12 +124,8 @@ ${org.orderers
     (ord, i) => `
             - Host: ${ord.options.host}
               Port: ${ord.options.ports[i]}
-              ClientTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${
-      org.domainName
-    }/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
-              ServerTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${
-      org.domainName
-    }/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
+              ClientTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${org.domainName}/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
+              ServerTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${org.domainName}/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
 `
   )
   .join('')}

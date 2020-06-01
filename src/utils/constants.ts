@@ -39,7 +39,6 @@ export enum DOCKER_DEFAULT {
 export enum HLF_CLIENT_ACCOUNT_ROLE {
   peer = 'peer',
   client = 'client',
-  user = 'user',
   admin= 'admin',
   orderer = 'orderer',
 }

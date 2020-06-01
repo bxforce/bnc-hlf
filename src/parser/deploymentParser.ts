@@ -94,12 +94,14 @@ export class DeploymentParser extends BaseParser {
 
       // parse & store orderers
       const ords = [];
-      orderers.forEach(ord => {
+      orderers.forEach((ord, index) => {
         const { orderer, engine_name: ordererEngineName } = ord;
         ords.push(
           new Orderer(orderer, {
             engineName: ordererEngineName,
-            consensus
+            consensus,
+            ports: [`8${index}50`],
+            number: index,
           })
         );
       });

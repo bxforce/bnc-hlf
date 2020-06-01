@@ -19,6 +19,7 @@ import { DockerComposeEntityBaseGenerator } from './generators/docker-compose/do
 import { DockerComposePeerGenerator } from './generators/docker-compose/dockercomposepeer.yaml';
 import { Organization } from './models/organization';
 import { DockerEngine } from './agents/docker-agent';
+import { DockerComposeOrdererGenerator } from './generators/docker-compose/dockercomposeorderer.yaml';
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
@@ -205,12 +206,18 @@ export class Orchestrator {
     await engine.createNetwork({ Name: options.composeNetwork });
 
     l('Creating Peer container & deploy');
-    const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options, engine);
+    const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options);
     l(`'Creating Peer ${peer.name} container template`);
     await peerGenerator.createTemplatePeers();
     l(`'Starting Peer ${peer.name} container`);
     const started = await peerGenerator.startPeer(peer);
     l(`Peer ${peer.name} started (${started})`);
+
+    l('Creating Orderers Container & Deploy');
+    const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options);
+    await ordererGenerator.createTemplateOrderers();
+    const ordererStarted = await ordererGenerator.deployOrdererContainers();
+    l(`Orderers started (${ordererStarted})`);
   }
 
   /**

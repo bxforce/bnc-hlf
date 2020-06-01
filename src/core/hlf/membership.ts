@@ -5,6 +5,10 @@ import { d, e } from '../../utils/logs';
 
 export type UserParams = IRegisterRequest;
 export type AdminParams = IEnrollmentRequest;
+export interface EnrollmentResponse {
+  enrollment: IEnrollResponse;
+  secret?: string;
+}
 
 /**
  * Class responsible to create user & admin accounts
@@ -81,11 +85,42 @@ export class Membership extends ClientHelper {
   }
 
   /**
+   *
+   * @param request
+   * @param adminId
+   */
+  async enrollTls(request: IEnrollmentRequest, adminId: string = this.clientConfig.admin.name): Promise<IEnrollResponse | undefined> {
+    try {
+      const identity = await this.wallet.getIdentity(request.enrollmentID);
+      if(!identity) {
+        d(`The user ${request.enrollmentID} is not registered and enrolled into the wallet`);
+        return null;
+      }
+
+      // check if the admin account exists
+      const adminIdentity = await this.wallet.getIdentity(adminId);
+      if (!adminIdentity) {
+        d(`An identity of the admin user (${adminId}) does not exists in the wallet`);
+        d('Check if admin account is already enrolled');
+        return null;
+      }
+
+      const enrollment = await this.ca.enroll(request);
+      d(`TLS enrolled for user ${request.enrollmentID}`);
+
+      return enrollment;
+    } catch(err) {
+      e(err);
+      return null;
+    }
+  }
+
+  /**
    * Add a new user account
    * @param params
    * @param mspId
    */
-  async addUser(params: UserParams, mspId: string): Promise<IEnrollResponse | undefined> {
+  async addUser(params: UserParams, mspId: string): Promise<EnrollmentResponse | undefined> {
     try {
       // check if the user exists
       const userIdentity = await this.wallet.getIdentity(params.enrollmentID);
@@ -108,8 +143,8 @@ export class Membership extends ClientHelper {
 
       // register the user, enroll the user and import into the wallet
       // @ts-ignore
-      const enrollmentSecret = await this.ca.register(params, adminUser);
-      const enrollment = await this.ca.enroll({ enrollmentSecret, enrollmentID: params.enrollmentID });
+      const secret = await this.ca.register(params, adminUser);
+      const enrollment = await this.ca.enroll({ enrollmentSecret: secret, enrollmentID: params.enrollmentID });
 
       const { key, certificate } = enrollment;
 
@@ -117,7 +152,7 @@ export class Membership extends ClientHelper {
       await this.wallet.addIdentity(params.enrollmentID, this.client.getMspid(), key, certificate);
       d(`Successfully add user "${params.enrollmentID} and imported it into the wallet`);
 
-      return enrollment;
+      return { enrollment, secret };
     } catch (err) {
       e(`Failed to add user "${params.enrollmentID}": ${err}`);
       return null;
