@@ -111,23 +111,26 @@ certificateAuthorities:
           rootCertificate: peerRootCertificate
         } = peerEnrollment.enrollment;
 
-        const peerTlsEnrollment = await this._generatePeerTlsFiles(peer, membership, peerEnrollment.secret);
-        const {
-          key: peerTlsKey,
-          certificate: peerTlsCertificate,
-          rootCertificate: peerTlsRootCertificate
-        } = peerTlsEnrollment;
-
         // Store all generated files
         await createFile(`${peerMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
         await createFile(`${peerMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
         await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
         await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
 
-        const peerTlsPath = getPeerTlsPath(this.options.networkRootPath, this.options.org, peer);
-        await createFile(`${peerTlsPath}/ca.crt`, peerTlsRootCertificate);
-        await createFile(`${peerTlsPath}/server.crt`, peerTlsCertificate);
-        await createFile(`${peerTlsPath}/server.key`, peerTlsKey.toBytes());
+        // Generate TLS if it'w enabled
+        if(this.options.org.isSecure) {
+          const peerTlsEnrollment = await this._generatePeerTlsFiles(peer, membership, peerEnrollment.secret);
+          const {
+            key: peerTlsKey,
+            certificate: peerTlsCertificate,
+            rootCertificate: peerTlsRootCertificate
+          } = peerTlsEnrollment;
+
+          const peerTlsPath = getPeerTlsPath(this.options.networkRootPath, this.options.org, peer);
+          await createFile(`${peerTlsPath}/ca.crt`, peerTlsRootCertificate);
+          await createFile(`${peerTlsPath}/server.crt`, peerTlsCertificate);
+          await createFile(`${peerTlsPath}/server.key`, peerTlsKey.toBytes());
+        }
       }
       d('Register & Enroll Organization peers done !!!');
 
@@ -143,22 +146,25 @@ certificateAuthorities:
           rootCertificate: ordererRootCertificate
         } = ordererEnrollment.enrollment;
 
-        const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
-        const {
-          key: ordererTlsKey,
-          certificate: ordererTlsCertificate,
-          rootCertificate: ordererTlsRootCertificate
-        } = ordererTlsEnrollment;
-
         await createFile(`${ordererMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
         await createFile(`${ordererMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
         await createFile(`${ordererMspPath}/keystore/priv_sk`, ordererKey.toBytes());
         await createFile(`${ordererMspPath}/signcerts/${orderer.name}.${this.options.org.fullName}-cert.pem`, ordererCertificate);
 
-        const ordererTlsPath = getOrdererTlsPath(this.options.networkRootPath, this.options.org, orderer);
-        await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
-        await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
-        await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
+        // Generate TLS files if it's enabled
+        if(this.options.org.isSecure) {
+          const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
+          const {
+            key: ordererTlsKey,
+            certificate: ordererTlsCertificate,
+            rootCertificate: ordererTlsRootCertificate
+          } = ordererTlsEnrollment;
+
+          const ordererTlsPath = getOrdererTlsPath(this.options.networkRootPath, this.options.org, orderer);
+          await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
+          await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
+          await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
+        }
       }
       d('Register & Enroll Organization orderers done !!!');
 
@@ -371,6 +377,13 @@ NodeOUs:
     }
   }
 
+  /**
+   * Generate the TLS Files for the selected orderer
+   * @param orderer
+   * @param membership
+   * @param secret
+   * @private
+   */
   private async _generateOrdererTlsFiles(orderer: Orderer, membership: Membership, secret: string): Promise<IEnrollResponse> {
     try {
       // enroll & store peer crypto credentials
