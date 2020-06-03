@@ -1,3 +1,8 @@
+/**
+ * Class responsible to operate other a docker engine (local or remote)
+ * @author ahmed.souissi@irt-systemx.fr
+ */
+
 import * as Compose from 'docker-compose';
 import { e, l } from '../utils/logs';
 import {
@@ -104,9 +109,13 @@ export class DockerEngine {
     return containerList;
   }
 
-  async doesContainerExist(name: string): Promise<Boolean> {
+  /**
+   * Check if a container name is already running
+   * @param name container name
+   */
+  async doesContainerExist(containerName: string): Promise<Boolean> {
     const containers = await this.engine.listContainers();
-    const fContainer = containers.filter(container => container.Names.filter(Name => Name === name).length > 0);
+    const fContainer = containers.filter(container => container.Names.filter(name => name.indexOf(containerName) > 0).length > 0);
     return fContainer.length > 0;
   }
 

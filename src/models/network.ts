@@ -1,8 +1,9 @@
 /* tslint:disable:no-inferrable-types */
 import { Organization } from './organization';
 import { Channel } from './channel';
-import { User } from './user';
 import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_VERSION } from '../utils/constants';
+import { Ca } from './ca';
+import { OrdererOrganization, OrdererOrganizationOptions } from './ordererOrganization';
 
 export class NetworkOptions {
   hyperledgerVersion?: HLF_VERSION;
@@ -19,6 +20,9 @@ export class NetworkOptions {
 export class Network {
   organizations: Organization[] = [];
   channels: Channel[];
+
+  /* This ca will be used to generate only orderer msp */
+  ordererOrganization?: OrdererOrganization;
 
   constructor(public path: string, public options: NetworkOptions) {}
 

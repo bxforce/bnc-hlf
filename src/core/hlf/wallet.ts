@@ -1,5 +1,5 @@
 import { Wallet, Wallets, Identity, X509Identity } from 'fabric-network';
-import { d, e } from '../../utils/logs';
+import { e } from '../../utils/logs';
 import { HLF_WALLET_TYPE } from '../../utils/constants';
 
 /**

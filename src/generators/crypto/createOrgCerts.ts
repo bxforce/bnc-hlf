@@ -64,7 +64,7 @@ certificateAuthorities:
   /**
    * Build all certificates for the network to be started
    */
-  async buildCertificate(): Promise<Boolean> {
+  async buildCertificate(): Promise<boolean> {
     try {
       // Generate connection-profile & MSP folder structure
       await this.save();
@@ -278,7 +278,7 @@ NodeOUs:
    * @param mspId
    * @private
    */
-  private async _generateCAAdminOrgMspFiles(membership: Membership, mspId: string): Promise<IEnrollResponse> {
+  async _generateCAAdminOrgMspFiles(membership: Membership, mspId: string): Promise<IEnrollResponse> {
     try {
       // Generate & store admin certificate
       const adminEnrollment: IEnrollResponse = await membership.enrollCaAdmin(mspId);

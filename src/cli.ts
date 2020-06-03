@@ -39,6 +39,12 @@ export class CLI {
     return orchEngine;
   }
 
+  static async generateOrdererCredentials(configGenesisFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateOrdererCredentials(configGenesisFilePath);
+    return orchEngine;
+  }
+
   static async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
     const enrollEngine = new Orchestrator();
     if(type == Type_User.admin){

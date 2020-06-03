@@ -1,8 +1,9 @@
 import { BaseGenerator } from './base';
 import { Network } from '../models/network';
+import { DockerComposeYamlOptions } from '../utils/data-type';
 
 export class ConfigtxYamlGenerator extends BaseGenerator {
-  contents = `---
+  contents = `
 Organizations:
 ${this.network.organizations
   .map(
@@ -10,7 +11,7 @@ ${this.network.organizations
   - &${org.name}
     Name: ${org.name}
     SkipAsForeign: false
-    ID: ${org.name}
+    ID: ${org.mspName}
     MSPDir: ${this.network.options.networkConfigPath}/organizations/peerOrganizations/${org.fullName}/msp
     Policies: &${org.name}POLICIES
             Readers:
@@ -98,14 +99,10 @@ ${this.network.organizations
   .map(
     org => `
 ${org.orderers
-  .map(
-    (ord, i) => `
+  .map((ord, i) => `
         # - ${ord.options.host}:${ord.options.ports[i]}
-`
-  )
-  .join('')}
-`
-  )
+`).join('')}
+`)
   .join('')}     
         
     BatchTimeout: 2s
@@ -220,7 +217,7 @@ ${this.network.organizations
   .join('')}                        
   `;
 
-  constructor(filename: string, path: string, private network: Network) {
+  constructor(filename: string, path: string, private network: Network, private options?: DockerComposeYamlOptions) {
     super(filename, path);
   }
 }

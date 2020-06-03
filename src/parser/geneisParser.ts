@@ -4,6 +4,8 @@ import { BaseParser } from './base';
 import { Orderer } from '../models/orderer';
 import { Peer } from '../models/peer';
 import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_VERSION } from '../utils/constants';
+import { Ca } from '../models/ca';
+import { OrdererOrganization } from '../models/ordererOrganization';
 
 export class GenesisParser extends BaseParser {
   constructor(public genesisFilePath: string) {
@@ -14,8 +16,19 @@ export class GenesisParser extends BaseParser {
     const parsedYaml = await this.parseRaw();
     const genesisBlock = parsedYaml['genesis'];
 
-    const { template_folder, consensus, organisations } = genesisBlock;
+    const { template_folder, consensus, ordererDomain, ca, organisations } = genesisBlock;
     const networkConsensus = consensus as ConsensusType;
+
+    // Parse CA
+    const { type, url, port, settings } = ca;
+    const caEntity = new Ca('caOrderer', {
+      number: 0,
+      ports: port,
+      host: url,
+      user: 'admin',
+      password: 'adminpw',
+      isSecure: false,
+    });
 
     // parse the organization
     const orgs = [];
@@ -62,6 +75,17 @@ export class GenesisParser extends BaseParser {
       consensus: networkConsensus
     });
     network.organizations = orgs;
+
+    const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
+      domainName: ordererDomain,
+      ca: caEntity
+    });
+
+    for(const org of network.organizations) {
+      ordererOrganization.orderers.push(...org.orderers);
+    }
+
+    network.ordererOrganization = ordererOrganization;
 
     return network;
   }

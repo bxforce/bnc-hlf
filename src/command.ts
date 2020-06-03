@@ -10,6 +10,10 @@ const tasks = {
     return await CLI.generateGenesis(filePath);
   },
 
+  async generateOrdererCredentials(filePath: string) {
+    return await CLI.generateOrdererCredentials(filePath);
+  },
+
   async createNetwork(filePath: string) {
     return await CLI.createNetwork(filePath);
   },
@@ -94,6 +98,15 @@ program
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.generateGenesis(cmd.config);
+    }
+  });
+
+program
+  .command('orderer-msp')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.generateOrdererCredentials(cmd.config);
     }
   });
 

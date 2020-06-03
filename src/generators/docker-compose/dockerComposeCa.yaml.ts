@@ -1,13 +1,12 @@
-import * as sudo from 'sudo-prompt';
-import { exec } from 'shelljs';
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { DockerEngine } from '../../agents/docker-agent';
 import { d, e, l } from '../../utils/logs';
-import * as chalk from 'chalk';
-import { BNC_TOOL_NAME, DOCKER_CA_DELAY, DOCKER_DEFAULT } from '../../utils/constants';
+import { DOCKER_CA_DELAY, DOCKER_DEFAULT } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 import delay = Utils.delay;
+import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
+import changeOwnership = Utils.changeOwnership;
 
 export class DockerComposeCaGenerator extends BaseGenerator {
   contents = `
@@ -37,8 +36,16 @@ services:
       - ${this.options.composeNetwork}    
   `;
 
+  /**
+   *
+   * @param filename
+   * @param path
+   * @param options
+   * @param dockerEngine
+   */
   constructor(filename: string, path: string, private options?: DockerComposeYamlOptions, private readonly dockerEngine?: DockerEngine) {
     super(filename, path);
+
     if (!this.dockerEngine) {
       this.dockerEngine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
     }
@@ -47,7 +54,7 @@ services:
   async startTlsCa() {
     try {
       await this.dockerEngine.composeOne(`${this.options.org.caName}`, { cwd: this.path, config: this.filename });
-      await this.changeOwnership(`${this.options.networkRootPath}/${this.options.org.name}`);
+      await changeOwnership(`${this.options.networkRootPath}/${this.options.org.name}`);
     } catch (err) {
       e(err);
     }
@@ -59,13 +66,13 @@ services:
    */
   async startOrgCa(): Promise<Boolean> {
     try {
-      const caIsRunning = await this.dockerEngine.doesContainerExist(`rca.${this.options.org.name}`);
+      const caIsRunning = await this.dockerEngine.doesContainerExist(`${this.options.org.caName}`);
       if (caIsRunning) {
         l('CA container is already running');
         return true;
       }
 
-      await this.dockerEngine.composeOne(`rca.${this.options.org.name}`, { cwd: this.path, config: this.filename });
+      await this.dockerEngine.composeOne(`${this.options.org.caName}`, { cwd: this.path, config: this.filename });
 
       // Check the container is running
       await delay(DOCKER_CA_DELAY);
@@ -77,7 +84,7 @@ services:
       d('CA running');
 
       // check if CA crypto generated
-      await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}`);
+      await changeOwnerShipWithPassword(`${this.options.networkRootPath}`);
       // await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
       // await this.changeOwnership(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
 
@@ -90,36 +97,36 @@ services:
     }
   }
 
-  private changeOwnership(folder: string) {
-    const options = {
-      name: BNC_TOOL_NAME
-    };
-
-    const command = `chown -R 1001:1001 ${folder}`;
-
-    return new Promise((resolved, rejected) => {
-      sudo.exec(command, options, (error, stdout, stderr) => {
-        if (error) {
-          rejected(error);
-        }
-
-        if (stderr) {
-          console.error(chalk.red(stderr));
-          e(stderr);
-        }
-
-        resolved(true);
-      });
-    });
-  }
-
-  private changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<Boolean> {
-    const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
-
-    return new Promise((resolved, rejected) => {
-      exec(command, {silent: true}, function(code, stdout, stderr) {
-        return code === 0 ? resolved() : rejected();
-      });
-    });
-  }
+  // private changeOwnership(folder: string) {
+  //   const options = {
+  //     name: BNC_TOOL_NAME
+  //   };
+  //
+  //   const command = `chown -R 1001:1001 ${folder}`;
+  //
+  //   return new Promise((resolved, rejected) => {
+  //     sudo.exec(command, options, (error, stdout, stderr) => {
+  //       if (error) {
+  //         rejected(error);
+  //       }
+  //
+  //       if (stderr) {
+  //         console.error(chalk.red(stderr));
+  //         e(stderr);
+  //       }
+  //
+  //       resolved(true);
+  //     });
+  //   });
+  // }
+  //
+  // private changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<Boolean> {
+  //   const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
+  //
+  //   return new Promise((resolved, rejected) => {
+  //     exec(command, {silent: true}, function(code, stdout, stderr) {
+  //       return code === 0 ? resolved() : rejected();
+  //     });
+  //   });
+  // }
 }

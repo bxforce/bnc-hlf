@@ -14,12 +14,14 @@ import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
 import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
 import { Identity } from 'fabric-network';
-import createFolder = SysWrapper.createFolder;
 import { DockerComposeEntityBaseGenerator } from './generators/docker-compose/dockercomposebase.yaml';
 import { DockerComposePeerGenerator } from './generators/docker-compose/dockercomposepeer.yaml';
 import { Organization } from './models/organization';
 import { DockerEngine } from './agents/docker-agent';
 import { DockerComposeOrdererGenerator } from './generators/docker-compose/dockercomposeorderer.yaml';
+import createFolder = SysWrapper.createFolder;
+import { DockerComposeCaOrdererGenerator } from './generators/docker-compose/dockerComposeCaOrderer.yaml';
+import { OrdererCertsGenerator } from './generators/crypto/createOrdererCerts';
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
@@ -54,22 +56,8 @@ export class Orchestrator {
    * @param configGenesisFilePath full path of the deployment configuration file
    */
   async generateGenesis(configGenesisFilePath: string) {
-    const homedir = require('os').homedir();
-    const path = join(homedir, this.networkRootPath);
-
-    l('Parsing genesis input file');
-    const validator = new ConfigurationValidator();
-    const isValid = validator.isValidGenesis(configGenesisFilePath);
-    if (!isValid) {
-      e('Genesis configuration input file is invalid');
-      return;
-    }
-    l('Input genesis file validated');
-
-    l('Start parsing genesis input file');
-    const parser = new GenesisParser(configGenesisFilePath);
-    const network: Network = await parser.parse();
-    l('Genesis input file parsed');
+    const path = this._getDefaultPath();
+    const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
 
     l('Start generating configtx.yaml file');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
@@ -87,7 +75,7 @@ export class Orchestrator {
    * @param skipDownload boolean to download fabric binaries (needed to create credentials)
    */
   async validateAndParse(configFilePath: string, skipDownload = false) {
-    const network: Network = await this._parse(configFilePath);
+    const network: Network = await Orchestrator._parse(configFilePath);
     l('[End] Blockchain configuration files parsed');
 
     // Generate dynamically crypto
@@ -108,7 +96,7 @@ export class Orchestrator {
     };
 
     if (!skipDownload) {
-      await this._downloadBinaries(path, options);
+      await Orchestrator._downloadBinaries(path, options);
     }
 
     // create network
@@ -174,7 +162,7 @@ export class Orchestrator {
    * @param skipDownload
    */
   async deployPeerContainer(configFilePath: string, skipDownload = false) {
-    const network: Network = await this._parse(configFilePath);
+    const network: Network = await Orchestrator._parse(configFilePath);
     const organization: Organization = network.organizations[0];
     l('[End] Blockchain configuration files parsed');
 
@@ -202,7 +190,7 @@ export class Orchestrator {
     const peer = organization.peers[0];
     const engineModel = organization.getEngine(peer.options.engineName);
     // const engine: DockerEngine = new DockerEngine({ host: engineModel.options.url, port: engineModel.options.port });
-    const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+    const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
     await engine.createNetwork({ Name: options.composeNetwork });
 
     l('Creating Peer container & deploy');
@@ -218,6 +206,42 @@ export class Orchestrator {
     await ordererGenerator.createTemplateOrderers();
     const ordererStarted = await ordererGenerator.deployOrdererContainers();
     l(`Orderers started (${ordererStarted})`);
+  }
+
+  /**
+   *
+   * @param genesisFilePath
+   */
+  async generateOrdererCredentials(genesisFilePath: string) {
+    const path = this._getDefaultPath();
+    await createFolder(path);
+
+    l('Genesis File: start parsing...');
+    const network = await Orchestrator._parseGenesis(genesisFilePath);
+    l('Genesis File: parsing done...');
+
+    const options: DockerComposeYamlOptions = { networkRootPath: path, composeNetwork: BNC_NETWORK, org: null };
+    const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
+    await engine.createNetwork({ Name: options.composeNetwork });
+    l('Genesis: docker engine configured !!!');
+
+    l('Genesis: start CA container...');
+    const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
+    await ca.save();
+    const caStarted = await ca.startOrdererCa();
+    if(!caStarted) {
+      e('Error while starting the orderer CA container !!!');
+      return;
+    }
+    l(`Genesis: CA container started (${caStarted}) !!!`);
+
+    l('Genesis: start generating credentials...');
+    const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
+      path,
+      network,
+      { name: this.defaultCAAdmin.name, password: this.defaultCAAdmin.password });
+    const isGenerated = await ordererGenerator.buildCertificate();
+    l(`Genesis: credentials generated (${isGenerated}) !!!`);
   }
 
   /**
@@ -377,7 +401,7 @@ export class Orchestrator {
    * @param deploymentConfigPath
    * @private
    */
-  private async _parse(deploymentConfigPath: string): Promise<Network> {
+  private static async _parse(deploymentConfigPath: string): Promise<Network> {
     l('[Start] Start parsing the blockchain configuration file');
     l('Validate input configuration file');
     const validator = new ConfigurationValidator();
@@ -397,12 +421,41 @@ export class Orchestrator {
   }
 
   /**
+   * Parse & validate genesis configuration file
+   * @param genesisConfigPath
+   * @private
+   */
+  private static async _parseGenesis(genesisConfigPath: string): Promise<Network | undefined> {
+    try {
+      l('Parsing genesis input file');
+      const validator = new ConfigurationValidator();
+      const isValid = validator.isValidGenesis(genesisConfigPath);
+      if (!isValid) {
+        e('Genesis configuration input file is invalid');
+        return;
+      }
+      l('Input genesis file validated');
+
+      l('Start parsing genesis input file');
+      const parser = new GenesisParser(genesisConfigPath);
+      const network: Network = await parser.parse();
+      l('Genesis input file parsed');
+
+      return network;
+    } catch (err) {
+      e(err);
+      return null;
+
+    }
+  }
+
+  /**
    * download hyperledger fabric binaries
    * @param folderPath folder where to store files
    * @param options options to generate script files
    * @private
    */
-  private async _downloadBinaries(folderPath: string, options: DockerComposeYamlOptions): Promise<boolean> {
+  private static async _downloadBinaries(folderPath: string, options: DockerComposeYamlOptions): Promise<boolean> {
     try {
       l('[Start] Download fabric binaries...');
       const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, options);
@@ -411,10 +464,19 @@ export class Orchestrator {
       l('[End] Ran Download fabric binaries');
 
       return true;
-    } catch(err) {
+    } catch (err) {
       e(err);
       return false;
     }
+  }
+
+  /**
+   * Return the default path where to store all files and materials
+   * @private
+   */
+  private _getDefaultPath(): string {
+    const homedir = require('os').homedir();
+    return join(homedir, this.networkRootPath);
   }
 
 }

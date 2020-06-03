@@ -1,5 +1,5 @@
 chains:
-  template_folder: "/mnt/c/Users/wassim.znaidi/Desktop/BNC/hyperledger-fabric-network"
+  template_folder: "/home/wassim/hyperledger-fabric-network"
   fabric: "2.0"
   tls: false
   consensus: "raft"

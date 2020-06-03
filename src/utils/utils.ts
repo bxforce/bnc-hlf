@@ -1,6 +1,11 @@
+import { exec } from 'shelljs';
 import { Peer } from '../models/peer';
 import { Organization } from '../models/organization';
 import { Orderer } from '../models/orderer';
+import { BNC_TOOL_NAME } from './constants';
+import * as sudo from 'sudo-prompt';
+import * as chalk from 'chalk';
+import { e } from './logs';
 
 export namespace Utils {
   export function toPascalCase(text: string): string {
@@ -13,6 +18,39 @@ export namespace Utils {
 
   export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  export function changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<boolean> {
+    const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
+
+    return new Promise((resolved, rejected) => {
+      exec(command, { silent: true }, function(code, stdout, stderr) {
+        return code === 0 ? resolved() : rejected();
+      });
+    });
+  }
+
+  export function changeOwnership(folder: string): Promise<boolean> {
+    const options = {
+      name: BNC_TOOL_NAME
+    };
+
+    const command = `chown -R 1001:1001 ${folder}`;
+
+    return new Promise((resolved, rejected) => {
+      sudo.exec(command, options, (error, stdout, stderr) => {
+        if (error) {
+          rejected(error);
+        }
+
+        if (stderr) {
+          console.error(chalk.red(stderr));
+          e(stderr);
+        }
+
+        resolved(true);
+      });
+    });
   }
 
   /**
@@ -54,4 +92,13 @@ export namespace Utils {
   export function getOrganizationMspPath(rootPath: string, organization: Organization): string {
     return `${rootPath}/organizations/peerOrganizations/${organization.fullName}/msp`;
   }
+
+  export function getOrderersPath(rootPath: string, organization: Organization): string {
+    return `${rootPath}/ordererOrganizations/${organization.fullName}`;
+  }
+
+  export function getOrderersMspPath(rootPath: string, organization: Organization): string {
+    return `${rootPath}/ordererOrganizations/${organization.fullName}/msp`;
+  }
+
 }
