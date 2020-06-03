@@ -6,6 +6,7 @@ import { BNC_TOOL_NAME } from './constants';
 import * as sudo from 'sudo-prompt';
 import * as chalk from 'chalk';
 import { e } from './logs';
+import { OrdererOrganization } from '../models/ordererOrganization';
 
 export namespace Utils {
   export function toPascalCase(text: string): string {
@@ -70,35 +71,41 @@ export namespace Utils {
   }
 
   /**
-   * Retrieve the orderer msp path
-   * @private
-   * @param rootPath
-   * @param organization
-   * @param orderer
-   */
-  export function getOrdererMspPath(rootPath: string, organization: Organization, orderer: Orderer): string {
-    const baseOrdererPath = `${rootPath}/organizations/ordererOrganizations/${organization.fullName}/orderers`;
-    return `${baseOrdererPath}/${orderer.name}.${organization.fullName}/msp`;
-  }
-
-  export function getOrdererTlsPath(rootPath: string, organization: Organization, orderer: Orderer): string {
-    const baseOrdererPath = `${rootPath}/organizations/ordererOrganizations/${organization.fullName}/orderers`;
-    return `${baseOrdererPath}/${orderer.name}.${organization.fullName}/tls`;
-  }
-
-  /**
    * Retrieve the organization msp path
    */
   export function getOrganizationMspPath(rootPath: string, organization: Organization): string {
     return `${rootPath}/organizations/peerOrganizations/${organization.fullName}/msp`;
   }
 
-  export function getOrderersPath(rootPath: string, organization: Organization): string {
-    return `${rootPath}/ordererOrganizations/${organization.fullName}`;
+  /**
+   * Return the full path MSP Orderer Organization path
+   * @param rootPath
+   * @param ordererDomain
+   */
+  export function getOrdererOrganizationRootPath(rootPath: string, ordererDomain: string): string {
+    return `${rootPath}/organizations/ordererOrganizations/${ordererDomain}`;
   }
 
-  export function getOrderersMspPath(rootPath: string, organization: Organization): string {
-    return `${rootPath}/ordererOrganizations/${organization.fullName}/msp`;
+  /**
+   * Return Orderer Entity MSP Path
+   * @param rootPath
+   * @param ordererOrganization
+   * @param orderer
+   */
+  export function getOrdererMspPath(rootPath: string, ordererOrganization: OrdererOrganization, orderer: Orderer): string {
+    const ordererFullName = ordererOrganization.ordererFullName(orderer);
+    return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${ordererFullName}/msp`;
+
   }
 
+  /**
+   * Return Orderer Entity MSP Path
+   * @param rootPath
+   * @param ordererOrganization
+   * @param orderer
+   */
+  export function getOrdererTlsPath(rootPath: string, ordererOrganization: OrdererOrganization, orderer: Orderer): string {
+    const ordererFullName = ordererOrganization.ordererFullName(orderer);
+    return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${ordererFullName}/tls`;
+  }
 }

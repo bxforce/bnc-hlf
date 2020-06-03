@@ -10,6 +10,10 @@ import { HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import { ClientConfig } from '../../core/hlf/helpers';
 import createFile = SysWrapper.createFile;
+import { Utils } from '../../utils/utils';
+import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
+import getOrdererMspPath = Utils.getOrdererMspPath;
+import getOrdererTlsPath = Utils.getOrdererTlsPath;
 
 /**
  * Class responsible to generate Ordering crypto & certificates credentials
@@ -84,10 +88,10 @@ certificateAuthorities:
         rootCertificate: adminRootCert
       } = caAdminEnrollment;
 
-      const mspPath = `${rootPath}/organizations/ordererOrganizations/${domain}`;
-      await createFile(`${mspPath}/msp/admincerts/admin@${domain}-cert.pem`, adminCert);
-      await createFile(`${mspPath}/msp/cacerts/ca.${domain}-cert.pem`, adminRootCert);
-      await createFile(`${mspPath}/ca/ca.${domain}-cert.pem`, adminRootCert);
+      const ordOrgRootPath = getOrdererOrganizationRootPath(rootPath, this.network.ordererOrganization.domainName);
+      await createFile(`${ordOrgRootPath}/msp/admincerts/admin@${domain}-cert.pem`, adminCert);
+      await createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, adminRootCert);
+      await createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, adminRootCert);
       // TODO add here tls certificate in case secure
 
       d('Register & Enroll orderers');
@@ -137,33 +141,29 @@ certificateAuthorities:
    */
   async createMSPDirectories(): Promise<boolean> {
     try {
-      const rootPath = this.network.options.networkConfigPath;
-      const domain = this.network?.ordererOrganization?.domainName;
-      const baseOrderersPath = `${rootPath}/organizations/ordererOrganizations/${domain}`;
-      const baseOrdererPath = `${rootPath}/organizations/ordererOrganizations/${domain}/orderers`;
+      const orderOrgRootPath = getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName);
 
-      // create base peer
-      await ensureDir(baseOrdererPath);
+      await ensureDir(orderOrgRootPath);
 
-      await SysWrapper.createFolder(`${baseOrderersPath}/ca`);
-      await SysWrapper.createFolder(`${baseOrderersPath}/msp`);
-      await SysWrapper.createFolder(`${baseOrderersPath}/msp/admincerts`);
-      await SysWrapper.createFolder(`${baseOrderersPath}/msp/cacerts`);
-      await SysWrapper.createFolder(`${baseOrderersPath}/msp/tlscacerts`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/ca`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/msp`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/msp/admincerts`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/msp/cacerts`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/msp/tlscacerts`);
 
       // create msp folder for every orderer
       for (let orderer of this.network.ordererOrganization.orderers) {
-        const ordererFullName = this.network.ordererOrganization.ordererFullName(orderer);
-        const mspPath = `${baseOrdererPath}/${ordererFullName}/msp`;
-        await SysWrapper.createFolder(`${mspPath}`);
-        await SysWrapper.createFolder(`${mspPath}/admincerts`);
-        await SysWrapper.createFolder(`${mspPath}/cacerts`);
-        await SysWrapper.createFolder(`${mspPath}/keystore`);
-        await SysWrapper.createFolder(`${mspPath}/signcerts`);
-        await SysWrapper.createFolder(`${mspPath}/tlscacerts`);
+        const ordererMspPath = getOrdererMspPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer);
 
-        const tlsPath = `${baseOrdererPath}/${ordererFullName}/tls`;
-        await SysWrapper.createFolder(`${tlsPath}`);
+        await SysWrapper.createFolder(`${ordererMspPath}`);
+        await SysWrapper.createFolder(`${ordererMspPath}/admincerts`);
+        await SysWrapper.createFolder(`${ordererMspPath}/cacerts`);
+        await SysWrapper.createFolder(`${ordererMspPath}/keystore`);
+        await SysWrapper.createFolder(`${ordererMspPath}/signcerts`);
+        await SysWrapper.createFolder(`${ordererMspPath}/tlscacerts`);
+
+        const ordererTlsPath = `${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer)}`;
+        await SysWrapper.createFolder(`${ordererTlsPath}`);
       }
 
       return true;

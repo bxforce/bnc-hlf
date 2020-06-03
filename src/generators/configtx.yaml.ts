@@ -5,6 +5,11 @@ import { DockerComposeYamlOptions } from '../utils/data-type';
 export class ConfigtxYamlGenerator extends BaseGenerator {
   contents = `
 Organizations:
+  _ &${this.network.ordererOrganization.name}
+    Name: ${this.network.ordererOrganization.name}
+    ID: ${this.network.ordererOrganization.mspName}
+    MSPDir: 
+  
 ${this.network.organizations
   .map(
     org => `
@@ -28,18 +33,13 @@ ${this.network.organizations
                 Rule: "OR('${org.name}.member')"
         OrdererEndpoints:
 ${org.orderers
-  .map(
-    (ord, i) => `
+  .map((ord, i) => `
             - ${ord.options.host}:${ord.options.ports[i]}
-`
-  )
-  .join('')}        
+`).join('')}        
         AnchorPeers:
             - Host: ${org.peers[0].options.host}
               Port: ${org.peers[0].options.ports[0]}
-`
-  )
-  .join('')}
+`).join('')}
 
 Capabilities:
     Channel: &ChannelCapabilities
