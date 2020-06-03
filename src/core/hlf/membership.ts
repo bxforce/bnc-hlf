@@ -61,6 +61,7 @@ export class Membership extends ClientHelper {
       if (adminIdentity) {
         d(`An identity for the admin user (${this.clientConfig.admin.name}) already exists in the wallet`);
         return null;
+        // TODO return enrollment response from existing data on wallet & ca container volumes (for ca root certificate)
       }
 
       // enroll the admin account
