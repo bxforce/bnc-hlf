@@ -3,20 +3,21 @@ genesis:
   consensus: "raft"
   ordererDomain: "bnc.com"
   ca:
-    type: "docker"
     url: "127.0.0.1"
     port: 8054
-    settings: [ "default" ]
   organisations:
-    - organisation: "Org1"
+    - organisation: "org1"
       domain_name: "bnc.com"
       orderers:
         - orderer: "orderer0"
-          host_name: "orderer.bnc.com"
+          host_name: "orderer0.bnc.com"
           port: 7050
         - orderer: "orderer1"
           host_name: "orderer1.bnc.com"
           port: 8050
+        - orderer: "orderer2"
+          host_name: "orderer2.bnc.com"
+          port: 9050
       anchorPeer:
         host_name: "peer0.org1.bnc.com"
         port: 7051

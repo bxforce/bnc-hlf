@@ -7,6 +7,7 @@ import { Utils } from '../../utils/utils';
 import delay = Utils.delay;
 import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
 import changeOwnership = Utils.changeOwnership;
+import getDockerComposePath = Utils.getDockerComposePath;
 
 export class DockerComposeCaGenerator extends BaseGenerator {
   contents = `
@@ -24,7 +25,7 @@ services:
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
       - FABRIC_CA_SERVER_CA_NAME=${this.options.org.caName}
-      - FABRIC_CA_SERVER_TLS_ENABLED=${this.options.org.ca.options.isSecure}
+      - FABRIC_CA_SERVER_TLS_ENABLED=${this.options.org.isSecure}
       - FABRIC_CA_SERVER_CSR_CN=ca.tls
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
@@ -44,7 +45,7 @@ services:
    * @param dockerEngine
    */
   constructor(filename: string, path: string, private options?: DockerComposeYamlOptions, private readonly dockerEngine?: DockerEngine) {
-    super(filename, path);
+    super(filename, getDockerComposePath(options.networkRootPath));
 
     if (!this.dockerEngine) {
       this.dockerEngine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
@@ -96,37 +97,4 @@ services:
       return false;
     }
   }
-
-  // private changeOwnership(folder: string) {
-  //   const options = {
-  //     name: BNC_TOOL_NAME
-  //   };
-  //
-  //   const command = `chown -R 1001:1001 ${folder}`;
-  //
-  //   return new Promise((resolved, rejected) => {
-  //     sudo.exec(command, options, (error, stdout, stderr) => {
-  //       if (error) {
-  //         rejected(error);
-  //       }
-  //
-  //       if (stderr) {
-  //         console.error(chalk.red(stderr));
-  //         e(stderr);
-  //       }
-  //
-  //       resolved(true);
-  //     });
-  //   });
-  // }
-  //
-  // private changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<Boolean> {
-  //   const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
-  //
-  //   return new Promise((resolved, rejected) => {
-  //     exec(command, {silent: true}, function(code, stdout, stderr) {
-  //       return code === 0 ? resolved() : rejected();
-  //     });
-  //   });
-  // }
 }

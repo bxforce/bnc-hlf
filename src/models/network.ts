@@ -1,12 +1,13 @@
 /* tslint:disable:no-inferrable-types */
 import { Organization } from './organization';
 import { Channel } from './channel';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_VERSION } from '../utils/constants';
-import { Ca } from './ca';
-import { OrdererOrganization, OrdererOrganizationOptions } from './ordererOrganization';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../utils/constants';
+import { OrdererOrganization } from './ordererOrganization';
+import { e } from '../utils/logs';
 
 export class NetworkOptions {
   hyperledgerVersion?: HLF_VERSION;
+  hyperledgerCAVersion?: HLF_CA_VERSION;
   externalHyperledgerVersion?: EXTERNAL_HLF_VERSION;
   inside?: boolean = false;
   networkConfigPath?: string;
@@ -26,28 +27,21 @@ export class Network {
 
   constructor(public path: string, public options: NetworkOptions) {}
 
-  async init() {
-    return;
-  }
+  /**
+   * Check a defined set of rules for a valid configuration
+   * For example, currently we support only raft consensus protocol & fabric release 2.0 and above
+   */
+  validate(): boolean {
+    if(this.options.hyperledgerVersion !== HLF_VERSION.HLF_2) {
+      e(`This implementation supports currently only HLF ${HLF_VERSION.HLF_2}`);
+      return false;
+    }
 
-  buildNetwork() {
-    return;
-  }
+    if(this.options.consensus !== ConsensusType.RAFT) {
+      e(`This implementation supports currently on consensus protocol: ${ConsensusType.RAFT}`);
+      return false;
+    }
 
-  buildFromSave(organizations: Organization[] = [], channels: Channel[] = []) {
-    this.organizations = organizations;
-    this.channels = channels;
-  }
-
-  async buildNetworkFromFile(networkConfigPath: string) {
-    return;
-  }
-
-  initChannels(config: any) {
-    return;
-  }
-
-  initOrgs(config: any) {
-    return;
+    return true;
   }
 }

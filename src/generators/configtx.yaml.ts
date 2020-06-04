@@ -1,14 +1,42 @@
 import { BaseGenerator } from './base';
 import { Network } from '../models/network';
 import { DockerComposeYamlOptions } from '../utils/data-type';
+import { Utils } from '../utils/utils';
+import { e } from '../utils/logs';
+import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
+import getOrdererTlsPath = Utils.getOrdererTlsPath;
+import getHlfBinariesPath = Utils.getHlfBinariesPath;
+import getArtifactsPath = Utils.getArtifactsPath;
+import { SysWrapper } from '../utils/sysWrapper';
+import execContent = SysWrapper.execContent;
+import getOrganizationMspPath = Utils.getOrganizationMspPath;
 
+/**
+ * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
+ * This use the configtxgen binary provided by HLF
+ */
 export class ConfigtxYamlGenerator extends BaseGenerator {
+  /* configtx.yaml contents */
   contents = `
 Organizations:
-  _ &${this.network.ordererOrganization.name}
+  - &${this.network.ordererOrganization.name}
     Name: ${this.network.ordererOrganization.name}
     ID: ${this.network.ordererOrganization.mspName}
-    MSPDir: 
+    MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp
+    Policies: &${this.network.ordererOrganization.name}POLICIES
+            Readers:
+                Type: Signature
+                Rule: "OR('${this.network.ordererOrganization.name}.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('${this.network.ordererOrganization.name}.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('${this.network.ordererOrganization.name}.admin')"
+        OrdererEndpoints:
+${this.network.ordererOrganization.orderers.map((ord, i) => `
+            - ${ord.options.host}:${ord.options.ports[0]}
+`).join('')}        
   
 ${this.network.organizations
   .map(
@@ -17,7 +45,7 @@ ${this.network.organizations
     Name: ${org.name}
     SkipAsForeign: false
     ID: ${org.mspName}
-    MSPDir: ${this.network.options.networkConfigPath}/organizations/peerOrganizations/${org.fullName}/msp
+    MSPDir: ${getOrganizationMspPath(this.network.options.networkConfigPath, org)}
     Policies: &${org.name}POLICIES
             Readers:
                 Type: Signature
@@ -31,11 +59,6 @@ ${this.network.organizations
             Endorsement:
                 Type: Signature
                 Rule: "OR('${org.name}.member')"
-        OrdererEndpoints:
-${org.orderers
-  .map((ord, i) => `
-            - ${ord.options.host}:${ord.options.ports[i]}
-`).join('')}        
         AnchorPeers:
             - Host: ${org.peers[0].options.host}
               Port: ${org.peers[0].options.ports[0]}
@@ -95,16 +118,11 @@ Application: &ApplicationDefaults
   
 Orderer: &OrdererDefaults
     Addresses:
-${this.network.organizations
-  .map(
-    org => `
-${org.orderers
-  .map((ord, i) => `
-        # - ${ord.options.host}:${ord.options.ports[i]}
+${this.network.organizations.map(org => `
+${org.orderers.map((ord, i) => `
+      - ${ord.options.host}:${ord.options.ports[0]}
 `).join('')}
-`)
-  .join('')}     
-        
+`).join('')}     
     BatchTimeout: 2s
     BatchSize:
         MaxMessageCount: 500
@@ -113,22 +131,15 @@ ${org.orderers
     MaxChannels: 0
     EtcdRaft:
         Consenters:
-${this.network.organizations
-  .map(
-    org => `
-${org.orderers
-  .map(
+${this.network.organizations.map(org => `
+${org.orderers.map(
     (ord, i) => `
             - Host: ${ord.options.host}
-              Port: ${ord.options.ports[i]}
-              ClientTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${org.domainName}/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
-              ServerTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${org.domainName}/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
-`
-  )
-  .join('')}
-`
-  )
-  .join('')}        
+              Port: ${ord.options.ports[0]}
+              ClientTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
+              ServerTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
+`).join('')}
+`).join('')}        
         Options:
             TickInterval: 500ms
             ElectionTick: 10
@@ -167,45 +178,32 @@ Channel: &ChannelDefaults
         <<: *ChannelCapabilities
 
 Profiles:
-    SampleDevModeEtcdRaft:
+    BncRaft:
         <<: *ChannelDefaults
         Orderer:
             <<: *OrdererDefaults
             OrdererType: etcdraft
             Organizations:
-${this.network.organizations
-  .map(
-    org => `
-                - <<: *${org.name}
+                - <<: *${this.network.ordererOrganization.name}
                   Policies:
-                      <<: *${org.name}POLICIES
+                      <<: *${this.network.ordererOrganization.name}POLICIES
                       Admins:
                           Type: Signature
-                          Rule: "OR('${org.name}.member')"
-`
-  )
-  .join('')}            
+                          Rule: "OR('${this.network.ordererOrganization.name}.member')"
+       
         Application:
             <<: *ApplicationDefaults
             Organizations:
-${this.network.organizations
-  .map(
-    org => `
-                - <<: *${org.name}
+                - <<: *${this.network.ordererOrganization.name}
                   Policies:
-                      <<: *${org.name}POLICIES
+                      <<: *${this.network.ordererOrganization.name}POLICIES
                       Admins:
                           Type: Signature
-                          Rule: "OR('${org.name}.member')"
-`
-  )
-  .join('')}                        
+                          Rule: "OR('${this.network.ordererOrganization.name}.member')"
         Consortiums:
-            SampleConsortium:
+            BncConsortium:
                 Organizations:
-${this.network.organizations
-  .map(
-    org => `
+${this.network.organizations.map(org => `
                 - <<: *${org.name}
                   Policies:
                       <<: *${org.name}POLICIES
@@ -213,11 +211,50 @@ ${this.network.organizations
                           Type: Signature
                           Rule: "OR('${org.name}.member')"
 `
-  )
-  .join('')}                        
+  ).join('')}                        
   `;
 
-  constructor(filename: string, path: string, private network: Network, private options?: DockerComposeYamlOptions) {
-    super(filename, path);
+  /**
+   * Constructor
+   * @param filename
+   * @param path
+   * @param network
+   */
+  constructor(filename: string, path: string, private network: Network) {
+    super(filename, getArtifactsPath(path));
+  }
+
+  /**
+   * Generate the genesis.block using the executable configtxgen
+   */
+  async generateGenesisBlock(): Promise<boolean> {
+    const scriptContent = `
+export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
+export FABRIC_CFG_PATH=${this.network.options.networkConfigPath}  
+
+which configtxgen
+if [ "$?" -ne 0 ]; then
+  echo "configtxgen tool not found. exiting"
+  exit 1
+fi    
+  
+set -x
+configtxgen --configPath ${this.path} -profile BncRaft -channelID bnc-channel -outputBlock ${this.path}/genesis.block
+res=$?
+set +x
+if [ $res -ne 0 ]; then
+  echo "Failed to generate orderer genesis block..."
+  exit 1
+fi
+    `;
+
+    try {
+      await execContent(scriptContent);
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
   }
 }

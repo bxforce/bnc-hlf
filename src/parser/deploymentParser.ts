@@ -6,10 +6,11 @@ import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
 import { Ca } from '../models/ca';
 import { Network } from '../models/network';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_VERSION } from '../utils/constants';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../utils/constants';
 
 /**
  * Parser class for the deployment configuration file
+ *
  * @author wassim.znaidi@gmail.com
  */
 export class DeploymentParser extends BaseParser {
@@ -22,6 +23,10 @@ export class DeploymentParser extends BaseParser {
     super(fullFilePath);
   }
 
+  /**
+   * Parse the provided deployment configuration file
+   * @return {@link Network} instance with parsed information
+   */
   async parse(): Promise<Network> {
     l('Starting Parsing configuration file');
 
@@ -31,7 +36,7 @@ export class DeploymentParser extends BaseParser {
     const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
 
     // Parsing engine
-    const engines: Engine[] = this.buildEngine(parsedYaml['engines']);
+    const engines: Engine[] = DeploymentParser.buildEngine(parsedYaml['engines']);
 
     // Set engine for every organization
     organizations.map(organization => {
@@ -44,21 +49,22 @@ export class DeploymentParser extends BaseParser {
     const { template_folder, fabric, consensus } = parsedYaml['chains'];
     const network: Network = new Network(this.fullFilePath, {
       hyperledgerVersion: fabric as HLF_VERSION,
+      hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
       externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
       consensus: consensus as ConsensusType,
       inside: false,
       networkConfigPath: template_folder,
     });
-    network.buildFromSave(organizations, []);
+    network.organizations = organizations;
 
     return network;
   }
 
   /**
-   *
+   * Parse the engine section within the deployment configuration file
    * @param yamlEngine
    */
-  private buildEngine(yamlEngine): Engine[] {
+  private static buildEngine(yamlEngine): Engine[] {
     const engines = [];
 
     for (const engineEntry of yamlEngine) {
@@ -74,7 +80,7 @@ export class DeploymentParser extends BaseParser {
   }
 
   /**
-   *
+   * Parse the organization section within the deployment configuration file
    * @param yamlOrganisations
    */
   private buildOrganisations(yamlOrganisations): Organization[] {
@@ -90,6 +96,8 @@ export class DeploymentParser extends BaseParser {
         engineName: caEngineName,
         ports: '7054',
         number: 0,
+        user: 'admin',
+        password: 'adminpw'
       });
 
       // parse & store orderers

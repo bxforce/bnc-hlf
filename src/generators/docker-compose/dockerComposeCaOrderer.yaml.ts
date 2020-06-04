@@ -8,6 +8,7 @@ import delay = Utils.delay;
 import { Network } from '../../models/network';
 import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
 import changeOwnership = Utils.changeOwnership;
+import getDockerComposePath = Utils.getDockerComposePath;
 
 export class DockerComposeCaOrdererGenerator extends BaseGenerator {
   private readonly caName?: string;
@@ -54,7 +55,7 @@ services:
               private options?: DockerComposeYamlOptions,
               private readonly dockerEngine?: DockerEngine) {
 
-    super(filename, `${path}/docker-compose`);
+    super(filename, getDockerComposePath(options.networkRootPath));
 
     this.caName = this.network.ordererOrganization.caName;
     this.rootPath = this.network.options.networkConfigPath;

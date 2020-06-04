@@ -1,6 +1,8 @@
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { BaseGenerator } from '../base';
 import { e } from '../../utils/logs';
+import { Utils } from '../../utils/utils';
+import getDockerComposePath = Utils.getDockerComposePath;
 
 /**
  * Class responsible to generate base Peer and Orderer compose file
@@ -61,7 +63,7 @@ services:
    * @param options
    */
   constructor(private options: DockerComposeYamlOptions) {
-    super('docker-compose-base.yaml', `${options.networkRootPath}/docker-compose/base`);
+    super('docker-compose-base.yaml', `${getDockerComposePath(options.networkRootPath)}/base`);
   }
 
   /**

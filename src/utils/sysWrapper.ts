@@ -155,6 +155,17 @@ export module SysWrapper {
     });
   }
 
+  /**
+   * Check if a folder exists
+   * @param folderPath
+   * @returns Promise<boolean>
+   */
+  export function existsFolder(folderPath: string): Promise<boolean> {
+    return new Promise((fulfilled, rejected) => {
+      return fulfilled(fs.existsSync(folderPath));
+    });
+  }
+
   /** Create a file in JSON format.
    * @returns Promise<void>
    */

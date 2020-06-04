@@ -3,7 +3,7 @@ import { Network } from '../models/network';
 import { BaseParser } from './base';
 import { Orderer } from '../models/orderer';
 import { Peer } from '../models/peer';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_VERSION } from '../utils/constants';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../utils/constants';
 import { Ca } from '../models/ca';
 import { OrdererOrganization } from '../models/ordererOrganization';
 
@@ -70,6 +70,7 @@ export class GenesisParser extends BaseParser {
     const network = new Network('genesis-network', {
       networkConfigPath: template_folder,
       hyperledgerVersion: HLF_VERSION.HLF_2,
+      hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
       externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
       inside: false,
       consensus: networkConsensus

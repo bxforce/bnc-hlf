@@ -8,6 +8,11 @@ import * as chalk from 'chalk';
 import { e } from './logs';
 import { OrdererOrganization } from '../models/ordererOrganization';
 
+/**
+ * Common utils functions
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export namespace Utils {
   export function toPascalCase(text: string): string {
     return text.match(/[a-z]+/gi)
@@ -65,6 +70,12 @@ export namespace Utils {
     return `${basePeerPath}/${peer.name}.${organization.fullName}/msp`;
   }
 
+  /**
+   * Retrieve the peer tls path
+   * @param rootPath
+   * @param organization
+   * @param peer
+   */
   export function getPeerTlsPath(rootPath: string, organization: Organization, peer: Peer): string {
     const basePeerPath = `${rootPath}/organizations/peerOrganizations/${organization.fullName}/peers`;
     return `${basePeerPath}/${peer.name}.${organization.fullName}/tls`;
@@ -107,5 +118,22 @@ export namespace Utils {
   export function getOrdererTlsPath(rootPath: string, ordererOrganization: OrdererOrganization, orderer: Orderer): string {
     const ordererFullName = ordererOrganization.ordererFullName(orderer);
     return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${ordererFullName}/tls`;
+  }
+
+  /**
+   * Return the hyperledger fabric binaries full folder path
+   * @param rootPath
+   * @param fabricVersion
+   */
+  export function getHlfBinariesPath(rootPath: string, fabricVersion: string): string {
+    return `${rootPath}/fabric-binaries/${fabricVersion}/bin`;
+  }
+
+  export function getArtifactsPath(rootPath: string): string {
+    return `${rootPath}/artifacts`;
+  }
+
+  export function getDockerComposePath(rootPath: string): string {
+    return `${rootPath}/docker-compose`;
   }
 }

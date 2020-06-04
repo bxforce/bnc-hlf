@@ -14,6 +14,10 @@ const tasks = {
     return await CLI.generateOrdererCredentials(filePath);
   },
 
+  async generatePeersCredentials(filePath: string) {
+    return await CLI.generatePeersCredentials(filePath);
+  },
+
   async createNetwork(filePath: string) {
     return await CLI.createNetwork(filePath);
   },
@@ -98,6 +102,15 @@ program
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.generateGenesis(cmd.config);
+    }
+  });
+
+program
+  .command('peer-msp')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.generatePeersCredentials(cmd.config);
     }
   });
 

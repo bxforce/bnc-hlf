@@ -113,19 +113,19 @@ certificateAuthorities:
         await createFile(`${ordererMspPath}/signcerts/${ordererFullName}-cert.pem`, ordererCert);
 
         // Generate TLS file if it's enabled
-        if (this.network.ordererOrganization.isSecure) {
-          const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
-          const {
-            key: ordererTlsKey,
-            certificate: ordererTlsCertificate,
-            rootCertificate: ordererTlsRootCertificate
-          } = ordererTlsEnrollment;
+        // if (this.network.ordererOrganization.isSecure) {
+        const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
+        const {
+          key: ordererTlsKey,
+          certificate: ordererTlsCertificate,
+          rootCertificate: ordererTlsRootCertificate
+        } = ordererTlsEnrollment;
 
-          const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
-          await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
-          await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
-          await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
-        }
+        const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
+        await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
+        await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
+        await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
+        // }
       }
       d('Register & Enroll Organization orderers done !!!');
 
@@ -208,6 +208,7 @@ certificateAuthorities:
         enrollmentID: `${this.network.ordererOrganization.ordererFullName(orderer)}`,
         enrollmentSecret: `${orderer.name}pw`,
         role: HLF_CLIENT_ACCOUNT_ROLE.orderer,
+        maxEnrollments: 3,
         affiliation: ''
       };
       const ordererEnrollmentResponse = await membership.addUser(params, mspId);

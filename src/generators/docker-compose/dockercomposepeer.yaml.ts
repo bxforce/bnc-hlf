@@ -3,6 +3,8 @@ import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { e } from '../../utils/logs';
 import { DockerEngine } from '../../agents/docker-agent';
 import { Peer } from '../../models/peer';
+import { Utils } from '../../utils/utils';
+import getDockerComposePath = Utils.getDockerComposePath;
 
 /**
  * Class responsible to generate Peer compose file
@@ -92,7 +94,7 @@ ${this.options.org.orderers
    * @param options
    */
   constructor(filename: string, private options: DockerComposeYamlOptions) {
-    super(filename, `${options.networkRootPath}/docker-compose`);
+    super(filename, getDockerComposePath(options.networkRootPath));
   }
 
   /**

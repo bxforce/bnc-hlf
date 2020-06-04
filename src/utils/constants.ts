@@ -15,7 +15,8 @@ export enum ConsensusType {
 }
 
 export enum HLF_VERSION {
-  HLF_2 = '2.0'
+  HLF_2 = '2.0.0',
+  HLF_2_1 = '2.1.0'
 }
 
 export enum EXTERNAL_HLF_VERSION {

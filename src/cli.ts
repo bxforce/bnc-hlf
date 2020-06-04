@@ -15,6 +15,12 @@ export class CLI {
     return orchEngine;
   }
 
+  static async generatePeersCredentials(configFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generatePeersCredentials(configFilePath);
+    return orchEngine;
+  }
+
   static async deployPeers(configFilePath: string, skipDownload?: boolean) {
     const orchEngine = new Orchestrator();
     await orchEngine.deployPeerContainer(configFilePath, skipDownload);

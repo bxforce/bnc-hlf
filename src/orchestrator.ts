@@ -22,6 +22,10 @@ import { DockerComposeOrdererGenerator } from './generators/docker-compose/docke
 import createFolder = SysWrapper.createFolder;
 import { DockerComposeCaOrdererGenerator } from './generators/docker-compose/dockerComposeCaOrderer.yaml';
 import { OrdererCertsGenerator } from './generators/crypto/createOrdererCerts';
+import existsFolder = SysWrapper.existsFolder;
+import { Utils } from './utils/utils';
+import getHlfBinariesPath = Utils.getHlfBinariesPath;
+import { DockerComposeCaGenerator } from './generators/docker-compose/dockerComposeCa.yaml';
 
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
@@ -58,13 +62,32 @@ export class Orchestrator {
   async generateGenesis(configGenesisFilePath: string) {
     const path = this._getDefaultPath();
     const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+    const isNetworkValid = network.validate();
+    if(!isNetworkValid) {
+      return;
+    }
+
+    // Check if HLF binaries exists
+    const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
+    const binariesFolderExists = await existsFolder(binariesFolderPath);
+    if(!binariesFolderExists) {
+      l('Genesis: start downloading HLF binaries...');
+      const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
+      if(!isDownloaded) {
+        e('Error while downloading HLF binaries files');
+        return;
+      }
+      l('Genesis: HLF binaries downloaded !!!');
+    }
 
     l('Start generating configtx.yaml file');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
-    await configTx.save();
+    // await configTx.save();
     l('Configtx.yaml file saved');
 
-    d('Testing debugging genesis generation');
+    l('Genesis: generate genesis block...');
+    const gen = await configTx.generateGenesisBlock();
+    l(`Genesis: block generated (${gen}) !!!`);
   }
 
   /**
@@ -96,7 +119,7 @@ export class Orchestrator {
     };
 
     if (!skipDownload) {
-      await Orchestrator._downloadBinaries(path, options);
+      await Orchestrator._downloadBinaries(path, network);
     }
 
     // create network
@@ -157,6 +180,56 @@ export class Orchestrator {
   }
 
   /**
+   * Generate Crypto & Certificate credentials for peers
+   * @param deploymentConfigFilePath
+   */
+  // TODO check if files exists already for the same peers/organizations
+  async generatePeersCredentials(deploymentConfigFilePath: string)  {
+    const path = this._getDefaultPath();
+    await createFolder(path);
+
+    l('Peer MSP: start parsing deployment file...');
+    const network = await Orchestrator._parse(deploymentConfigFilePath);
+    const isNetworkValid = network.validate();
+    if(!isNetworkValid) {
+      e('Deployment config file is not valid');
+      return;
+    }
+    l('Peer MSP: deploy config parsed !!!');
+
+    // Start the CA container if not
+    const options: DockerComposeYamlOptions = {
+      networkRootPath: path,
+      composeNetwork: BNC_NETWORK,
+      org: network.organizations[0],
+      envVars: {
+        FABRIC_VERSION: HLF_VERSION.HLF_2,
+        FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+        THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+      }
+    };
+    const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
+    await engine.createNetwork({ Name: options.composeNetwork });
+    l('Peer MSP: docker engine configured !!!');
+
+    l('Peer MSP: start CA container...');
+    const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, options, engine);
+    await ca.save();
+    const caStarted = await ca.startOrgCa();
+    if(!caStarted) {
+      e('Peer MSP: Error while starting the Organization CA container !!!');
+      return;
+    }
+    l(`Peer MSP: CA container started (${caStarted}) !!!`);
+
+    l(`Peer MSP: start create peer crypto & certs credentials...`);
+    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, options);
+    const isGenerated = await orgCertsGenerator.buildCertificate();
+
+    l(`Peer MSP: credentials generated (${isGenerated}) !!! `);
+  }
+
+  /**
    * deploy peer container
    * @param configFilePath
    * @param skipDownload
@@ -212,6 +285,7 @@ export class Orchestrator {
    *
    * @param genesisFilePath
    */
+  // TODO check if files exists already for the same orderers/organizations
   async generateOrdererCredentials(genesisFilePath: string) {
     const path = this._getDefaultPath();
     await createFolder(path);
@@ -219,6 +293,11 @@ export class Orchestrator {
     l('Genesis File: start parsing...');
     const network = await Orchestrator._parseGenesis(genesisFilePath);
     l('Genesis File: parsing done...');
+
+    const isNetworkValid = network.validate();
+    if(!isNetworkValid) {
+      return;
+    }
 
     const options: DockerComposeYamlOptions = { networkRootPath: path, composeNetwork: BNC_NETWORK, org: null };
     const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
@@ -452,13 +531,13 @@ export class Orchestrator {
   /**
    * download hyperledger fabric binaries
    * @param folderPath folder where to store files
-   * @param options options to generate script files
+   * @param network
    * @private
    */
-  private static async _downloadBinaries(folderPath: string, options: DockerComposeYamlOptions): Promise<boolean> {
+  private static async _downloadBinaries(folderPath: string, network: Network): Promise<boolean> {
     try {
       l('[Start] Download fabric binaries...');
-      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, options);
+      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, network);
       await downloadFabricBinariesGenerator.save();
       await downloadFabricBinariesGenerator.run();
       l('[End] Ran Download fabric binaries');
