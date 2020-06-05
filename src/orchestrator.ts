@@ -82,7 +82,7 @@ export class Orchestrator {
 
     l('Start generating configtx.yaml file');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
-    // await configTx.save();
+    await configTx.save();
     l('Configtx.yaml file saved');
 
     l('Genesis: generate genesis block...');

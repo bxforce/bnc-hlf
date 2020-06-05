@@ -68,7 +68,7 @@ const tasks = {
     } else if (anchortx) {
       l('[init anchorTx] Not yet implemented');
     } else if (genesis) {
-      l('[init genesis] Not yet implemented');
+      await tasks.generateGenesis(config);
     }
     //l('config file: ' + config;
   },

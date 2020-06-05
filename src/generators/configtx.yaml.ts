@@ -26,44 +26,41 @@ Organizations:
     ID: ${this.network.ordererOrganization.mspName}
     MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp
     Policies: &${this.network.ordererOrganization.name}POLICIES
-            Readers:
-                Type: Signature
-                Rule: "OR('${this.network.ordererOrganization.name}.member')"
-            Writers:
-                Type: Signature
-                Rule: "OR('${this.network.ordererOrganization.name}.member')"
-            Admins:
-                Type: Signature
-                Rule: "OR('${this.network.ordererOrganization.name}.admin')"
-        OrdererEndpoints:
+        Readers:
+            Type: Signature
+            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+        Writers:
+            Type: Signature
+            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+        Admins:
+            Type: Signature
+            Rule: "OR('${this.network.ordererOrganization.name}.admin')"
+    OrdererEndpoints:
 ${this.network.ordererOrganization.orderers.map((ord, i) => `
-            - ${ord.options.host}:${ord.options.ports[0]}
+        - ${ord.options.host}:${ord.options.ports[0]}
 `).join('')}        
   
-${this.network.organizations
-  .map(
-    org => `
+${this.network.organizations.map(org => `
   - &${org.name}
     Name: ${org.name}
-    SkipAsForeign: false
     ID: ${org.mspName}
     MSPDir: ${getOrganizationMspPath(this.network.options.networkConfigPath, org)}
     Policies: &${org.name}POLICIES
-            Readers:
-                Type: Signature
-                Rule: "OR('${org.name}.member')"
-            Writers:
-                Type: Signature
-                Rule: "OR('${org.name}.member')"
-            Admins:
-                Type: Signature
-                Rule: "OR('${org.name}.admin')"
-            Endorsement:
-                Type: Signature
-                Rule: "OR('${org.name}.member')"
-        AnchorPeers:
-            - Host: ${org.peers[0].options.host}
-              Port: ${org.peers[0].options.ports[0]}
+        Readers:
+            Type: Signature
+            Rule: "OR('${org.name}.member')"
+        Writers:
+            Type: Signature
+            Rule: "OR('${org.name}.member')"
+        Admins:
+            Type: Signature
+            Rule: "OR('${org.name}.admin')"
+        Endorsement:
+            Type: Signature
+            Rule: "OR('${org.name}.member')"
+    AnchorPeers:
+        - Host: ${org.peers[0].options.host}
+          port: ${org.peers[0].options.ports[0]}
 `).join('')}
 
 Capabilities:
@@ -119,23 +116,23 @@ Application: &ApplicationDefaults
         <<: *ApplicationCapabilities
   
 Orderer: &OrdererDefaults
+    OrdererType: etcdraft
     Addresses:
 ${this.network.organizations.map(org => `
 ${org.orderers.map((ord, i) => `
-      - ${ord.options.host}:${ord.options.ports[0]}
+        - ${ord.options.host}:${ord.options.ports[0]}
 `).join('')}
 `).join('')}     
     BatchTimeout: 2s
     BatchSize:
-        MaxMessageCount: 500
-        AbsoluteMaxBytes: 10 MB
-        PreferredMaxBytes: 2 MB
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
     MaxChannels: 0
     EtcdRaft:
         Consenters:
 ${this.network.organizations.map(org => `
-${org.orderers.map(
-    (ord, i) => `
+${org.orderers.map((ord, i) => `
             - Host: ${ord.options.host}
               Port: ${ord.options.ports[0]}
               ClientTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
@@ -186,34 +183,19 @@ Profiles:
             <<: *OrdererDefaults
             OrdererType: etcdraft
             Organizations:
-                - <<: *${this.network.ordererOrganization.name}
-                  Policies:
-                      <<: *${this.network.ordererOrganization.name}POLICIES
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('${this.network.ordererOrganization.name}.member')"
-       
+            - *${this.network.ordererOrganization.name}
+            Capabilities:
+                <<: *OrdererCapabilities       
         Application:
             <<: *ApplicationDefaults
             Organizations:
                 - <<: *${this.network.ordererOrganization.name}
-                  Policies:
-                      <<: *${this.network.ordererOrganization.name}POLICIES
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('${this.network.ordererOrganization.name}.member')"
         Consortiums:
             BncConsortium:
                 Organizations:
 ${this.network.organizations.map(org => `
-                - <<: *${org.name}
-                  Policies:
-                      <<: *${org.name}POLICIES
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('${org.name}.member')"
-`
-  ).join('')}                        
+                - *${org.name}
+`).join('')}                        
   `;
 
   /**

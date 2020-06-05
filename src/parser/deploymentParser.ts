@@ -6,7 +6,7 @@ import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
 import { Ca } from '../models/ca';
 import { Network } from '../models/network';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../utils/constants';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT } from '../utils/constants';
 import { OrdererOrganization } from '../models/ordererOrganization';
 
 /**
@@ -118,7 +118,7 @@ export class DeploymentParser extends BaseParser {
           new Orderer(orderer, {
             engineName: ordererEngineName,
             consensus,
-            ports: [`8${index}50`],
+            ports: [`${index*1000+ORDERER_DEFAULT_PORT}`],
             number: index
           })
         );

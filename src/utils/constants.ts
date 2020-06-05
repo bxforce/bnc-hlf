@@ -50,6 +50,8 @@ export const enum HLF_WALLET_TYPE {
   Memory = 'memory'
 }
 
+export const ORDERER_DEFAULT_PORT = 7050;
+
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;
 export const updateTimeout = 60000;

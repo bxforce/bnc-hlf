@@ -21,6 +21,7 @@ export class Membership extends ClientHelper {
   public ca: FabricCAServices;
 
   // TODO should we create a singleton or not ??
+  // No need if case of CLI (no meaning)
 
   /**
    * Constructor
