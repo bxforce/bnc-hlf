@@ -7,6 +7,7 @@ import { BaseParser } from './base';
 import { Ca } from '../models/ca';
 import { Network } from '../models/network';
 import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../utils/constants';
+import { OrdererOrganization } from '../models/ordererOrganization';
 
 /**
  * Parser class for the deployment configuration file
@@ -53,9 +54,18 @@ export class DeploymentParser extends BaseParser {
       externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
       consensus: consensus as ConsensusType,
       inside: false,
-      networkConfigPath: template_folder,
+      networkConfigPath: template_folder
     });
     network.organizations = organizations;
+
+    // set a default ordererOrganization
+    const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
+      domainName: organizations[0].domainName
+    });
+    for(const org of network.organizations) {
+      ordererOrganization.orderers.push(...org.orderers);
+    }
+    network.ordererOrganization = ordererOrganization;
 
     return network;
   }
@@ -109,7 +119,7 @@ export class DeploymentParser extends BaseParser {
             engineName: ordererEngineName,
             consensus,
             ports: [`8${index}50`],
-            number: index,
+            number: index
           })
         );
       });

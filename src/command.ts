@@ -30,8 +30,8 @@ const tasks = {
     return await CLI.validateAndParse(filePath, skipDownload);
   },
 
-  async deployPeers(filePath: string, skipDownload?: boolean) {
-    return await CLI.deployPeers(filePath, skipDownload);
+  async deployHlfServices(filePath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
+    return await CLI.deployHlfContainers(filePath, skipDownload, enablePeers, enableOrderers);
   },
 
   async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
@@ -145,12 +145,22 @@ program
   });
 
 program
-  .command('deploy-peers')
+  .command('deploy-hlf')
   .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
   .action(async (cmd: any) => {
     if (cmd) {
-      await tasks.deployPeers(cmd.config, !!cmd.skipDownload);
+      await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
+    }
+  });
+
+program
+  .command('deploy-orderers')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, false, true);
     }
   });
 

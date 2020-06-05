@@ -4,6 +4,9 @@ import { e } from '../../utils/logs';
 import { DockerEngine } from '../../agents/docker-agent';
 import { Utils } from '../../utils/utils';
 import getDockerComposePath = Utils.getDockerComposePath;
+import getArtifactsPath = Utils.getArtifactsPath;
+import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constants';
+import { Orderer } from '../../models/orderer';
 
 /**
  * Class responsible to generate Orderer compose file
@@ -12,7 +15,7 @@ import getDockerComposePath = Utils.getDockerComposePath;
  */
 
 export class DockerComposeOrdererGenerator extends BaseGenerator {
-  /* docker-compose template content text */
+  /* docker-compose orderer template content text */
   contents = `
 version: '2'
 
@@ -27,8 +30,7 @@ networks:
     external: true
 
 services:
-${this.options.org.orderers
-    .map(orderer => `
+${this.options.org.orderers.map(orderer => `
   ${orderer.name}.${this.options.org.fullName}:
     extends:
       file:   base/docker-compose-base.yaml
@@ -49,9 +51,9 @@ ${this.options.org.orderers
     networks:
       - ${this.options.composeNetwork}   
     volumes:
-      - ${this.options.networkRootPath}/${this.options.org.fullName}/artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${this.options.org.ordererName(orderer)}/msp:/var/hyperledger/orderer/msp
-      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${this.options.org.ordererName(orderer)}/tls/:/var/hyperledger/orderer/tls
+      - ${getArtifactsPath(this.options.networkRootPath)}/${GENESIS_FILE_NAME}:/var/hyperledger/orderer/orderer.genesis.block
+      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${this.options.org.ordererName(orderer)}/msp:/var/hyperledger/orderer/msp
+      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${this.options.org.ordererName(orderer)}/tls/:/var/hyperledger/orderer/tls
       - ${orderer.name}.${this.options.org.fullName}:/var/hyperledger/production/orderer
     ports:
       - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
@@ -70,7 +72,7 @@ ${this.options.org.orderers
   /**
    * Create the Orderer docker compose template file
    */
-  async createTemplateOrderers(): Promise<Boolean> {
+  async createTemplateOrderers(): Promise<boolean> {
     try {
       await this.save();
 
@@ -81,13 +83,33 @@ ${this.options.org.orderers
     }
   }
 
-  async deployOrdererContainers(): Promise<boolean> {
+  /**
+   * Start a single orderer container service
+   * @param orderer selected orderer
+   */
+  async startOrderer(orderer: Orderer): Promise<boolean>  {
+    try {
+      const serviceName = `${orderer.name}.${this.options.org.fullName}`;
+
+      const engine = this.options.org.getEngine(orderer.options.engineName);
+      const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+
+      await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  /**
+   * Start all orderer container within the above compose template
+   */
+  async startOrderers(): Promise<boolean> {
     try {
       for(const orderer of this.options.org.orderers) {
-        const serviceName =  `${orderer.name}.${this.options.org.fullName}`;
-        const engine = this.options.org.getEngine(orderer.options.engineName);
-        const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-        await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: true });
+        await this.startOrderer(orderer);
       }
 
       return true;

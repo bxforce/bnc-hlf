@@ -21,9 +21,9 @@ export class CLI {
     return orchEngine;
   }
 
-  static async deployPeers(configFilePath: string, skipDownload?: boolean) {
+  static async deployHlfContainers(configFilePath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
     const orchEngine = new Orchestrator();
-    await orchEngine.deployPeerContainer(configFilePath, skipDownload);
+    await orchEngine.deployHLFContainers(configFilePath, skipDownload, enablePeers, enableOrderers);
     return orchEngine;
   }
 

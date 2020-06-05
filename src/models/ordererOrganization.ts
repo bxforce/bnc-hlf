@@ -16,9 +16,9 @@ export class OrdererOrganization {
 
   constructor(public name: string, options?: OrdererOrganizationOptions) {
     if(options) {
-      this.ca = options.ca;
+      this.ca = options.ca ?? undefined;
       this.orderers = options.orderers ?? [];
-      this.domainName = options.domainName;
+      this.domainName = options.domainName ?? 'unknown';
       this.isSecure = options.isSecure ?? false;
     }
   }

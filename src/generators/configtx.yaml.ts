@@ -10,6 +10,7 @@ import getArtifactsPath = Utils.getArtifactsPath;
 import { SysWrapper } from '../utils/sysWrapper';
 import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
+import { GENESIS_FILE_NAME } from '../utils/constants';
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
@@ -239,7 +240,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 set -x
-configtxgen --configPath ${this.path} -profile BncRaft -channelID bnc-channel -outputBlock ${this.path}/genesis.block
+configtxgen --configPath ${this.path} -profile BncRaft -channelID bnc-channel -outputBlock ${this.path}/${GENESIS_FILE_NAME}
 res=$?
 set +x
 if [ $res -ne 0 ]; then

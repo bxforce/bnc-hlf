@@ -50,8 +50,11 @@ export const enum HLF_WALLET_TYPE {
   Memory = 'memory'
 }
 
+export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;
 export const updateTimeout = 60000;
 export const BNC_TOOL_NAME = 'BNC';
 export const BNC_NETWORK = 'bnc_network';
 export const DOCKER_CA_DELAY = 3000;
+
+export const ENABLE_CONTAINER_LOGGING = true;

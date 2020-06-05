@@ -5,6 +5,7 @@ import { DockerEngine } from '../../agents/docker-agent';
 import { Peer } from '../../models/peer';
 import { Utils } from '../../utils/utils';
 import getDockerComposePath = Utils.getDockerComposePath;
+import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
 
 /**
  * Class responsible to generate Peer compose file
@@ -123,7 +124,7 @@ ${this.options.org.orderers
       const engine = this.options.org.getEngine(peer.options.engineName);
       const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
 
-      await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: true });
+      await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 
       return true;
     } catch(err) {
