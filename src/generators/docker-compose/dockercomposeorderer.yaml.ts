@@ -13,7 +13,6 @@ import { Orderer } from '../../models/orderer';
  *
  * @author wassim.znaidi@gmail.com
  */
-
 export class DockerComposeOrdererGenerator extends BaseGenerator {
   /* docker-compose orderer template content text */
   contents = `

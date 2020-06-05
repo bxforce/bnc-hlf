@@ -32,3 +32,7 @@ TBD
 ## Changelog
 
 [Go to changelog](./changelog.md)
+
+
+- configtx etcdraft section
+- orderer docker compose ports

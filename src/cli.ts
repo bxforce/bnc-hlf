@@ -4,7 +4,7 @@ import { Type_User }  from './utils/constants';
 
 /**
  *
- * @author wassim.znaidi
+ * @author wassim.znaidi@gmail.com
  * @author sahar
  * @author ahmed
  */

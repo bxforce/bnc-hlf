@@ -6,11 +6,11 @@ import { ensureDir } from 'fs-extra';
 import { SysWrapper } from '../../utils/sysWrapper';
 import { Orderer } from '../../models/orderer';
 import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
-import { HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
+import { ConsensusType, HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import { ClientConfig } from '../../core/hlf/helpers';
-import createFile = SysWrapper.createFile;
 import { Utils } from '../../utils/utils';
+import createFile = SysWrapper.createFile;
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererMspPath = Utils.getOrdererMspPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
@@ -47,6 +47,13 @@ certificateAuthorities:
     caName: ${this.network.ordererOrganization.caName}  
   `;
 
+  /**
+   * Constructor
+   * @param filename
+   * @param path
+   * @param network
+   * @param admin
+   */
   constructor(filename: string,
               path: string,
               private network: Network,
@@ -113,19 +120,19 @@ certificateAuthorities:
         await createFile(`${ordererMspPath}/signcerts/${ordererFullName}-cert.pem`, ordererCert);
 
         // Generate TLS file if it's enabled
-        // if (this.network.ordererOrganization.isSecure) {
-        const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
-        const {
-          key: ordererTlsKey,
-          certificate: ordererTlsCertificate,
-          rootCertificate: ordererTlsRootCertificate
-        } = ordererTlsEnrollment;
+        if (this.network.ordererOrganization.isSecure || this.network.options.consensus === ConsensusType.RAFT) {
+          const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
+          const {
+            key: ordererTlsKey,
+            certificate: ordererTlsCertificate,
+            rootCertificate: ordererTlsRootCertificate
+          } = ordererTlsEnrollment;
 
-        const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
-        await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
-        await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
-        await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
-        // }
+          const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
+          await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
+          await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
+          await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
+        }
       }
       d('Register & Enroll Organization orderers done !!!');
 

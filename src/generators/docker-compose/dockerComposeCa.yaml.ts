@@ -9,6 +9,10 @@ import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
 import changeOwnership = Utils.changeOwnership;
 import getDockerComposePath = Utils.getDockerComposePath;
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class DockerComposeCaGenerator extends BaseGenerator {
   contents = `
 version: '2'

@@ -5,6 +5,10 @@ import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { e } from '../../utils/logs';
 import { SysWrapper } from '../../utils/sysWrapper';
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class CreateOrgCertsShGenerator extends BaseGenerator {
   contents = `
 export PATH=${this.options.networkRootPath}/fabric-binaries/${this.options.envVars.FABRIC_VERSION}/bin:${this.options.networkRootPath}:$PATH

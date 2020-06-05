@@ -2,9 +2,12 @@
 import * as program from 'commander';
 import { l } from './utils/logs';
 import { CLI } from './cli';
-
 const pkg = require('../package.json');
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 const tasks = {
   async generateGenesis(filePath: string) {
     return await CLI.generateGenesis(filePath);

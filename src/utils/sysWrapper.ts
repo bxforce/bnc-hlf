@@ -5,6 +5,10 @@ import memFs = require('mem-fs');
 import memFsEditor = require('mem-fs-editor');
 import {l} from './logs';
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export module SysWrapper {
 
   /** Create a file to specific path from contents.

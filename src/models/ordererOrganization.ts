@@ -8,6 +8,10 @@ export class OrdererOrganizationOptions {
   isSecure?: boolean;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class OrdererOrganization {
   ca: Ca;
   orderers: Orderer[] = [];

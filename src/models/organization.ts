@@ -20,6 +20,10 @@ export class OrganizationOptions {
   engineOrgName?: string;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class Organization {
   channels: Channel[];
   ca: Ca;

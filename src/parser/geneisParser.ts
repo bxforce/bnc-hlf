@@ -7,6 +7,10 @@ import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from
 import { Ca } from '../models/ca';
 import { OrdererOrganization } from '../models/ordererOrganization';
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class GenesisParser extends BaseParser {
   constructor(public genesisFilePath: string) {
     super(genesisFilePath);

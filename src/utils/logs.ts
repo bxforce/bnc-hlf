@@ -1,3 +1,7 @@
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 import * as chalk from 'chalk';
 
 export function l(msg: string | object | Error) {

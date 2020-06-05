@@ -6,6 +6,10 @@ export class OrdererOptions {
   host?: string;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class Orderer {
   constructor(public name: string, public options: OrdererOptions) {}
 

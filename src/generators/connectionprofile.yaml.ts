@@ -2,6 +2,10 @@ import { BaseGenerator } from './base';
 import { DockerComposeYamlOptions } from '../utils/data-type';
 import { e } from '../utils/logs';
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class ConnectionProfileGenerator extends BaseGenerator {
   contents = `
 name: "connection.${this.options.org.name}.profile"

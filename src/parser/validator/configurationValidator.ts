@@ -2,6 +2,10 @@ import * as YamlValidator from 'yaml-validator';
 import { l } from '../../utils/logs';
 
 // TODO use directly the js-yaml safeLoad schema options
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class ConfigurationValidator {
   static structureDeployment = {
     chains: {

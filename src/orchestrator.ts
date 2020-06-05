@@ -230,11 +230,15 @@ export class Orchestrator {
   }
 
   /**
-   * deploy peer container
+   * deploy peer & orderer container
    * @param configFilePath
    * @param skipDownload
+   * @param enablePeers
+   * @param enableOrderers
+   * @param enablePeers
+   * @param enableOrderers
    */
-  async deployPeerContainer(configFilePath: string, skipDownload = false) {
+  async deployHLFContainers(configFilePath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
     const network: Network = await Orchestrator._parse(configFilePath);
     const organization: Organization = network.organizations[0];
     l('[End] Blockchain configuration files parsed');
@@ -261,24 +265,28 @@ export class Orchestrator {
 
     l('Creating Docker network');
     const peer = organization.peers[0];
-    const engineModel = organization.getEngine(peer.options.engineName);
+    // const engineModel = organization.getEngine(peer.options.engineName);
     // const engine: DockerEngine = new DockerEngine({ host: engineModel.options.url, port: engineModel.options.port });
     const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
     await engine.createNetwork({ Name: options.composeNetwork });
 
-    l('Creating Peer container & deploy');
-    const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options);
-    l(`'Creating Peer ${peer.name} container template`);
-    await peerGenerator.createTemplatePeers();
-    l(`'Starting Peer ${peer.name} container`);
-    const started = await peerGenerator.startPeer(peer);
-    l(`Peer ${peer.name} started (${started})`);
+    if(enablePeers) {
+      l('Creating Peer container & deploy');
+      const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options);
+      l(`'Creating Peer ${peer.name} container template`);
+      await peerGenerator.createTemplatePeers();
+      l(`'Starting Peer ${peer.name} container`);
+      const started = await peerGenerator.startPeer(peer);
+      l(`Peer ${peer.name} started (${started})`);
+    }
 
-    l('Creating Orderers Container & Deploy');
-    const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options);
-    await ordererGenerator.createTemplateOrderers();
-    const ordererStarted = await ordererGenerator.deployOrdererContainers();
-    l(`Orderers started (${ordererStarted})`);
+    if(enableOrderers) {
+      l('Creating Orderers Container & Deploy');
+      const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options);
+      // await ordererGenerator.createTemplateOrderers();
+      const ordererStarted = await ordererGenerator.startOrderers();
+      l(`Orderers started (${ordererStarted})`);
+    }
   }
 
   /**

@@ -7,6 +7,10 @@ export class PeerOptions {
   host?: string;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class Peer {
   constructor(public name: string, public options?: PeerOptions) {}
 }

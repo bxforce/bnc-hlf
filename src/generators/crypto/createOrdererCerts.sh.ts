@@ -9,6 +9,10 @@ import { DockerEngine } from '../../agents/docker-agent';
 import { SysWrapper } from '../../utils/sysWrapper';
 import execContent = SysWrapper.execContent;
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class CreateOrdererCertsGenerator extends BaseGenerator {
   /* Orderer compose file instance  */
   contents = `

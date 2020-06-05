@@ -1,20 +1,21 @@
 import { BaseGenerator } from './base';
 import { Network } from '../models/network';
-import { DockerComposeYamlOptions } from '../utils/data-type';
 import { Utils } from '../utils/utils';
 import { e } from '../utils/logs';
+import { SysWrapper } from '../utils/sysWrapper';
+import { CHANNEL_NAME_DEFAULT, GENESIS_FILE_NAME } from '../utils/constants';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
-import { SysWrapper } from '../utils/sysWrapper';
 import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
-import { GENESIS_FILE_NAME } from '../utils/constants';
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
  * This use the configtxgen binary provided by HLF
+ *
+ * @author wassim.znaidi@gmail.com
  */
 export class ConfigtxYamlGenerator extends BaseGenerator {
   /* configtx.yaml contents */
@@ -240,7 +241,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 set -x
-configtxgen --configPath ${this.path} -profile BncRaft -channelID bnc-channel -outputBlock ${this.path}/${GENESIS_FILE_NAME}
+configtxgen --configPath ${this.path} -profile BncRaft -channelID ${CHANNEL_NAME_DEFAULT} -outputBlock ${this.path}/${GENESIS_FILE_NAME}
 res=$?
 set +x
 if [ $res -ne 0 ]; then

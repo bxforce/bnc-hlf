@@ -8,6 +8,10 @@ export class CaOptions {
   isSecure?: false;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class Ca {
   constructor(public name: string, public options: CaOptions) {}
 }
