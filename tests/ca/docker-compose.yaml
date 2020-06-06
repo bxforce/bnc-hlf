@@ -23,7 +23,6 @@ services:
     command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/priv_sk -b admin:adminpw -d'
     volumes:
       - c:/Users/sahar.fehri/Desktop/bnc-tools/tests/ca/chiraz/priv_sk:/etc/hyperledger/fabric-ca-server-config/priv_sk
-    container_name: ca_peerOrg1
     networks:
       - byfn
 

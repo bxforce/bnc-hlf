@@ -1,7 +1,17 @@
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { e } from '../../utils/logs';
+import { DockerEngine } from '../../agents/docker-agent';
+import { Peer } from '../../models/peer';
+import { Utils } from '../../utils/utils';
+import getDockerComposePath = Utils.getDockerComposePath;
+import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
 
+/**
+ * Class responsible to generate Peer compose file
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class DockerComposePeerGenerator extends BaseGenerator {
   /* docker compose content for peers */
   contents = `
@@ -35,7 +45,7 @@ ${this.options.org.peers
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peer.name}.${this.options.org.fullName}:${peer.options.ports[0]}
       - CORE_PEER_LOCALMSPID=${this.options.org.mspName}
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=${peer.name}.${this.options.org.fullName}.couchdb:${peer.options.couchDbPort}
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=${peer.name}.${this.options.org.fullName}.couchdb:5984
       # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
       # provide the credentials for ledger to connect to CouchDB.  The username and password must
       # match the username and password set for the associated CouchDB.
@@ -55,7 +65,7 @@ ${this.options.org.peers
 `).join('')}
 ${this.options.org.orderers
       .map(ordererHost => `
-      - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
+      #- "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
 `).join('')}
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
@@ -72,7 +82,7 @@ ${this.options.org.orderers
       - COUCHDB_PASSWORD=${peer.name}Pwd
     # Comment the port mapping IN ORDER to hide/expose the CouchDB service!!!!!
     ports:
-      - "${peer.options.couchDbPort}:${peer.options.couchDbPort}"
+      - ${peer.options.couchDbPort}:5984
     networks:
       - ${this.options.composeNetwork}
 `).join('')}
@@ -80,13 +90,12 @@ ${this.options.org.orderers
   `;
 
   /**
-   *
+   * Constructor
    * @param filename
-   * @param path
    * @param options
    */
-  constructor(filename: string, path: string,  private options: DockerComposeYamlOptions) {
-    super(filename, path);
+  constructor(filename: string, private options: DockerComposeYamlOptions) {
+    super(filename, getDockerComposePath(options.networkRootPath));
   }
 
   /**
@@ -101,6 +110,35 @@ ${this.options.org.orderers
     } catch(err) {
       e(err);
       return false;
+    }
+  }
+
+  /**
+   * Start a single peer container
+   * @param peer
+   */
+  async startPeer(peer: Peer): Promise<boolean> {
+    try {
+      const serviceName =  `${peer.name}.${this.options.org.fullName}`;
+
+      const engine = this.options.org.getEngine(peer.options.engineName);
+      const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+
+      await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
+
+  /**
+   * Start all peer container with the provided organization
+   */
+  async startPeers() {
+    for(const peer of this.options.org.peers) {
+      await this.startPeer(peer);
     }
   }
 }

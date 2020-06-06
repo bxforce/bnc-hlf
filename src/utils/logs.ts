@@ -1,3 +1,7 @@
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 import * as chalk from 'chalk';
 
 export function l(msg: string | object | Error) {
@@ -27,7 +31,9 @@ export function e(msg: string | object) {
       break;
     }
     case 'object': {
-      console.log(chalk.red('[BNC] - ', msg));
+      // @ts-ignore
+      const errMsg = msg?.err ?? msg;
+      console.log(chalk.red('[BNC] - ', errMsg));
       break;
     }
     default:

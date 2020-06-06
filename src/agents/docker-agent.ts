@@ -1,5 +1,10 @@
+/**
+ * Class responsible to operate other a docker engine (local or remote)
+ * @author ahmed.souissi@irt-systemx.fr
+ */
+
 import * as Compose from 'docker-compose';
-import { l } from '../utils/logs';
+import { e, l } from '../utils/logs';
 import {
   Container,
   ContainerCreateOptions,
@@ -66,6 +71,19 @@ export class DockerEngine {
     this.engine = new Dockerode(engineOptions);
   }
 
+  /**
+   * Check if the current configured engine is alive or not
+   */
+  async isAlive(): Promise<Boolean> {
+    try {
+      await this.engine.info();
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
   //Containers Management
   async createContainer(options: ContainerCreateOptions): Promise<Container> {
     const already = await this.doesContainerExist(options.name);
@@ -91,9 +109,13 @@ export class DockerEngine {
     return containerList;
   }
 
-  async doesContainerExist(name: string): Promise<Boolean> {
+  /**
+   * Check if a container name is already running
+   * @param name container name
+   */
+  async doesContainerExist(containerName: string): Promise<Boolean> {
     const containers = await this.engine.listContainers();
-    const fContainer = containers.filter(container => container.Names.filter(Name => Name === name).length > 0);
+    const fContainer = containers.filter(container => container.Names.filter(name => name.indexOf(containerName) > 0).length > 0);
     return fContainer.length > 0;
   }
 
@@ -105,6 +127,8 @@ export class DockerEngine {
     }
     l(`Docker network (${options.Name}) already exists`);
   }
+
+  // TODO stop one container running
 
   getNetwork(id: string): DockerNetwork {
     let network = new DockerNetwork(this);

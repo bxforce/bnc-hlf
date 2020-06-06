@@ -5,6 +5,10 @@ import memFs = require('mem-fs');
 import memFsEditor = require('mem-fs-editor');
 import {l} from './logs';
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export module SysWrapper {
 
   /** Create a file to specific path from contents.
@@ -152,6 +156,17 @@ export module SysWrapper {
       const store = memFs.create();
       const editor = memFsEditor.create(store);
       fulfilled(editor.exists(filePath));
+    });
+  }
+
+  /**
+   * Check if a folder exists
+   * @param folderPath
+   * @returns Promise<boolean>
+   */
+  export function existsFolder(folderPath: string): Promise<boolean> {
+    return new Promise((fulfilled, rejected) => {
+      return fulfilled(fs.existsSync(folderPath));
     });
   }
 

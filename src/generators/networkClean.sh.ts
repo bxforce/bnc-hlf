@@ -5,6 +5,10 @@ export class NetworkCleanShOptions {
   removeImages: boolean;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class NetworkCleanShGenerator extends BaseGenerator {
   success = join(this.path, 'networkclean.sh.successful');
   contents = `#!/bin/bash
