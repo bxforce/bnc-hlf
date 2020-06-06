@@ -1,5 +1,3 @@
-import { safeLoad } from 'js-yaml';
-import { SysWrapper } from '../utils/sysWrapper';
 import { l } from '../utils/logs';
 import { Organization } from '../models/organization';
 import { Engine } from '../models/engine';
@@ -7,13 +5,30 @@ import { Peer } from '../models/peer';
 import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
 import { Ca } from '../models/ca';
+import { Network } from '../models/network';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT } from '../utils/constants';
+import { OrdererOrganization } from '../models/ordererOrganization';
 
+/**
+ * Parser class for the deployment configuration file
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class DeploymentParser extends BaseParser {
+
+  /**
+   * Constructor
+   * @param fullFilePath deployment configuration full path
+   */
   constructor(public fullFilePath: string) {
     super(fullFilePath);
   }
 
-  async parse(): Promise<Organization[]> {
+  /**
+   * Parse the provided deployment configuration file
+   * @return {@link Network} instance with parsed information
+   */
+  async parse(): Promise<Network> {
     l('Starting Parsing configuration file');
 
     const parsedYaml = await this.parseRaw();
@@ -22,7 +37,7 @@ export class DeploymentParser extends BaseParser {
     const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
 
     // Parsing engine
-    const engines: Engine[] = this.buildEngine(parsedYaml['engines']);
+    const engines: Engine[] = DeploymentParser.buildEngine(parsedYaml['engines']);
 
     // Set engine for every organization
     organizations.map(organization => {
@@ -31,10 +46,35 @@ export class DeploymentParser extends BaseParser {
 
     l('Finish Parsing configuration file');
 
-    return organizations;
+    // build the network instance
+    const { template_folder, fabric, consensus } = parsedYaml['chains'];
+    const network: Network = new Network(this.fullFilePath, {
+      hyperledgerVersion: fabric as HLF_VERSION,
+      hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
+      externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
+      consensus: consensus as ConsensusType,
+      inside: false,
+      networkConfigPath: template_folder
+    });
+    network.organizations = organizations;
+
+    // set a default ordererOrganization
+    const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
+      domainName: organizations[0].domainName
+    });
+    for(const org of network.organizations) {
+      ordererOrganization.orderers.push(...org.orderers);
+    }
+    network.ordererOrganization = ordererOrganization;
+
+    return network;
   }
 
-  private buildEngine(yamlEngine): Engine[] {
+  /**
+   * Parse the engine section within the deployment configuration file
+   * @param yamlEngine
+   */
+  private static buildEngine(yamlEngine): Engine[] {
     const engines = [];
 
     for (const engineEntry of yamlEngine) {
@@ -49,6 +89,10 @@ export class DeploymentParser extends BaseParser {
     return engines;
   }
 
+  /**
+   * Parse the organization section within the deployment configuration file
+   * @param yamlOrganisations
+   */
   private buildOrganisations(yamlOrganisations): Organization[] {
     const organizations: Organization[] = [];
     const { template_folder, fabric, tls, consensus, db, organisations } = yamlOrganisations;
@@ -58,16 +102,24 @@ export class DeploymentParser extends BaseParser {
 
       // parse CA
       const { name: caName, engine_name: caEngineName } = ca;
-      const caEntity = new Ca(caName, caEngineName);
+      const caEntity = new Ca(caName, {
+        engineName: caEngineName,
+        ports: '7054',
+        number: 0,
+        user: 'admin',
+        password: 'adminpw'
+      });
 
       // parse & store orderers
       const ords = [];
-      orderers.forEach(ord => {
+      orderers.forEach((ord, index) => {
         const { orderer, engine_name: ordererEngineName } = ord;
         ords.push(
           new Orderer(orderer, {
             engineName: ordererEngineName,
-            consensus
+            consensus,
+            ports: [`${index*1000+ORDERER_DEFAULT_PORT}`],
+            number: index
           })
         );
       });

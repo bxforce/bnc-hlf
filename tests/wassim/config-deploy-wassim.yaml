@@ -1,7 +1,7 @@
 chains:
-  template_folder: "/home/ahmed/hyperledger-fabric-network"
-  fabric: "2.0"
-  tls: true
+  template_folder: "/home/wassim/hyperledger-fabric-network"
+  fabric: "2.0.0"
+  tls: false
   consensus: "raft"
   db: "couchdb"
   organisations:
@@ -14,6 +14,10 @@ chains:
       orderers:
         - orderer: "orderer0"
           engine_name: "host1"
+        - orderer: "orderer1"
+          engine_name: "host1"
+        - orderer: "orderer2"
+          engine_name: "host1"
       peers:
         - peer: "peer0"
           engine_name: "host1"
@@ -24,18 +28,18 @@ engines:
     hosts:
       - host: "host1"
         type: "docker"
-        url: "192.168.208.13"
+        url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]
       - host: "host2"
         type: "docker"
-        url: "192.168.208.204"
+        url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]
   - engine: "engineOrg2"
     hosts:
       - host: "host1"
         type: "docker"
-        url: "192.168.208.13"
+        url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]

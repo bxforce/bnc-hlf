@@ -1,12 +1,29 @@
 /* tslint:disable:no-unused-variable */
 import {Orchestrator} from './orchestrator';
 import { Type_User }  from './utils/constants';
-import * as channel from './core/hlf/channel';
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ * @author sahar
+ * @author ahmed
+ */
 export class CLI {
   static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
     const orchEngine = new Orchestrator();
     await orchEngine.validateAndParse(configFilePath, skipDownload);
+    return orchEngine;
+  }
+
+  static async generatePeersCredentials(configFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generatePeersCredentials(configFilePath);
+    return orchEngine;
+  }
+
+  static async deployHlfContainers(configFilePath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.deployHLFContainers(configFilePath, skipDownload, enablePeers, enableOrderers);
     return orchEngine;
   }
 
@@ -22,15 +39,15 @@ export class CLI {
     return orchEngine;
   }
 
-  static async startRootCA() {
-    const orchEngine = new Orchestrator();
-    await orchEngine.startRootCa();
-    return orchEngine;
-  }
-
   static async generateGenesis(configGenesisFilePath: string) {
     const orchEngine = new Orchestrator();
     await orchEngine.generateGenesis(configGenesisFilePath);
+    return orchEngine;
+  }
+
+  static async generateOrdererCredentials(configGenesisFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateOrdererCredentials(configGenesisFilePath);
     return orchEngine;
   }
 
@@ -53,21 +70,21 @@ export class CLI {
     await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
 
-  static async createChannel(channeltxPath, nameChannel, nameOrg) {
-    const channelEngine = new Orchestrator();
-    await channelEngine.createChannel(nameChannel, channeltxPath, nameOrg);
-    return channelEngine;
-  }
-
-  static async joinChannel(nameChannel, nameOrg, peers) {
-    const channelEngine = new Orchestrator();
-    await channelEngine.joinChannel(nameChannel, nameOrg, peers);
-    return channelEngine;
-  }
-
-  static async updateChannel(anchortx, namech, nameorg) {
-    const channelEngine = new Orchestrator();
-    await channelEngine.updateChannel(anchortx, namech, nameorg);
-    return channelEngine;
-  }
+  // static async createChannel(channeltxPath, nameChannel, nameOrg) {
+  //   const channelEngine = new Orchestrator();
+  //   await channelEngine.createChannel(nameChannel, channeltxPath, nameOrg);
+  //   return channelEngine;
+  // }
+  //
+  // static async joinChannel(nameChannel, nameOrg, peers) {
+  //   const channelEngine = new Orchestrator();
+  //   await channelEngine.joinChannel(nameChannel, nameOrg, peers);
+  //   return channelEngine;
+  // }
+  //
+  // static async updateChannel(anchortx, namech, nameorg) {
+  //   const channelEngine = new Orchestrator();
+  //   await channelEngine.updateChannel(anchortx, namech, nameorg);
+  //   return channelEngine;
+  // }
 }

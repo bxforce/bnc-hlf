@@ -1,16 +1,21 @@
 import { BaseGenerator } from '../base';
-import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { Network } from '../../models/network';
 
 // TODO inline the script with the one here: https://github.com/hyperledger/fabric/blob/master/scripts/bootstrap.sh
+/**
+ * Class responsible to download Hyperledger Fabric binaries
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class DownloadFabricBinariesGenerator extends BaseGenerator {
   contents = `
     #!/bin/bash
   set -e
 # Download the necessary bin files
 
-export VERSION=${this.options.envVars.FABRIC_VERSION}
-export CA_VERSION=${this.options.envVars.FABRIC_CA_VERSION}
-export THIRDPARTY_IMAGE_VERSION=${this.options.envVars.THIRDPARTY_VERSION}
+export VERSION=${this.network.options.hyperledgerVersion}
+export CA_VERSION=${this.network.options.hyperledgerCAVersion}
+export THIRDPARTY_IMAGE_VERSION=${this.network.options.externalHyperledgerVersion}
 export ARCH=$(echo "$(uname -s|tr '[:upper:]' '[:lower:]'|sed 's/mingw64_nt.*/windows/')-$(uname -m | sed 's/x86_64/amd64/g')")
 export MARCH=$(uname -m)
 
@@ -55,7 +60,7 @@ CA_BINARY_FILE=hyperledger-fabric-ca-$ARCH-$CA_VERSION.tar.gz
 
 echo "Installing Hyperledger Fabric binaries"
 
-DIRECTORY=${this.options.networkRootPath}/fabric-binaries/${this.options.envVars.FABRIC_VERSION}
+DIRECTORY=${this.network.options.networkConfigPath}/fabric-binaries/${this.network.options.hyperledgerVersion}
 
 if [ ! -d "$DIRECTORY" ]; then
     mkdir -p $DIRECTORY
@@ -119,7 +124,13 @@ export THIRDPARTY_TAG="$THIRDPARTY_IMAGE_VERSION"
 dockerInstall
 `;
 
-  constructor(filename: string, path: string, private options: DockerComposeYamlOptions) {
+  /**
+   * Constructor
+   * @param filename
+   * @param path
+   * @param network
+   */
+  constructor(filename: string, path: string, private network?: Network) {
     super(filename, path);
   }
 }

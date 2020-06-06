@@ -2,16 +2,23 @@
 import * as program from 'commander';
 import { l } from './utils/logs';
 import { CLI } from './cli';
-
 const pkg = require('../package.json');
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 const tasks = {
   async generateGenesis(filePath: string) {
     return await CLI.generateGenesis(filePath);
   },
 
-  async createRootCA() {
-    return await CLI.startRootCA();
+  async generateOrdererCredentials(filePath: string) {
+    return await CLI.generateOrdererCredentials(filePath);
+  },
+
+  async generatePeersCredentials(filePath: string) {
+    return await CLI.generatePeersCredentials(filePath);
   },
 
   async createNetwork(filePath: string) {
@@ -24,6 +31,10 @@ const tasks = {
 
   async validateAndParse(filePath: string, skipDownload?: boolean) {
     return await CLI.validateAndParse(filePath, skipDownload);
+  },
+
+  async deployHlfServices(filePath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
+    return await CLI.deployHlfContainers(filePath, skipDownload, enablePeers, enableOrderers);
   },
 
   async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
@@ -39,8 +50,7 @@ const tasks = {
   },
 
   async installChaincode() {
-    l('Not yet implemented');
-
+    l('[Install Chaincode] Not yet implemented');
   },
 
   async upgradeChaincode() {
@@ -58,7 +68,7 @@ const tasks = {
     } else if (anchortx) {
       l('[init anchorTx] Not yet implemented');
     } else if (genesis) {
-      l('[init genesis] Not yet implemented');
+      await tasks.generateGenesis(config);
     }
     //l('config file: ' + config;
   },
@@ -74,19 +84,19 @@ const tasks = {
     l('[start] not yet implemented');
     //l('config file: ' + config;
   },
-  stop() {
+  async stop() {
     l('[stop] not yet implemented');
   },
-  async createChannel(channeltxPath, nameChannel, nameOrg) {
-    return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
-  },
-  async joinChannel(nameChannel, nameOrg, listPeers) {
-    let arrPeers = listPeers.split(",").map(String)
-    return await CLI.joinChannel(nameChannel, nameOrg, arrPeers);
-  },
-  async updateChannel(anchortx, namech, nameorg) {
-    return await CLI.updateChannel(anchortx, namech, nameorg);
-  }
+  // async createChannel(channeltxPath, nameChannel, nameOrg) {
+  //   return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
+  // },
+  // async joinChannel(nameChannel, nameOrg, listPeers) {
+  //   let arrPeers = listPeers.split(",").map(String)
+  //   return await CLI.joinChannel(nameChannel, nameOrg, arrPeers);
+  // },
+  // async updateChannel(anchortx, namech, nameorg) {
+  //   return await CLI.updateChannel(anchortx, namech, nameorg);
+  // }
 };
 
 program
@@ -95,6 +105,24 @@ program
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.generateGenesis(cmd.config);
+    }
+  });
+
+program
+  .command('peer-msp')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.generatePeersCredentials(cmd.config);
+    }
+  });
+
+program
+  .command('orderer-msp')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.generateOrdererCredentials(cmd.config);
     }
   });
 
@@ -120,20 +148,32 @@ program
   });
 
 program
+  .command('deploy-hlf')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
+    }
+  });
+
+program
+  .command('deploy-orderers')
+  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
+  .action(async (cmd: any) => {
+    if (cmd) {
+      await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, false, true);
+    }
+  });
+
+program
   .command('clean')
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
-program
-  .command('start-root-ca')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.createRootCA();
-    }
-  });
 program
   .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
@@ -164,10 +204,6 @@ program  // just for testing to be deleted
   .action(async (id:string, args:string[], cmd: any) => {
     await tasks.deleteIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
   });
-
-program.command('start-root-ca').action(async () => {
-  await tasks.createRootCA();
-});
 
 program
   .command('init')
@@ -202,33 +238,33 @@ program
   });
 
 const channelCmd = program.command('channel');
-channelCmd
-  .command('create')
-  .description('create channel if it does not exist')
-  .requiredOption('-t, --channel-tx <channel-path>', 'configurationTemplateFilePath')
-  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-  .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
-  .action(async cmd => {
-    await tasks.createChannel(cmd.channelTx, cmd.namech, cmd.nameorg );
-  });
-channelCmd
-  .command('join')
-  .description('join channel')
-  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-  .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
-  .option('-p, --list <items>', 'comma separated list')
-  .action(async cmd => {
-    await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list);
-  });
-channelCmd
-  .command('update')
-  .description('update channel')
-  .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
-  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-  .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
-  .action(async (cmd) => {
-    await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.nameorg);
-  });
+// channelCmd
+//   .command('create')
+//   .description('create channel if it does not exist')
+//   .requiredOption('-t, --channel-tx <channel-path>', 'configurationTemplateFilePath')
+//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+//   .action(async cmd => {
+//     await tasks.createChannel(cmd.channelTx, cmd.namech, cmd.nameorg );
+//   });
+// channelCmd
+//   .command('join')
+//   .description('join channel')
+//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+//   .option('-p, --list <items>', 'comma separated list')
+//   .action(async cmd => {
+//     await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list);
+//   });
+// channelCmd
+//   .command('update')
+//   .description('update channel')
+//   .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
+//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
+//   .action(async (cmd) => {
+//     await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.nameorg);
+//   });
 
 program.version(pkg.version);
 

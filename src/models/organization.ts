@@ -4,6 +4,7 @@ import { Peer } from './peer';
 import { Orderer } from './orderer';
 import { Engine } from './engine';
 import { Ca } from './ca';
+import { DockerEngine } from '../agents/docker-agent';
 
 export class OrganizationOptions {
   peers: Peer[];
@@ -19,6 +20,10 @@ export class OrganizationOptions {
   engineOrgName?: string;
 }
 
+/**
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class Organization {
   channels: Channel[];
   ca: Ca;
@@ -112,4 +117,9 @@ export class Organization {
     const engine = this.engines.find(eng => eng.name === engineName);
     return engine ? engine.options.url : 'undefined';
   }
+
+  getEngine(engineName: string): Engine {
+    return this.engines.find(eng => eng.name === engineName);
+  }
+
 }

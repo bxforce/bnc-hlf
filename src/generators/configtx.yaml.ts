@@ -1,44 +1,67 @@
 import { BaseGenerator } from './base';
 import { Network } from '../models/network';
+import { Utils } from '../utils/utils';
+import { e } from '../utils/logs';
+import { SysWrapper } from '../utils/sysWrapper';
+import { CHANNEL_NAME_DEFAULT, GENESIS_FILE_NAME } from '../utils/constants';
+import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
+import getOrdererTlsPath = Utils.getOrdererTlsPath;
+import getHlfBinariesPath = Utils.getHlfBinariesPath;
+import getArtifactsPath = Utils.getArtifactsPath;
+import execContent = SysWrapper.execContent;
+import getOrganizationMspPath = Utils.getOrganizationMspPath;
 
+/**
+ * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
+ * This use the configtxgen binary provided by HLF
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class ConfigtxYamlGenerator extends BaseGenerator {
-  contents = `---
+  /* configtx.yaml contents */
+  contents = `
 Organizations:
-${this.network.organizations
-  .map(
-    org => `
+  - &${this.network.ordererOrganization.name}
+    Name: ${this.network.ordererOrganization.name}
+    ID: ${this.network.ordererOrganization.mspName}
+    MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp
+    Policies: &${this.network.ordererOrganization.name}POLICIES
+        Readers:
+            Type: Signature
+            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+        Writers:
+            Type: Signature
+            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+        Admins:
+            Type: Signature
+            Rule: "OR('${this.network.ordererOrganization.name}.admin')"
+    OrdererEndpoints:
+${this.network.ordererOrganization.orderers.map((ord, i) => `
+        - ${ord.options.host}:${ord.options.ports[0]}
+`).join('')}        
+  
+${this.network.organizations.map(org => `
   - &${org.name}
     Name: ${org.name}
-    SkipAsForeign: false
-    ID: ${org.name}
-    MSPDir: ${this.network.options.networkConfigPath}/crypto-config/peerOrganizations/${org.fullName.toLowerCase()}/msp
+    ID: ${org.mspName}
+    MSPDir: ${getOrganizationMspPath(this.network.options.networkConfigPath, org)}
     Policies: &${org.name}POLICIES
-            Readers:
-                Type: Signature
-                Rule: "OR('${org.name}.member')"
-            Writers:
-                Type: Signature
-                Rule: "OR('${org.name}.member')"
-            Admins:
-                Type: Signature
-                Rule: "OR('${org.name}.admin')"
-            Endorsement:
-                Type: Signature
-                Rule: "OR('${org.name}.member')"
-        OrdererEndpoints:
-${org.orderers
-  .map(
-    (ord, i) => `
-            - ${ord.options.host}:${ord.options.ports[i]}
-`
-  )
-  .join('')}        
-        AnchorPeers:
-            - Host: ${org.peers[0].options.host}
-              Port: ${org.peers[0].options.ports[0]}
-`
-  )
-  .join('')}
+        Readers:
+            Type: Signature
+            Rule: "OR('${org.name}.member')"
+        Writers:
+            Type: Signature
+            Rule: "OR('${org.name}.member')"
+        Admins:
+            Type: Signature
+            Rule: "OR('${org.name}.admin')"
+        Endorsement:
+            Type: Signature
+            Rule: "OR('${org.name}.member')"
+    AnchorPeers:
+        - Host: ${org.peers[0].options.host}
+          port: ${org.peers[0].options.ports[0]}
+`).join('')}
 
 Capabilities:
     Channel: &ChannelCapabilities
@@ -93,49 +116,29 @@ Application: &ApplicationDefaults
         <<: *ApplicationCapabilities
   
 Orderer: &OrdererDefaults
+    OrdererType: etcdraft
     Addresses:
-${this.network.organizations
-  .map(
-    org => `
-${org.orderers
-  .map(
-    (ord, i) => `
-        # - ${ord.options.host}:${ord.options.ports[i]}
-`
-  )
-  .join('')}
-`
-  )
-  .join('')}     
-        
+${this.network.organizations.map(org => `
+${org.orderers.map((ord, i) => `
+        - ${ord.options.host}:${ord.options.ports[0]}
+`).join('')}
+`).join('')}     
     BatchTimeout: 2s
     BatchSize:
-        MaxMessageCount: 500
-        AbsoluteMaxBytes: 10 MB
-        PreferredMaxBytes: 2 MB
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
     MaxChannels: 0
     EtcdRaft:
         Consenters:
-${this.network.organizations
-  .map(
-    org => `
-${org.orderers
-  .map(
-    (ord, i) => `
+${this.network.organizations.map(org => `
+${org.orderers.map((ord, i) => `
             - Host: ${ord.options.host}
-              Port: ${ord.options.ports[i]}
-              ClientTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${
-      org.domainName
-    }/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
-              ServerTLSCert: ${this.network.options.networkConfigPath}/crypto-config/ordererOrganizations/${
-      org.domainName
-    }/orderers/${ord.options.host.toLowerCase()}/tls/server.crt
-`
-  )
-  .join('')}
-`
-  )
-  .join('')}        
+              Port: ${ord.options.ports[0]}
+              ClientTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
+              ServerTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
+`).join('')}
+`).join('')}        
         Options:
             TickInterval: 500ms
             ElectionTick: 10
@@ -174,57 +177,68 @@ Channel: &ChannelDefaults
         <<: *ChannelCapabilities
 
 Profiles:
-    SampleDevModeEtcdRaft:
+    BncRaft:
         <<: *ChannelDefaults
         Orderer:
             <<: *OrdererDefaults
             OrdererType: etcdraft
             Organizations:
-${this.network.organizations
-  .map(
-    org => `
-                - <<: *${org.name}
-                  Policies:
-                      <<: *${org.name}POLICIES
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('${org.name}.member')"
-`
-  )
-  .join('')}            
+            - *${this.network.ordererOrganization.name}
+            Capabilities:
+                <<: *OrdererCapabilities       
         Application:
             <<: *ApplicationDefaults
             Organizations:
-${this.network.organizations
-  .map(
-    org => `
-                - <<: *${org.name}
-                  Policies:
-                      <<: *${org.name}POLICIES
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('${org.name}.member')"
-`
-  )
-  .join('')}                        
+                - <<: *${this.network.ordererOrganization.name}
         Consortiums:
-            SampleConsortium:
+            BncConsortium:
                 Organizations:
-${this.network.organizations
-  .map(
-    org => `
-                - <<: *${org.name}
-                  Policies:
-                      <<: *${org.name}POLICIES
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('${org.name}.member')"
-`
-  )
-  .join('')}                        
+${this.network.organizations.map(org => `
+                - *${org.name}
+`).join('')}                        
   `;
 
+  /**
+   * Constructor
+   * @param filename
+   * @param path
+   * @param network
+   */
   constructor(filename: string, path: string, private network: Network) {
-    super(filename, path);
+    super(filename, getArtifactsPath(path));
+  }
+
+  /**
+   * Generate the genesis.block using the executable configtxgen
+   */
+  async generateGenesisBlock(): Promise<boolean> {
+    const scriptContent = `
+export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
+export FABRIC_CFG_PATH=${this.network.options.networkConfigPath}  
+
+which configtxgen
+if [ "$?" -ne 0 ]; then
+  echo "configtxgen tool not found. exiting"
+  exit 1
+fi    
+  
+set -x
+configtxgen --configPath ${this.path} -profile BncRaft -channelID ${CHANNEL_NAME_DEFAULT} -outputBlock ${this.path}/${GENESIS_FILE_NAME}
+res=$?
+set +x
+if [ $res -ne 0 ]; then
+  echo "Failed to generate orderer genesis block..."
+  exit 1
+fi
+    `;
+
+    try {
+      await execContent(scriptContent);
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
   }
 }
