@@ -7,6 +7,8 @@ const pkg = require('../package.json');
 
 /**
  *
+ * @author ahmed Souissi
+ * @author sahar Fehri
  * @author wassim.znaidi@gmail.com
  */
 const tasks = {

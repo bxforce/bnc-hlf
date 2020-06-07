@@ -27,6 +27,13 @@ import { Utils } from './utils/utils';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { DockerComposeCaGenerator } from './generators/docker-compose/dockerComposeCa.yaml';
 
+/**
+ * Main tools orchestrator
+ *
+ * @author wassim.znaidi@gmail.com
+ * @author sahar fehri
+ * @author ahmed souissi
+ */
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
   networkRootPath = './hyperledger-fabric-network';
