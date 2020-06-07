@@ -2,6 +2,7 @@
 import * as program from 'commander';
 import { l } from './utils/logs';
 import { CLI } from './cli';
+
 const pkg = require('../package.json');
 
 /**
@@ -13,12 +14,12 @@ const tasks = {
     return await CLI.generateGenesis(filePath);
   },
 
-  async generateOrdererCredentials(filePath: string) {
-    return await CLI.generateOrdererCredentials(filePath);
+  async generateOrdererCredentials(genesisConfigFilePath: string) {
+    return await CLI.generateOrdererCredentials(genesisConfigFilePath);
   },
 
-  async generatePeersCredentials(filePath: string) {
-    return await CLI.generatePeersCredentials(filePath);
+  async generatePeersCredentials(deploymentConfigFilePath: string) {
+    return await CLI.generatePeersCredentials(deploymentConfigFilePath);
   },
 
   async createNetwork(filePath: string) {
@@ -41,11 +42,11 @@ const tasks = {
     return await CLI.enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
   },
 
-  async fetchIdentity(id,caInfo, walletDirectoryName, ccpPath) {
-    return await CLI.fetchIdentity(id,caInfo, walletDirectoryName, ccpPath);
+  async fetchIdentity(id, caInfo, walletDirectoryName, ccpPath) {
+    return await CLI.fetchIdentity(id, caInfo, walletDirectoryName, ccpPath);
   },
 
-  async deleteIdentity(id,caInfo, walletDirectoryName, ccpPath) {
+  async deleteIdentity(id, caInfo, walletDirectoryName, ccpPath) {
     return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   },
 
@@ -60,17 +61,35 @@ const tasks = {
   async invokeChaincode() {
     l('[Invoke Chaincode] Not yet implemented');
   },
-  async init(config: string, genesis: boolean, configtx: boolean, anchortx: any) {
+  async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any) {
+    l('Request Init command ...');
+
     if (!(genesis || configtx || anchortx)) {
-      l('[init all] Not yet implemented');
-    } else if (configtx) {
-      l('[init configTx] Not yet implemented');
-    } else if (anchortx) {
-      l('[init anchorTx] Not yet implemented');
-    } else if (genesis) {
-      await tasks.generateGenesis(config);
+      l('[Init]: generate all config files (genesis, configtx, anchortx)...');
+
+    } else {
+      if (genesis) {
+        l('[Init]: generate genesis block ... ');
+
+        await CLI.generateGenesis(genesisConfigPath);
+
+        l('[Init]: genesis block generated done !!! ');
+      }
+
+      if (configtx) {
+        l('[Init]: generate configtx.yaml file... ');
+
+        await CLI.generateConfigtx(genesisConfigPath);
+
+        l('[Init]: configtx.yaml file generated done !!! ');
+      }
+
+      if (anchortx) {
+        l('AnchorTx generated not yet supported');
+      }
     }
-    //l('config file: ' + config;
+
+    l('[Init]: exit command !!!');
   },
   enrollConfig(config: string, admin: boolean) {
     if (admin) {
@@ -86,7 +105,7 @@ const tasks = {
   },
   async stop() {
     l('[stop] not yet implemented');
-  },
+  }
   // async createChannel(channeltxPath, nameChannel, nameOrg) {
   //   return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
   // },
@@ -100,17 +119,18 @@ const tasks = {
 };
 
 program
-  .command('generate-genesis')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.generateGenesis(cmd.config);
-    }
+  .command('init')
+  .option('--genesis', 'generate genesis_block')
+  .option('--configtx', 'generate configTx')
+  .option('--anchortx', 'generate anchorTx')
+  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment defintion file')
+  .action(async cmd => {
+    await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });
 
 program
-  .command('peer-msp')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .command('enroll-peers')
+  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.generatePeersCredentials(cmd.config);
@@ -118,8 +138,8 @@ program
   });
 
 program
-  .command('orderer-msp')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .command('enroll-orderers')
+  .requiredOption('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file')
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.generateOrdererCredentials(cmd.config);
@@ -180,7 +200,7 @@ program
   .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
   .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
   .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
-  .action(async (type:string, id:string , secret:string,affiliation:string ,mspID:string,  args:string[], cmd:any ) => {
+  .action(async (type: string, id: string, secret: string, affiliation: string, mspID: string, args: string[], cmd: any) => {
     await tasks.enroll(type, id, secret, affiliation, mspID, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath); // if -R is not passed cmd.rmi is true
 
   });
@@ -191,7 +211,7 @@ program
   .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
   .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
   .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
-  .action(async (id:string, args:string[], cmd: any) => {
+  .action(async (id: string, args: string[], cmd: any) => {
     await tasks.fetchIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
   });
 
@@ -201,18 +221,8 @@ program  // just for testing to be deleted
   .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
   .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
   .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
-  .action(async (id:string, args:string[], cmd: any) => {
+  .action(async (id: string, args: string[], cmd: any) => {
     await tasks.deleteIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
-  });
-
-program
-  .command('init')
-  .option('--genesis', 'generate genesis_block')
-  .option('--configtx', 'generate configTx')
-  .option('--anchortx', 'generate anchorTx')
-  .requiredOption('-f, --config <path>', 'bncGenesisConfigurationFilePath')
-  .action(async cmd => {
-    await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });
 
 program
