@@ -10,6 +10,7 @@ import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
+import existsPath = SysWrapper.existsPath;
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
@@ -233,6 +234,15 @@ fi
     `;
 
     try {
+      // check if configtx.yaml exists
+      const configtxPath = `${this.path}/configtx.yaml`; // TODO differentiate between different configtx of different organization
+      const genesisExist = existsPath(configtxPath);
+      if(!genesisExist) {
+        e('Configuration configtx.yaml does not exists, exit genesis generation task !!! ');
+        return false;
+      }
+
+      // execute the scripts
       await execContent(scriptContent);
 
       return true;

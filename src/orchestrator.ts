@@ -27,6 +27,13 @@ import { Utils } from './utils/utils';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { DockerComposeCaGenerator } from './generators/docker-compose/dockerComposeCa.yaml';
 
+/**
+ * Main tools orchestrator
+ *
+ * @author wassim.znaidi@gmail.com
+ * @author sahar fehri
+ * @author ahmed souissi
+ */
 export class Orchestrator {
   /* default folder to store all generated tools files and data */
   networkRootPath = './hyperledger-fabric-network';
@@ -56,38 +63,54 @@ export class Orchestrator {
   }
 
   /**
+   * Generate configtx yaml file
+   * @param configGenesisFilePath
+   */
+  async generateConfigtx(configGenesisFilePath: string) {
+    const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+    const isNetworkValid = network.validate();
+    if (!isNetworkValid) {
+      return;
+    }
+
+    l('[configtx] Start generating configtx.yaml file...');
+    const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+    await configTx.save();
+    l('[configtx] Configtx.yaml file saved !!!');
+  }
+
+  /**
    * Generate the Genesis template file
    * @param configGenesisFilePath full path of the deployment configuration file
    */
   async generateGenesis(configGenesisFilePath: string) {
-    const path = this._getDefaultPath();
     const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+    await createFolder(path);
     const isNetworkValid = network.validate();
-    if(!isNetworkValid) {
+    if (!isNetworkValid) {
       return;
     }
 
     // Check if HLF binaries exists
     const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
     const binariesFolderExists = await existsFolder(binariesFolderPath);
-    if(!binariesFolderExists) {
-      l('Genesis: start downloading HLF binaries...');
+    if (!binariesFolderExists) {
+      l('[genesis]: start downloading HLF binaries...');
       const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
-      if(!isDownloaded) {
-        e('Error while downloading HLF binaries files');
+      if (!isDownloaded) {
+        e('[genesis]: Error while downloading HLF binaries files');
         return;
       }
-      l('Genesis: HLF binaries downloaded !!!');
+      l('[genesis]: Genesis: HLF binaries downloaded !!!');
     }
 
-    l('Start generating configtx.yaml file');
+    l('[genesis]: start generating genesis block...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
-    await configTx.save();
-    l('Configtx.yaml file saved');
-
-    l('Genesis: generate genesis block...');
     const gen = await configTx.generateGenesisBlock();
-    l(`Genesis: block generated (${gen}) !!!`);
+
+    l(`[genesis]: block generated --> ${gen} !!!`);
   }
 
   /**
@@ -184,14 +207,14 @@ export class Orchestrator {
    * @param deploymentConfigFilePath
    */
   // TODO check if files exists already for the same peers/organizations
-  async generatePeersCredentials(deploymentConfigFilePath: string)  {
+  async generatePeersCredentials(deploymentConfigFilePath: string) {
     const path = this._getDefaultPath();
     await createFolder(path);
 
     l('Peer MSP: start parsing deployment file...');
     const network = await Orchestrator._parse(deploymentConfigFilePath);
     const isNetworkValid = network.validate();
-    if(!isNetworkValid) {
+    if (!isNetworkValid) {
       e('Deployment config file is not valid');
       return;
     }
@@ -216,7 +239,7 @@ export class Orchestrator {
     const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, options, engine);
     await ca.save();
     const caStarted = await ca.startOrgCa();
-    if(!caStarted) {
+    if (!caStarted) {
       e('Peer MSP: Error while starting the Organization CA container !!!');
       return;
     }
@@ -270,7 +293,7 @@ export class Orchestrator {
     const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
     await engine.createNetwork({ Name: options.composeNetwork });
 
-    if(enablePeers) {
+    if (enablePeers) {
       l('Creating Peer container & deploy');
       const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options);
       l(`'Creating Peer ${peer.name} container template`);
@@ -280,7 +303,7 @@ export class Orchestrator {
       l(`Peer ${peer.name} started (${started})`);
     }
 
-    if(enableOrderers) {
+    if (enableOrderers) {
       l('Creating Orderers Container & Deploy');
       const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options);
       // await ordererGenerator.createTemplateOrderers();
@@ -295,40 +318,41 @@ export class Orchestrator {
    */
   // TODO check if files exists already for the same orderers/organizations
   async generateOrdererCredentials(genesisFilePath: string) {
-    const path = this._getDefaultPath();
-    await createFolder(path);
-
-    l('Genesis File: start parsing...');
+    l('[Orderer Cred]: start parsing...');
     const network = await Orchestrator._parseGenesis(genesisFilePath);
-    l('Genesis File: parsing done...');
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+    await createFolder(path);
+    l('[Orderer Cred]: parsing done!!!');
 
     const isNetworkValid = network.validate();
-    if(!isNetworkValid) {
+    if (!isNetworkValid) {
+      e('[Orderer Cred]: input file contains invalid parameters !!! ');
       return;
     }
 
+    l('[Orderer Cred]: configure local docker engine to be used for the generation process !!!');
     const options: DockerComposeYamlOptions = { networkRootPath: path, composeNetwork: BNC_NETWORK, org: null };
-    const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
+    const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' }); // TODO configure local docker remote engine
     await engine.createNetwork({ Name: options.composeNetwork });
-    l('Genesis: docker engine configured !!!');
+    l('[Orderer Cred]: docker engine configured !!!');
 
-    l('Genesis: start CA container...');
+    l('[Orderer Cred]: start CA container...');
     const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
     await ca.save();
     const caStarted = await ca.startOrdererCa();
-    if(!caStarted) {
-      e('Error while starting the orderer CA container !!!');
+    if (!caStarted) {
+      e('[Orderer Cred]: Error while starting the orderer CA container !!!');
       return;
     }
-    l(`Genesis: CA container started (${caStarted}) !!!`);
+    l(`[Orderer Cred]: CA container started (${caStarted}) !!!`);
 
-    l('Genesis: start generating credentials...');
+    l('[Orderer Cred]: start generating credentials...');
     const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
       path,
       network,
       { name: this.defaultCAAdmin.name, password: this.defaultCAAdmin.password });
     const isGenerated = await ordererGenerator.buildCertificate();
-    l(`Genesis: credentials generated (${isGenerated}) !!!`);
+    l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
   }
 
   /**

@@ -39,6 +39,20 @@ export class CLI {
     return orchEngine;
   }
 
+  /**
+   * Generate the Configtx yaml file
+   * @param configGenesisFilePath genesis configuration input file
+   */
+  static async generateConfigtx(configGenesisFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateConfigtx(configGenesisFilePath);
+    return orchEngine;
+  }
+
+  /**
+   * Generate the genesis block file
+   * @param configGenesisFilePath genesis configuration input file
+   */
   static async generateGenesis(configGenesisFilePath: string) {
     const orchEngine = new Orchestrator();
     await orchEngine.generateGenesis(configGenesisFilePath);
