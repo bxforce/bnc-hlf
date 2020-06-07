@@ -51,6 +51,8 @@ bnc new -f YOUR_CONFIFURATION_FILE
 - Developer - Ahmed Souissi ([@ahmeds](#))
 - Developer - Sahar Fehri ([@sharf](#))
 - Product owner - Chiraz Chaabane ([@chirazc](#))
+- [@worldsibu](https://github.com/worldsibu) for inspiration and some part of the util code.
+
 
 ## Changelog
 
