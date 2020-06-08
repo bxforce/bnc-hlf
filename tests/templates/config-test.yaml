@@ -1,0 +1,41 @@
+chains:
+  template_folder: "/home/ahmed/hyperledger-fabric-network"
+  fabric: "2.0"
+  tls: true
+  consensus: "raft"
+  db: "couchdb"
+  organisations:
+    - organisation: "org1"
+      engineOrg: "engineOrg1"
+      domain_name: "bnc.com"
+      ca:
+        name: "ca1"
+        engine_name: "host2"
+      orderers:
+        - orderer: "orderer0"
+          engine_name: "host1"
+      peers:
+        - peer: "peer0"
+          engine_name: "host1"
+        - peer: "peer1"
+          engine_name: "host2"
+engines:
+  - engine: "engineOrg1"
+    hosts:
+      - host: "host1"
+        type: "docker"
+        url: "192.168.208.13"
+        port: 2375
+        settings: [ "default" ]
+      - host: "host2"
+        type: "docker"
+        url: "192.168.208.204"
+        port: 2375
+        settings: [ "default" ]
+  - engine: "engineOrg2"
+    hosts:
+      - host: "host1"
+        type: "docker"
+        url: "192.168.208.13"
+        port: 2375
+        settings: [ "default" ]
