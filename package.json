@@ -17,8 +17,7 @@
     "package.json"
   ],
   "bin": {
-    "bnc": "./dist/command.js",
-    "docker-test": "./dist/docker-test.js"
+    "bnc": "./dist/command.js"
   },
   "engines": {
     "node": ">=12.15.1"
