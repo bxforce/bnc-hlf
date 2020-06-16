@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
 Copyright 2020 IRT SystemX
 
@@ -14,7 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#!/usr/bin/env node
 import * as program from 'commander';
 import { l } from './utils/logs';
 import { CLI } from './cli';
