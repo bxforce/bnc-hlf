@@ -36,10 +36,10 @@ engines:
         url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]
-  - engine: "engineOrg2"
-    hosts:
-      - host: "host1"
-        type: "docker"
-        url: "127.0.0.1"
-        port: 2375
-        settings: [ "default" ]
+#  - engine: "engineOrg2"
+#    hosts:
+#      - host: "host1"
+#        type: "docker"
+#        url: "127.0.0.1"
+#        port: 2375
+#        settings: [ "default" ]

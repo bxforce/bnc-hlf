@@ -27,7 +27,7 @@ import {
   ContainerInfo,
   ContainerInspectInfo,
   DockerOptions,
-  Network,
+  Network, NetworkCreateOptions,
   NetworkInspectInfo,
   Volume,
   VolumeInspectInfo
@@ -50,18 +50,18 @@ interface ContainerListOptions {
   filters?: string;
 }
 
-interface NetworkCreateOptions {
-  Name: string;
-  CheckDuplicate?: boolean;
-  Driver?: string;
-  Internal?: boolean;
-  Attachable?: boolean;
-  Ingress?: boolean;
-  IPAM?: {};
-  EnableIPv6?: boolean;
-  Options?: {};
-  Labels?: {};
-}
+// interface NetworkCreateOptions {
+//   Name: string;
+//   CheckDuplicate?: boolean;
+//   Driver?: string;
+//   Internal?: boolean;
+//   Attachable?: boolean;
+//   Ingress?: boolean;
+//   IPAM?: {};
+//   EnableIPv6?: boolean;
+//   Options?: {};
+//   Labels?: {};
+// }
 
 interface VolumeCreateOptions {
   Name?: string;
