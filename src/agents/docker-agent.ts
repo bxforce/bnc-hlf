@@ -27,7 +27,7 @@ import {
   ContainerInfo,
   ContainerInspectInfo,
   DockerOptions,
-  Network,
+  Network, NetworkCreateOptions,
   NetworkInspectInfo,
   Volume,
   VolumeInspectInfo
@@ -50,18 +50,18 @@ interface ContainerListOptions {
   filters?: string;
 }
 
-interface NetworkCreateOptions {
-  Name: string;
-  CheckDuplicate?: boolean;
-  Driver?: string;
-  Internal?: boolean;
-  Attachable?: boolean;
-  Ingress?: boolean;
-  IPAM?: {};
-  EnableIPv6?: boolean;
-  Options?: {};
-  Labels?: {};
-}
+// interface NetworkCreateOptions {
+//   Name: string;
+//   CheckDuplicate?: boolean;
+//   Driver?: string;
+//   Internal?: boolean;
+//   Attachable?: boolean;
+//   Ingress?: boolean;
+//   IPAM?: {};
+//   EnableIPv6?: boolean;
+//   Options?: {};
+//   Labels?: {};
+// }
 
 interface VolumeCreateOptions {
   Name?: string;
@@ -127,12 +127,35 @@ export class DockerEngine {
 
   /**
    * Check if a container name is already running
-   * @param name container name
+   * @param containerName container name
    */
-  async doesContainerExist(containerName: string): Promise<Boolean> {
+  async doesContainerExist(containerName: string): Promise<boolean> {
     const containers = await this.engine.listContainers();
     const fContainer = containers.filter(container => container.Names.filter(name => name.indexOf(containerName) > 0).length > 0);
     return fContainer.length > 0;
+  }
+
+  /**
+   * Remove all container existing in the list within the current docker engine
+   * @param serviceNames
+   */
+  async stopContainerList(serviceNames: string[]): Promise<boolean> {
+    try {
+      // filter existing containers info
+      const containersInfo = await this.engine.listContainers();
+      const foundContainerInfos = containersInfo.filter(container => container.Names.filter(name => serviceNames.includes(name)).length > 0);
+
+      // retrieve container instance from one found and stop it
+      for (let containerInfo of foundContainerInfos) {
+        const container: DockerContainer = this.getContainer(containerInfo.Id);
+        await container.stop();
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
   }
 
   //Networks Management
@@ -168,6 +191,8 @@ export class DockerEngine {
     return fNetwork.length > 0;
   }
 
+  // TODO implement delete network
+
   //Volumes Management
   async createVolume(options: VolumeCreateOptions): Promise<Volume> {
     if (options.hasOwnProperty('Name')) {
@@ -202,6 +227,8 @@ export class DockerEngine {
     const fVolume = Volumes.filter(volume => volume.Name === name);
     return fVolume.length > 0;
   }
+
+  // TODO implement delete volumes
 
   //Docker-compose Management
   composeUpAll(options?: IDockerComposeOptions): Promise<IDockerComposeResult> {
