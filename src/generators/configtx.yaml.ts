@@ -250,6 +250,9 @@ fi
     `;
 
     try {
+      // check artifact folder path
+      await SysWrapper.createFolder(this.path);
+
       // check if configtx.yaml exists
       const configtxPath = `${this.path}/configtx.yaml`; // TODO differentiate between different configtx of different organization
       const genesisExist = existsPath(configtxPath);

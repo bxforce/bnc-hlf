@@ -124,6 +124,7 @@ export class Orchestrator {
 
     l('[genesis]: start generating genesis block...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+    await configTx.save();
     const gen = await configTx.generateGenesisBlock();
 
     l(`[genesis]: block generated --> ${gen} !!!`);
@@ -653,5 +654,4 @@ export class Orchestrator {
     const homedir = require('os').homedir();
     return join(homedir, this.networkRootPath);
   }
-
 }
