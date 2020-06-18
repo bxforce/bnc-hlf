@@ -606,5 +606,4 @@ export class Orchestrator {
     const homedir = require('os').homedir();
     return join(homedir, this.networkRootPath);
   }
-
 }
