@@ -42,6 +42,7 @@ import existsFolder = SysWrapper.existsFolder;
 import { Utils } from './utils/utils';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { DockerComposeCaGenerator } from './generators/docker-compose/dockerComposeCa.yaml';
+import getDockerComposePath = Utils.getDockerComposePath;
 
 /**
  * Main tools orchestrator
@@ -280,13 +281,19 @@ export class Orchestrator {
    */
   async deployHLFContainers(configFilePath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
     const network: Network = await Orchestrator._parse(configFilePath);
+    const isNetworkValid = network.validate();
+    if (!isNetworkValid) {
+      return;
+    }
     const organization: Organization = network.organizations[0];
     l('[End] Blockchain configuration files parsed');
 
-    // Generate dynamically crypto
-    const homedir = require('os').homedir();
-    const path = join(homedir, this.networkRootPath);
+    // Assign & check root path
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
     await createFolder(path);
+
+    // Auto-create docker-compose folder if not exists
+    await createFolder(getDockerComposePath(path));
 
     const options: DockerComposeYamlOptions = {
       networkRootPath: path,
@@ -299,7 +306,7 @@ export class Orchestrator {
       }
     };
 
-    l('Creating Peer base');
+    l('Creating Peer base docker compose file');
     const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options);
     await peerBaseGenerator.createTemplateBase();
 
