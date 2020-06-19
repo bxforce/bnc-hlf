@@ -28,10 +28,21 @@ Or
 
 * __generate nodes peers credentials__
     ````
-    bnc enroll-peers --config/-f [bncDeploymentConfigFilePath]
+    bnc enroll-peers -f [bncDeploymentConfigFilePath]
     ````
 * __generate nodes orderers credentials__
     ````
-    bnc enroll-orderers --config/-f [bncGenesisConfigFilePath]
+    bnc enroll-orderers -f [bncGenesisConfigFilePath]
     ````
 
+##  Container start/stop
+
+* __start network__: start hyperledger entities containers (peers & orderers)
+    ````
+    bnc start -f [bncDeploymentConfigFilePath]
+    ````
+
+* __stop network__: stop 
+    ````
+    bnc stop -f [bncDeploymentConfigFilePath]
+    ````

@@ -56,6 +56,18 @@ export class CLI {
   }
 
   /**
+   * Stop the blockchain already deployed using the deployment config file
+   * @param deployConfigPath
+   * @param deleteNetwork
+   * @param deleteVolume
+   */
+  static async stopBlockchain(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.stopBlockchainContainer(deployConfigPath, deleteNetwork, deleteVolume);
+    return orchEngine;
+  }
+
+  /**
    * Generate the Configtx yaml file
    * @param configGenesisFilePath genesis configuration input file
    */

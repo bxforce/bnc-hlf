@@ -25,7 +25,7 @@ import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 import { SysWrapper } from './utils/sysWrapper';
-import { BNC_NETWORK, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
+import { BNC_NETWORK, ENABLE_CONTAINER_LOGGING, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
 import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
 import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
@@ -377,6 +377,54 @@ export class Orchestrator {
       { name: this.defaultCAAdmin.name, password: this.defaultCAAdmin.password });
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
+  }
+
+  /**
+   * Stop all container of a blockchain
+   * @param deployConfigPath the deployment configuration file
+   * @param deleteNetwork
+   * @param deleteVolume
+   */
+  async stopBlockchainContainer(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean): Promise<boolean> {
+    try {
+      const network: Network = await Orchestrator._parse(deployConfigPath);
+
+      // loop on organization & peers && orderers
+      for(const org of network.organizations) {
+        // build list of docker services/volumes to delete
+        const volumes: string[] = [];
+        const services: string[] = [];
+        for(const peer of org.peers) {
+          services.push(`${peer.name}.${org.fullName}`);
+          services.push(`${peer.name}.${org.fullName}.couchdb`);
+          volumes.push(`${peer.name}.${org.fullName}`);
+        }
+        for(const orderer of org.orderers) {
+          services.push(`{orderer.name}.${org.fullName}`);
+          volumes.push(`{orderer.name}.${org.fullName}`);
+        }
+
+        // Now check all container within all organization engine
+        for(const engine of org.engines) {
+          const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+          await docker.stopContainerList(services);
+
+          // delete the network
+          if(deleteNetwork) {
+            // TODO API to delete network not yet implemented
+          }
+
+          if(deleteVolume) {
+            // TODO API to delete volumes not yet implemented
+          }
+        }
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
   }
 
   /**

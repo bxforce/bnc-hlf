@@ -118,12 +118,12 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-  start(config: string) {
-    l('[start] not yet implemented');
-    //l('config file: ' + config;
-  },
-  async stop() {
-    l('[stop] not yet implemented');
+  async stop(deployConfigFilePath: string) {
+    l('Request stop command ...');
+
+    await CLI.stopBlockchain(deployConfigFilePath, false, false);
+
+    l('Blockchain stopped !!!');
   }
   // async createChannel(channeltxPath, nameChannel, nameOrg) {
   //   return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
@@ -136,6 +136,8 @@ const tasks = {
   //   return await CLI.updateChannel(anchortx, namech, nameorg);
   // }
 };
+
+// --> start official commands
 
 program
   .command('init')
@@ -164,6 +166,24 @@ program
       await tasks.generateOrdererCredentials(cmd.config);
     }
   });
+
+program
+  .command('start')
+  .description('create/start network')
+  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async cmd => {
+    await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
+  });
+
+program
+  .command('stop')
+  .description('stop the blockchain')
+  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    await tasks.stop(cmd.config);
+  });
+
+// --> end official commands
 
 program
   .command('new')
@@ -250,20 +270,6 @@ program
   .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .action(async cmd => {
     await tasks.enrollConfig(cmd.config, cmd.admin);
-  });
-
-program
-  .command('start')
-  .description('create/start network')
-  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
-  .action(async cmd => {
-    await tasks.start(cmd.config);
-  });
-program
-  .command('stop')
-  .description('stop network')
-  .action(async () => {
-    await tasks.stop();
   });
 
 const channelCmd = program.command('channel');
