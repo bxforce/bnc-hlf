@@ -33,6 +33,14 @@ const tasks = {
     return await CLI.generateGenesis(filePath);
   },
 
+  async generateChannelConfig(genesisConfigFilePath: string) {
+    return await CLI.generateChannelConfig(genesisConfigFilePath);
+  },
+
+  async generateAnchorPeer(genesisConfigFilePath: string) {
+    return await CLI.generateAnchorPeer(genesisConfigFilePath);
+  },
+
   async generateOrdererCredentials(genesisConfigFilePath: string) {
     return await CLI.generateOrdererCredentials(genesisConfigFilePath);
   },
@@ -80,8 +88,12 @@ const tasks = {
   async invokeChaincode() {
     l('[Invoke Chaincode] Not yet implemented');
   },
+
   async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any) {
     l('Request Init command ...');
+
+    // Generate the configtx.yaml file (mainly for genesis block)
+    await CLI.generateConfigtx(genesisConfigPath);
 
     if (!(genesis || configtx || anchortx)) {
       l('[Init]: generate all config files (genesis, configtx, anchortx)...');
@@ -96,15 +108,19 @@ const tasks = {
       }
 
       if (configtx) {
-        l('[Init]: generate configtx.yaml file... ');
+        l('[Init]: generate channel config file... ');
 
-        await CLI.generateConfigtx(genesisConfigPath);
+        await CLI.generateChannelConfig(genesisConfigPath);
 
-        l('[Init]: configtx.yaml file generated done !!! ');
+        l('[Init]: channel configuration generated done !!! ');
       }
 
       if (anchortx) {
-        l('AnchorTx generated not yet supported');
+        l('[Init]: generate the anchor peer update file...');
+
+        await CLI.generateAnchorPeer(genesisConfigPath);
+
+        l('[Init]: anchor peer update generated done !!!');
       }
     }
 
@@ -141,10 +157,10 @@ const tasks = {
 
 program
   .command('init')
-  .option('--genesis', 'generate genesis_block')
-  .option('--configtx', 'generate configTx')
-  .option('--anchortx', 'generate anchorTx')
-  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment defintion file')
+  .option('--genesis', 'generate genesis block')
+  .option('--configtx', 'generate channel configuration file')
+  .option('--anchortx', 'generate anchor peer update file')
+  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
   .action(async cmd => {
     await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });

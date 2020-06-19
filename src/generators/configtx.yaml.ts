@@ -27,6 +27,7 @@ import getArtifactsPath = Utils.getArtifactsPath;
 import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import existsPath = SysWrapper.existsPath;
+import { cachedResult } from 'fabric-network/lib/impl/gatewayutils';
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
@@ -256,7 +257,7 @@ fi
       // check if configtx.yaml exists
       const configtxPath = `${this.path}/configtx.yaml`; // TODO differentiate between different configtx of different organization
       const genesisExist = existsPath(configtxPath);
-      if(!genesisExist) {
+      if (!genesisExist) {
         e('Configuration configtx.yaml does not exists, exit genesis generation task !!! ');
         return false;
       }
@@ -269,5 +270,103 @@ fi
       e(err);
       return false;
     }
+  }
+
+  /**
+   * Generate the channel configuration tx file
+   */
+  async generateConfigTx(channelName: string): Promise<boolean> {
+    const scriptContent = `
+export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
+export FABRIC_CFG_PATH=${this.network.options.networkConfigPath}  
+
+which configtxgen
+if [ "$?" -ne 0 ]; then
+  echo "configtxgen tool not found. exiting"
+  exit 1
+fi    
+  
+set -x
+configtxgen -profile BncRaft -outputCreateChannelTx ${this.path}/${channelName}.tx -channelID ${CHANNEL_NAME_DEFAULT}
+res=$?
+set +x
+if [ $res -ne 0 ]; then
+  echo "Failed to generate channel configuration transaction..."
+  exit 1
+fi
+    `;
+
+    try {
+      // check artifact folder path
+      await SysWrapper.createFolder(this.path);
+
+      // check if configtx.yaml exists
+      const channelTxPath = `${this.path}/${channelName}.tx`;
+      const channelExist = existsPath(channelTxPath);
+      if (!channelExist) {
+        e(`Configuration channel ${channelName} does not exists, exit now !!! `);
+        return false;
+      }
+
+      // execute the scripts
+      await execContent(scriptContent);
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+
+  }
+
+  /**
+   * Generate the anchor peer update
+   */
+  async generateAnchorPeer(): Promise<boolean> {
+
+    try {
+      // check artifact folder path
+      await SysWrapper.createFolder(this.path);
+
+      for(const org of this.network.organizations) {
+        const anchorFile = `${org.mspName}anchors.tx`;
+        const scriptContent = `
+export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
+export FABRIC_CFG_PATH=${this.network.options.networkConfigPath}  
+
+which configtxgen
+if [ "$?" -ne 0 ]; then
+  echo "configtxgen tool not found. exiting"
+  exit 1
+fi    
+  
+set -x
+configtxgen -profile BncRaft -outputAnchorPeersUpdate ${this.path}/${anchorFile} -channelID ${CHANNEL_NAME_DEFAULT} -asOrg ${org.mspName}
+res=$?
+set +x
+if [ $res -ne 0 ]; then
+  echo "Failed to generate anchor peer update for ${org.mspName}..."
+  exit 1
+fi
+    `;
+        // check if configtx.yaml exists
+        const anchorPath = `${this.path}/${anchorFile}`;
+        const anchorExist = existsPath(anchorPath);
+        if (!anchorExist) {
+          e(`Anchor peer update ${anchorPath} does not exists, exit now !!! `);
+          return false;
+        }
+
+        // execute the scripts
+        await execContent(scriptContent);
+
+      }
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+
   }
 }

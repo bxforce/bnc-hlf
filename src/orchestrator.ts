@@ -91,6 +91,19 @@ export class Orchestrator {
       return;
     }
 
+    // Check if HLF binaries exists
+    const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
+    const binariesFolderExists = await existsFolder(binariesFolderPath);
+    if (!binariesFolderExists) {
+      l('[channel config]: start downloading HLF binaries...');
+      const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
+      if (!isDownloaded) {
+        e('[channel config]: Error while downloading HLF binaries files');
+        return;
+      }
+      l('[channel config]: HLF binaries downloaded !!!');
+    }
+
     l('[configtx] Start generating configtx.yaml file...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
     await configTx.save();
@@ -99,29 +112,11 @@ export class Orchestrator {
 
   /**
    * Generate the Genesis template file
-   * @param configGenesisFilePath full path of the deployment configuration file
+   * @param configGenesisFilePath
    */
   async generateGenesis(configGenesisFilePath: string) {
     const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
-    await createFolder(path);
-    const isNetworkValid = network.validate();
-    if (!isNetworkValid) {
-      return;
-    }
-
-    // Check if HLF binaries exists
-    const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
-    const binariesFolderExists = await existsFolder(binariesFolderPath);
-    if (!binariesFolderExists) {
-      l('[genesis]: start downloading HLF binaries...');
-      const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
-      if (!isDownloaded) {
-        e('[genesis]: Error while downloading HLF binaries files');
-        return;
-      }
-      l('[genesis]: Genesis: HLF binaries downloaded !!!');
-    }
 
     l('[genesis]: start generating genesis block...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
@@ -129,6 +124,36 @@ export class Orchestrator {
     const gen = await configTx.generateGenesisBlock();
 
     l(`[genesis]: block generated --> ${gen} !!!`);
+  }
+
+  /**
+   * Generate the Channel configuration file
+   * @param configGenesisFilePath
+   */
+  async generateConfigChannel(configGenesisFilePath: string) {
+    const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+    l('[channel config]: start generating channel configuration...');
+    const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+    const gen = await configTx.generateConfigTx('channel');
+
+    l(`[channel config]: channel configuration generated --> ${gen} !!!`);
+  }
+
+  /**
+   * Generate the anchor peer update
+   * @param configGenesisFilePath
+   */
+  async generateAnchorPeer(configGenesisFilePath: string) {
+    const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+    l('[anchor peer]: start generating anchor peer update...');
+    const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+    const gen = await configTx.generateAnchorPeer();
+
+    l(`[anchor peer]: anchor peer generated --> ${gen} !!!`);
   }
 
   /**
