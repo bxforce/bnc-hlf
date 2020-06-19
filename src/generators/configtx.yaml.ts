@@ -19,7 +19,7 @@ import { Network } from '../models/network';
 import { Utils } from '../utils/utils';
 import { e } from '../utils/logs';
 import { SysWrapper } from '../utils/sysWrapper';
-import { CHANNEL_NAME_DEFAULT, GENESIS_FILE_NAME } from '../utils/constants';
+import { CHANNEL_NAME_DEFAULT, ConsensusType, GENESIS_FILE_NAME } from '../utils/constants';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
@@ -27,6 +27,7 @@ import getArtifactsPath = Utils.getArtifactsPath;
 import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import existsPath = SysWrapper.existsPath;
+import existsFolder = SysWrapper.existsFolder;
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
@@ -193,6 +194,7 @@ Channel: &ChannelDefaults
     Capabilities:
         <<: *ChannelCapabilities
 
+
 Profiles:
     BncRaft:
         <<: *ChannelDefaults
@@ -253,6 +255,13 @@ fi
       // check artifact folder path
       await SysWrapper.createFolder(this.path);
 
+      // check if all needed files and folder exists
+      const isValid = await this._validate();
+      if(!isValid) {
+        e('Missing files/folder are detected to generate the genesis block - exit !!!');
+        return false;
+      }
+
       // check if configtx.yaml exists
       const configtxPath = `${this.path}/configtx.yaml`; // TODO differentiate between different configtx of different organization
       const genesisExist = existsPath(configtxPath);
@@ -266,6 +275,37 @@ fi
 
       return true;
     } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  private async _validate(): Promise<boolean> {
+    try {
+      // Check org msp folder
+      const mspFolder = `${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp`;
+      const mspExists = await existsFolder(mspFolder);
+      if(!mspExists) {
+        e(`MSP folder not exists on: ${mspFolder}`);
+        return false;
+      }
+
+      // check orderer consenter ssl certs
+      if(this.network.options.consensus === ConsensusType.RAFT) {
+        for(const org of this.network.organizations) {
+          for (const orderer of org.orderers) {
+            const ordCert = `${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer)}/server.crt`;
+            const certExists = await existsPath(ordCert);
+            if(!certExists) {
+              e(`Orderer SSL certs not exists on: ${ordCert}`);
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    } catch(err) {
       e(err);
       return false;
     }
