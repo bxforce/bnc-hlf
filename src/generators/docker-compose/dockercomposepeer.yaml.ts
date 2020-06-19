@@ -16,7 +16,7 @@ limitations under the License.
 
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
-import { e } from '../../utils/logs';
+import { e, l } from '../../utils/logs';
 import { DockerEngine } from '../../agents/docker-agent';
 import { Peer } from '../../models/peer';
 import { Utils } from '../../utils/utils';
@@ -81,7 +81,7 @@ ${this.options.org.peers
 `).join('')}
 ${this.options.org.orderers
       .map(ordererHost => `
-      #- "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
+      - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
 `).join('')}
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
@@ -137,10 +137,14 @@ ${this.options.org.orderers
     try {
       const serviceName =  `${peer.name}.${this.options.org.fullName}`;
 
+      l(`Starting Peer ${serviceName}...`);
+
       const engine = this.options.org.getEngine(peer.options.engineName);
       const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
 
       await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
+
+      l(`Service Peer ${serviceName} started successfully !!!`);
 
       return true;
     } catch(err) {

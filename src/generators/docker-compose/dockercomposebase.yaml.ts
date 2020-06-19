@@ -18,6 +18,8 @@ import { DockerComposeYamlOptions } from '../../utils/data-type';
 import { BaseGenerator } from '../base';
 import { e } from '../../utils/logs';
 import { Utils } from '../../utils/utils';
+import { Network } from '../../models/network';
+import { ConsensusType } from '../../utils/constants';
 import getDockerComposePath = Utils.getDockerComposePath;
 
 /**
@@ -41,7 +43,7 @@ services:
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${this.options.composeNetwork}
       - FABRIC_LOGGING_SPEC=INFO
       #- FABRIC_LOGGING_SPEC=DEBUG
-      - CORE_PEER_TLS_ENABLED=${this.options.org.isSecure}
+      - CORE_PEER_TLS_ENABLED= ${this.options.org.isSecure}
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_PROFILE_ENABLED=true
@@ -63,7 +65,7 @@ services:
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
       # enabled TLS
-      - ORDERER_GENERAL_TLS_ENABLED=${this.options.org.isSecure}
+      - ORDERER_GENERAL_TLS_ENABLED=${this.network.options.consensus === ConsensusType.RAFT ? true : this.options.org.isSecure}
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
@@ -77,8 +79,9 @@ services:
   /**
    * Constructor
    * @param options
+   * @param network
    */
-  constructor(private options: DockerComposeYamlOptions) {
+  constructor(private options: DockerComposeYamlOptions, private network?: Network) {
     super('docker-compose-base.yaml', `${getDockerComposePath(options.networkRootPath)}/base`);
   }
 

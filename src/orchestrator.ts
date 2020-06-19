@@ -307,7 +307,7 @@ export class Orchestrator {
     };
 
     l('Creating Peer base docker compose file');
-    const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options);
+    const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
     await peerBaseGenerator.createTemplateBase();
 
     l('Creating Docker network');
@@ -322,15 +322,14 @@ export class Orchestrator {
       const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options);
       l(`'Creating Peer ${peer.name} container template`);
       await peerGenerator.createTemplatePeers();
-      l(`'Starting Peer ${peer.name} container`);
-      const started = await peerGenerator.startPeer(peer);
-      l(`Peer ${peer.name} started (${started})`);
+      l(`'Starting Peer containers`);
+      await peerGenerator.startPeers();
     }
 
     if (enableOrderers) {
       l('Creating Orderers Container & Deploy');
       const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options);
-      // await ordererGenerator.createTemplateOrderers();
+      await ordererGenerator.createTemplateOrderers();
       const ordererStarted = await ordererGenerator.startOrderers();
       l(`Orderers started (${ordererStarted})`);
     }
@@ -407,7 +406,11 @@ export class Orchestrator {
         // Now check all container within all organization engine
         for(const engine of org.engines) {
           const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-          await docker.stopContainerList(services);
+          const containerDeleted = await docker.stopContainerList(services);
+          if(!containerDeleted) {
+            e('Error while deleting the docker container for peer & orderer');
+            return false;
+          }
 
           // delete the network
           if(deleteNetwork) {
