@@ -93,7 +93,7 @@ const tasks = {
     l('Request Init command ...');
 
     // Generate the configtx.yaml file (mainly for genesis block)
-    await CLI.generateConfigtx(genesisConfigPath);
+    // await CLI.generateConfigtx(genesisConfigPath);
 
     if (!(genesis || configtx || anchortx)) {
       l('[Init]: generate all config files (genesis, configtx, anchortx)...');

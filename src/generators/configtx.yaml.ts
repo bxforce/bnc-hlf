@@ -287,7 +287,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 set -x
-configtxgen -profile BncRaft -outputCreateChannelTx ${this.path}/${channelName}.tx -channelID ${CHANNEL_NAME_DEFAULT}
+configtxgen --configPath ${this.path} -profile BncRaft -outputCreateChannelTx ${this.path}/${channelName}.tx -channelID ${CHANNEL_NAME_DEFAULT}
 res=$?
 set +x
 if [ $res -ne 0 ]; then
