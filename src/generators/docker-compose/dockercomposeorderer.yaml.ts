@@ -55,11 +55,11 @@ ${this.options.org.orderers.map(orderer => `
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${orderer.name}.${this.options.org.fullName}
     extra_hosts:
-${this.options.org.peers
+${this.options.org.getPeerExtraHost()
       .map(peerHost => `
       - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"
 `).join('')}
-${this.options.org.orderers
+${this.options.org.getOrdererExtraHost()
       .map(ordererHost => `
       - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
 `).join('')}

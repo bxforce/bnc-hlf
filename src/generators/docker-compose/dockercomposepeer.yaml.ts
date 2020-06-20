@@ -75,11 +75,11 @@ ${this.options.org.peers
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
     extra_hosts:
-${this.options.org.peers
+${this.options.org.getPeerExtraHost()
       .map(peerHost => `
       - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"
 `).join('')}
-${this.options.org.orderers
+${this.options.org.getOrdererExtraHost()
       .map(ordererHost => `
       - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
 `).join('')}
