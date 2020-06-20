@@ -25,7 +25,7 @@ import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 import { SysWrapper } from './utils/sysWrapper';
-import { BNC_NETWORK, ENABLE_CONTAINER_LOGGING, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
+import { BNC_NETWORK, CHANNEL_DEFAULT_NAME, ENABLE_CONTAINER_LOGGING, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
 import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
 import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
@@ -136,7 +136,7 @@ export class Orchestrator {
 
     l('[channel config]: start generating channel configuration...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
-    const gen = await configTx.generateConfigTx('channel');
+    const gen = await configTx.generateConfigTx(CHANNEL_DEFAULT_NAME);
 
     l(`[channel config]: channel configuration generated --> ${gen} !!!`);
   }
@@ -151,7 +151,7 @@ export class Orchestrator {
 
     l('[anchor peer]: start generating anchor peer update...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
-    const gen = await configTx.generateAnchorPeer();
+    const gen = await configTx.generateAnchorPeer(CHANNEL_DEFAULT_NAME);
 
     l(`[anchor peer]: anchor peer generated --> ${gen} !!!`);
   }

@@ -97,6 +97,9 @@ const tasks = {
 
     if (!(genesis || configtx || anchortx)) {
       l('[Init]: generate all config files (genesis, configtx, anchortx)...');
+      await CLI.generateGenesis(genesisConfigPath);
+      await CLI.generateChannelConfig(genesisConfigPath);
+      await CLI.generateAnchorPeer(genesisConfigPath);
 
     } else {
       if (genesis) {

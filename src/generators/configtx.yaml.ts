@@ -19,7 +19,7 @@ import { Network } from '../models/network';
 import { Utils } from '../utils/utils';
 import { e } from '../utils/logs';
 import { SysWrapper } from '../utils/sysWrapper';
-import { CHANNEL_NAME_DEFAULT, GENESIS_FILE_NAME } from '../utils/constants';
+import { CHANNEL_RAFT_ID, GENESIS_FILE_NAME } from '../utils/constants';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
@@ -27,7 +27,6 @@ import getArtifactsPath = Utils.getArtifactsPath;
 import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import existsPath = SysWrapper.existsPath;
-import { cachedResult } from 'fabric-network/lib/impl/gatewayutils';
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
@@ -40,19 +39,19 @@ export class ConfigtxYamlGenerator extends BaseGenerator {
   contents = `
 Organizations:
   - &${this.network.ordererOrganization.name}
-    Name: ${this.network.ordererOrganization.name}
+    Name:  ${this.network.ordererOrganization.name}
     ID: ${this.network.ordererOrganization.mspName}
     MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp
     Policies: &${this.network.ordererOrganization.name}POLICIES
         Readers:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+            Rule: "OR('${this.network.ordererOrganization.mspName}.member')"
         Writers:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+            Rule: "OR('${this.network.ordererOrganization.mspName}.member')"
         Admins:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.name}.admin')"
+            Rule: "OR('${this.network.ordererOrganization.mspName}.admin')"
     OrdererEndpoints:
 ${this.network.ordererOrganization.orderers.map((ord, i) => `
         - ${ord.options.host}:${ord.options.ports[0]}
@@ -60,22 +59,22 @@ ${this.network.ordererOrganization.orderers.map((ord, i) => `
   
 ${this.network.organizations.map(org => `
   - &${org.name}
-    Name: ${org.name}
+    Name: ${org.mspName}
     ID: ${org.mspName}
     MSPDir: ${getOrganizationMspPath(this.network.options.networkConfigPath, org)}
     Policies: &${org.name}POLICIES
         Readers:
             Type: Signature
-            Rule: "OR('${org.name}.member')"
+            Rule: "OR('${org.mspName}.member')"
         Writers:
             Type: Signature
-            Rule: "OR('${org.name}.member')"
+            Rule: "OR('${org.mspName}.member')"
         Admins:
             Type: Signature
-            Rule: "OR('${org.name}.admin')"
+            Rule: "OR('${org.mspName}.admin')"
         Endorsement:
             Type: Signature
-            Rule: "OR('${org.name}.member')"
+            Rule: "OR('${org.mspName}.member')"
     AnchorPeers:
         - Host: ${org.peers[0].options.host}
           port: ${org.peers[0].options.ports[0]}
@@ -195,6 +194,17 @@ Channel: &ChannelDefaults
         <<: *ChannelCapabilities
 
 Profiles:
+    BncChannel:
+        Consortium: BncConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+${this.network.organizations.map(org => `
+                - *${org.name}
+`).join('')}                        
+            Capabilities:
+                <<: *ApplicationCapabilities
     BncRaft:
         <<: *ChannelDefaults
         Orderer:
@@ -241,7 +251,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 set -x
-configtxgen --configPath ${this.path} -profile BncRaft -channelID ${CHANNEL_NAME_DEFAULT} -outputBlock ${this.path}/${GENESIS_FILE_NAME}
+configtxgen --configPath ${this.path} -profile BncRaft -channelID ${CHANNEL_RAFT_ID} -outputBlock ${this.path}/${GENESIS_FILE_NAME}
 res=$?
 set +x
 if [ $res -ne 0 ]; then
@@ -287,7 +297,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 set -x
-configtxgen --configPath ${this.path} -profile BncRaft -outputCreateChannelTx ${this.path}/${channelName}.tx -channelID ${CHANNEL_NAME_DEFAULT}
+configtxgen --configPath ${this.path} -profile BncChannel -outputCreateChannelTx ${this.path}/${channelName}.tx -channelID ${channelName}
 res=$?
 set +x
 if [ $res -ne 0 ]; then
@@ -322,7 +332,7 @@ fi
   /**
    * Generate the anchor peer update
    */
-  async generateAnchorPeer(): Promise<boolean> {
+  async generateAnchorPeer(channelName: string): Promise<boolean> {
 
     try {
       // check artifact folder path
@@ -341,7 +351,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 set -x
-configtxgen -profile BncRaft -outputAnchorPeersUpdate ${this.path}/${anchorFile} -channelID ${CHANNEL_NAME_DEFAULT} -asOrg ${org.mspName}
+configtxgen --configPath ${this.path} -profile BncChannel -outputAnchorPeersUpdate ${this.path}/${anchorFile} -channelID ${channelName} -asOrg ${org.mspName}
 res=$?
 set +x
 if [ $res -ne 0 ]; then
