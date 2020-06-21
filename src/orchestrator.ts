@@ -43,6 +43,8 @@ import { Utils } from './utils/utils';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { DockerComposeCaGenerator } from './generators/docker-compose/dockerComposeCa.yaml';
 import getDockerComposePath = Utils.getDockerComposePath;
+import { ChannelGenerator } from './generators/artifacts/channel-mgmt';
+import getArtifactsPath = Utils.getArtifactsPath;
 
 /**
  * Main tools orchestrator
@@ -52,13 +54,96 @@ import getDockerComposePath = Utils.getDockerComposePath;
  * @author ahmed souissi
  */
 export class Orchestrator {
-  /* default folder to store all generated tools files and data */
-  networkRootPath = './hyperledger-fabric-network';
 
-  defaultCAAdmin = {
+  // public async joinChannel(nameChannel, nameOrg, peers) {
+  //   await channel.joinChannel(nameChannel, peers, nameOrg);
+  // }
+  //
+  // public async updateChannel(anchortx, namech, nameorg) {
+  //   await channel.updateChannel(anchortx, namech, nameorg);
+  // }
+
+  /**
+   * Parse & validate deployment configuration file
+   * @param deploymentConfigPath
+   * @private
+   */
+  private static async _parse(deploymentConfigPath: string): Promise<Network> {
+    l('[Start] Start parsing the blockchain configuration file');
+    l('Validate input configuration file');
+    const validator = new ConfigurationValidator();
+    const isValid = validator.isValidDeployment(deploymentConfigPath);
+
+    if (!isValid) {
+      e('Configuration file is invalid');
+      return;
+    }
+    l('Configuration file valid');
+
+    let configParse = new DeploymentParser(deploymentConfigPath);
+    const network = await configParse.parse();
+    l('[End] Blockchain configuration files parsed');
+
+    return network;
+  }
+
+  /**
+   * Parse & validate genesis configuration file
+   * @param genesisConfigPath
+   * @private
+   */
+  private static async _parseGenesis(genesisConfigPath: string): Promise<Network | undefined> {
+    try {
+      l('Parsing genesis input file');
+      const validator = new ConfigurationValidator();
+      const isValid = validator.isValidGenesis(genesisConfigPath);
+      if (!isValid) {
+        e('Genesis configuration input file is invalid');
+        return;
+      }
+      l('Input genesis file validated');
+
+      l('Start parsing genesis input file');
+      const parser = new GenesisParser(genesisConfigPath);
+      const network: Network = await parser.parse();
+      l('Genesis input file parsed');
+
+      return network;
+    } catch (err) {
+      e(err);
+      return null;
+
+    }
+  }
+
+  /**
+   * download hyperledger fabric binaries
+   * @param folderPath folder where to store files
+   * @param network
+   * @private
+   */
+  private static async _downloadBinaries(folderPath: string, network: Network): Promise<boolean> {
+    try {
+      l('[Start] Download fabric binaries...');
+      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, network);
+      await downloadFabricBinariesGenerator.save();
+      await downloadFabricBinariesGenerator.run();
+      l('[End] Ran Download fabric binaries');
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  static defaultCAAdmin = {
     name: 'admin',
     password: 'adminpw'
   };
+
+  /* default folder to store all generated tools files and data */
+  networkRootPath = './hyperledger-fabric-network';
 
   /**
    * Parse and validate deployment file
@@ -249,8 +334,8 @@ export class Orchestrator {
    * Generate Crypto & Certificate credentials for peers
    * @param deploymentConfigFilePath
    */
-  // TODO check if files exists already for the same peers/organizations
   async generatePeersCredentials(deploymentConfigFilePath: string) {
+    // TODO check if files exists already for the same peers/organizations
     const path = this._getDefaultPath();
     await createFolder(path);
 
@@ -361,11 +446,11 @@ export class Orchestrator {
   }
 
   /**
-   *
+   * Generate Crypto & Certificates credentials for orderers
    * @param genesisFilePath
    */
-  // TODO check if files exists already for the same orderers/organizations
   async generateOrdererCredentials(genesisFilePath: string) {
+    // TODO check if files exists already for the same orderers/organizations
     l('[Orderer Cred]: start parsing...');
     const network = await Orchestrator._parseGenesis(genesisFilePath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
@@ -398,7 +483,7 @@ export class Orchestrator {
     const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
       path,
       network,
-      { name: this.defaultCAAdmin.name, password: this.defaultCAAdmin.password });
+      { name: Orchestrator.defaultCAAdmin.name, password: Orchestrator.defaultCAAdmin.password });
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
   }
@@ -523,8 +608,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: this.defaultCAAdmin.name,
-        secret: this.defaultCAAdmin.password
+        name: Orchestrator.defaultCAAdmin.name,
+        secret: Orchestrator.defaultCAAdmin.password
       }
     };
     const membership = new Membership(config);
@@ -559,8 +644,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: this.defaultCAAdmin.name,
-        secret: this.defaultCAAdmin.password
+        name: Orchestrator.defaultCAAdmin.name,
+        secret: Orchestrator.defaultCAAdmin.password
       }
     };
     const membership = new Membership(config);
@@ -585,8 +670,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: this.defaultCAAdmin.name,
-        secret: this.defaultCAAdmin.password
+        name: Orchestrator.defaultCAAdmin.name,
+        secret: Orchestrator.defaultCAAdmin.password
       }
     };
     const membership = new Membership(config);
@@ -595,90 +680,21 @@ export class Orchestrator {
     return await membership.wallet.deleteIdentity(id);
   }
 
-  // public async createChannel(nameChannel, channeltxPath, nameOrg) {
-  //   await channel.createChannel(nameChannel, channeltxPath, nameOrg);
-  // }
-  //
-  // public async joinChannel(nameChannel, nameOrg, peers) {
-  //   await channel.joinChannel(nameChannel, peers, nameOrg);
-  // }
-  //
-  // public async updateChannel(anchortx, namech, nameorg) {
-  //   await channel.updateChannel(anchortx, namech, nameorg);
-  // }
-
   /**
-   * Parse & validate deployment configuration file
+   *
+   * @param channelName
+   * @param channeltxPath
    * @param deploymentConfigPath
-   * @private
    */
-  private static async _parse(deploymentConfigPath: string): Promise<Network> {
-    l('[Start] Start parsing the blockchain configuration file');
-    l('Validate input configuration file');
-    const validator = new ConfigurationValidator();
-    const isValid = validator.isValidDeployment(deploymentConfigPath);
+  async createChannel(channelName: string, channeltxPath: string, deploymentConfigPath: string): Promise<void> {
+    l(`[Channel] - Request to create a new channel (${channelName})`);
+    const network: Network = await Orchestrator._parseGenesis(deploymentConfigPath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
-    if (!isValid) {
-      e('Configuration file is invalid');
-      return;
-    }
-    l('Configuration file valid');
+    const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+    const created = await channelGenerator.setupChannel(channelName, `${getArtifactsPath(path)}/${channelName}.tx`);
 
-    let configParse = new DeploymentParser(deploymentConfigPath);
-    const network = await configParse.parse();
-    l('[End] Blockchain configuration files parsed');
-
-    return network;
-  }
-
-  /**
-   * Parse & validate genesis configuration file
-   * @param genesisConfigPath
-   * @private
-   */
-  private static async _parseGenesis(genesisConfigPath: string): Promise<Network | undefined> {
-    try {
-      l('Parsing genesis input file');
-      const validator = new ConfigurationValidator();
-      const isValid = validator.isValidGenesis(genesisConfigPath);
-      if (!isValid) {
-        e('Genesis configuration input file is invalid');
-        return;
-      }
-      l('Input genesis file validated');
-
-      l('Start parsing genesis input file');
-      const parser = new GenesisParser(genesisConfigPath);
-      const network: Network = await parser.parse();
-      l('Genesis input file parsed');
-
-      return network;
-    } catch (err) {
-      e(err);
-      return null;
-
-    }
-  }
-
-  /**
-   * download hyperledger fabric binaries
-   * @param folderPath folder where to store files
-   * @param network
-   * @private
-   */
-  private static async _downloadBinaries(folderPath: string, network: Network): Promise<boolean> {
-    try {
-      l('[Start] Download fabric binaries...');
-      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, network);
-      await downloadFabricBinariesGenerator.save();
-      await downloadFabricBinariesGenerator.run();
-      l('[End] Ran Download fabric binaries');
-
-      return true;
-    } catch (err) {
-      e(err);
-      return false;
-    }
+    l(`[Channel] - Exit create channel request (${created}) !!!`);
   }
 
   /**

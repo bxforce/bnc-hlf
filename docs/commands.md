@@ -46,3 +46,12 @@ Or
     ````
     bnc stop -f [bncDeploymentConfigFilePath]
     ````
+
+## Channel management
+
+* __create a new channel (if it does not exist)__
+
+  ````shell script
+  bnc channel create --config/-f [configurationTemplateFilePath]
+  ````
+  

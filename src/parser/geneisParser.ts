@@ -93,7 +93,8 @@ export class GenesisParser extends BaseParser {
       hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
       externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
       inside: false,
-      consensus: networkConsensus
+      consensus: networkConsensus,
+      forDeployment: false,
     });
     network.organizations = orgs;
 

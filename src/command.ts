@@ -129,6 +129,7 @@ const tasks = {
 
     l('[Init]: exit command !!!');
   },
+
   enrollConfig(config: string, admin: boolean) {
     if (admin) {
       l('[enroll admin] Not yet implemented');
@@ -137,16 +138,19 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
+
   async stop(deployConfigFilePath: string) {
     l('Request stop command ...');
 
     await CLI.stopBlockchain(deployConfigFilePath, false, false);
 
     l('Blockchain stopped !!!');
-  }
-  // async createChannel(channeltxPath, nameChannel, nameOrg) {
-  //   return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
-  // },
+  },
+
+  async createChannel(channelName, channeltxPath, deploymentConfigFilePath) {
+    return await CLI.createChannel(channelName, channeltxPath, deploymentConfigFilePath);
+  },
+
   // async joinChannel(nameChannel, nameOrg, listPeers) {
   //   let arrPeers = listPeers.split(",").map(String)
   //   return await CLI.joinChannel(nameChannel, nameOrg, arrPeers);
@@ -200,6 +204,17 @@ program
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .action(async (cmd: any) => {
     await tasks.stop(cmd.config);
+  });
+
+const channelCmd = program.command('channel');
+channelCmd
+  .command('create')
+  .description('create channel if it does not exist')
+  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+  .requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
+  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+  .action(async cmd => {
+    await tasks.createChannel(cmd.namech, cmd.channelTx, cmd.config);
   });
 
 // --> end official commands
@@ -291,16 +306,6 @@ program
     await tasks.enrollConfig(cmd.config, cmd.admin);
   });
 
-const channelCmd = program.command('channel');
-// channelCmd
-//   .command('create')
-//   .description('create channel if it does not exist')
-//   .requiredOption('-t, --channel-tx <channel-path>', 'configurationTemplateFilePath')
-//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
-//   .action(async cmd => {
-//     await tasks.createChannel(cmd.channelTx, cmd.namech, cmd.nameorg );
-//   });
 // channelCmd
 //   .command('join')
 //   .description('join channel')

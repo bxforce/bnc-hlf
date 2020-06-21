@@ -133,12 +133,18 @@ export class CLI {
     await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
 
-  // static async createChannel(channeltxPath, nameChannel, nameOrg) {
-  //   const channelEngine = new Orchestrator();
-  //   await channelEngine.createChannel(nameChannel, channeltxPath, nameOrg);
-  //   return channelEngine;
-  // }
-  //
+  /**
+   * Create a new channel
+   * @param channelName
+   * @param channeltxPath
+   * @param deployConfigPath
+   */
+  static async createChannel(channelName, channeltxPath, deployConfigPath) {
+    const channelEngine = new Orchestrator();
+    await channelEngine.createChannel(channelName, channeltxPath, deployConfigPath);
+    return channelEngine;
+  }
+
   // static async joinChannel(nameChannel, nameOrg, peers) {
   //   const channelEngine = new Orchestrator();
   //   await channelEngine.joinChannel(nameChannel, nameOrg, peers);

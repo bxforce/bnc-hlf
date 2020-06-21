@@ -70,7 +70,8 @@ export class DeploymentParser extends BaseParser {
       externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
       consensus: consensus as ConsensusType,
       inside: false,
-      networkConfigPath: template_folder
+      networkConfigPath: template_folder,
+      forDeployment: true
     });
     network.organizations = organizations;
 
@@ -136,6 +137,7 @@ export class DeploymentParser extends BaseParser {
             consensus,
             ports: [`${index*1000+ORDERER_DEFAULT_PORT}`],
             number: index
+            // TODO set the host based on engine name
           })
         );
       });
