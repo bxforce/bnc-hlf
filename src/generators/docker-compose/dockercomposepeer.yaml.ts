@@ -75,6 +75,7 @@ ${this.options.org.peers
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
     extra_hosts:
+      - "bnc_test: 127.0.0.1"
 ${this.options.org.getPeerExtraHost()
       .map(peerHost => `
       - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"

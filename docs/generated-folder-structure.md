@@ -6,10 +6,10 @@ Under this default root folder, the BNC tool will create different sub-folder as
 ```
 $ROOT_FOLDER
 │───artifacts:
-│───properties:
+│───settings:
 │───docker-compose: 
 │───fabric-binaries:
-│───compose-files
+│   │   fabric-ca:
 │───organizations:
 │   │   fabric-ca:
 │   │   ordererOrganizations:

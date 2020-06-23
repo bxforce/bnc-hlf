@@ -22,7 +22,7 @@ import { ensureDir } from 'fs-extra';
 import { SysWrapper } from '../../utils/sysWrapper';
 import { Orderer } from '../../models/orderer';
 import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
-import { ConsensusType, HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
+import { ConsensusType, HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Utils } from '../../utils/utils';
@@ -30,6 +30,8 @@ import createFile = SysWrapper.createFile;
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererMspPath = Utils.getOrdererMspPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
+import getPropertiesPath = Utils.getPropertiesPath;
+import copyFile = SysWrapper.copyFile;
 
 /**
  * Class responsible to generate Ordering crypto & certificates credentials
@@ -52,7 +54,7 @@ client:
 
 certificateAuthorities:
   ${this.network.ordererOrganization.caName}:
-    url: http://${this.network.ordererOrganization.ca.options.host}:${this.network.ordererOrganization.ca.options.ports}
+    url: http${this.network.ordererOrganization.isSecure ? 's' : ''}://${this.network.ordererOrganization.ca.options.host}:${this.network.ordererOrganization.ca.options.ports}
     httpOptions:
       verify: false
     tlsCACerts:
@@ -75,7 +77,7 @@ certificateAuthorities:
               private network: Network,
               private admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }
   ) {
-    super(filename, path);
+    super(filename, getPropertiesPath(path));
   }
 
   /**
@@ -115,7 +117,11 @@ certificateAuthorities:
       await createFile(`${ordOrgRootPath}/msp/admincerts/admin@${domain}-cert.pem`, adminCert);
       await createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, adminRootCert);
       await createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, adminRootCert);
-      // TODO add here tls certificate in case secure
+
+      if(this.network.ordererOrganization.isSecure) {
+        const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
+        await copyFile(tlsCaCerts, `${ordOrgRootPath}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
+      }
 
       d('Register & Enroll orderers');
       for (const orderer of this.network.ordererOrganization.orderers) {
@@ -169,6 +175,7 @@ certificateAuthorities:
       await ensureDir(orderOrgRootPath);
 
       await SysWrapper.createFolder(`${orderOrgRootPath}/ca`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/tlsca`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp/admincerts`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp/cacerts`);
@@ -231,7 +238,7 @@ certificateAuthorities:
         enrollmentID: `${this.network.ordererOrganization.ordererFullName(orderer)}`,
         enrollmentSecret: `${orderer.name}pw`,
         role: HLF_CLIENT_ACCOUNT_ROLE.orderer,
-        maxEnrollments: 3,
+        maxEnrollments: MAX_ENROLLMENT_COUNT,
         affiliation: ''
       };
       const ordererEnrollmentResponse = await membership.addUser(params, mspId);

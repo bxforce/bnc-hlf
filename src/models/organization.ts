@@ -139,8 +139,7 @@ export class Organization {
   }
 
   getPeerExtraHost(): Peer[] {
-    const peers = this.peers.filter(peer => this.engineHost(peer.options.engineName) !== '127.0.0.1');
-    return peers;
+    return this.peers.filter(peer => this.engineHost(peer.options.engineName) !== '127.0.0.1');
   }
 
   getOrdererExtraHost(): Orderer[] {

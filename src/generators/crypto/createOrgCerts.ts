@@ -21,7 +21,7 @@ import { SysWrapper } from '../../utils/sysWrapper';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
-import { HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
+import { HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
 import { Peer } from '../../models/peer';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import createFile = SysWrapper.createFile;
@@ -29,6 +29,8 @@ import { Utils } from '../../utils/utils';
 import getPeerMspPath = Utils.getPeerMspPath;
 import getPeerTlsPath = Utils.getPeerTlsPath;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
+import getPropertiesPath = Utils.getPropertiesPath;
+import copyFile = SysWrapper.copyFile;
 
 export interface AdminCAAccount {
   name: string;
@@ -36,6 +38,7 @@ export interface AdminCAAccount {
 }
 
 /**
+ * Class responsible to generate organization keys and certificates credentials
  *
  * @author wassim.znaidi@gmail.com
  * @author ahmed.souissi@irt-systemx.fr
@@ -56,11 +59,11 @@ client:
 
 certificateAuthorities:
   ${this.options.org.caName}:
-    url: http://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.ports}
+    url: http${this.options.org.isSecure ? 's' : ''}://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.ports}
     httpOptions:
       verify: false
     tlsCACerts:
-      path: ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/ca
+      path: ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/msp/tlscacerts
     registrar:
       - enrollId: ${this.admin.name}
         enrollSecret: ${this.admin.password}
@@ -71,7 +74,7 @@ certificateAuthorities:
               path: string,
               private options?: DockerComposeYamlOptions,
               private admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }) {
-    super(filename, path);
+    super(filename, getPropertiesPath(path));
   }
 
   /**
@@ -111,6 +114,14 @@ certificateAuthorities:
       const orgMspPath = getOrganizationMspPath(this.options.networkRootPath, this.options.org);
       await createFile(`${orgMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
       await this.generateConfigOUFile(`${orgMspPath}/config.yaml`);
+
+      // copy ca tls certs if secure enabled
+      if(this.options.org.isSecure) {
+        const fromTlsCaCerts = `${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem`;
+        const toFile = `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/tlsca/tlsca.${this.options.org.fullName}-cert.pem`;
+        await copyFile(fromTlsCaCerts, toFile);
+        await copyFile(fromTlsCaCerts, `${orgMspPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
+      }
 
       // generate NodeOU & enroll & store peer crypto credentials
       d('Register & Enroll Organization peers');
@@ -163,6 +174,9 @@ certificateAuthorities:
 
       // create base peer
       await ensureDir(basePeerPath);
+
+      //create the tlsca folder
+      await ensureDir(`${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/tlsca`);
 
       // create msp folder for every peer
       for (let peer of this.options.org.peers) {
@@ -261,6 +275,7 @@ NodeOUs:
         enrollmentID: `${peer.name}.${this.options.org.fullName}`,
         enrollmentSecret: `${peer.name}pw`,
         role: HLF_CLIENT_ACCOUNT_ROLE.peer,
+        maxEnrollments: MAX_ENROLLMENT_COUNT,
         affiliation: ''
       };
       const peerEnrollmentResponse = await membership.addUser(params, mspId);
