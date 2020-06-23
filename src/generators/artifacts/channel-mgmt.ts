@@ -23,6 +23,10 @@ import { ClientConfig } from '../../core/hlf/helpers';
 import { Channels } from '../../core/hlf/channels';
 import { SysWrapper } from '../../utils/sysWrapper';
 import existsPath = SysWrapper.existsPath;
+import { Utils } from '../../utils/utils';
+import getPropertiesPath = Utils.getPropertiesPath;
+import { X509Identity } from 'fabric-network';
+import { User } from '../../models/user';
 
 /**
  * Class responsible to create the hyperledger fabric channel instance
@@ -32,22 +36,19 @@ import existsPath = SysWrapper.existsPath;
 export class ChannelGenerator extends BaseGenerator {
   /* connection profile content to load the client instance */
   contents = `
-  name: "bnc"
-x-type: "hlfv1"
-description: "Blockchain network composer"
 version: "1.0"
 
 client:
-  organization: ${this.network.ordererOrganization.name}
+  organization: ${this.network.organizations[0].name}
   credentialStore:
-    path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.ordererOrganization.fullName}
+    path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
     cryptoStore:
-      path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.ordererOrganization.fullName}
+      path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
 
 orderers:
 ${this.network.organizations[0].orderers.map(orderer => `
     ${orderer.name}.${this.network.organizations[0].fullName}:
-      url: grpcs://${this.network.organizations[0].engineHost(orderer.options.engineName)}:${orderer.options.ports[0]}
+      url: grpcs://localhost:${orderer.options.ports[0]}
       grpcOptions:
         ssl-target-name-override: ${orderer.name}.${this.network.organizations[0].fullName}
         grpc-max-send-message-length: 15
@@ -67,7 +68,7 @@ ${this.network.organizations[0].orderers.map(orderer => `
               path: string,
               private network: Network,
               private admin: AdminCAAccount = { name: Orchestrator.defaultCAAdmin.name , password: Orchestrator.defaultCAAdmin.password }) {
-    super(filename, path);
+    super(filename, getPropertiesPath(path));
   }
 
   /**
@@ -92,16 +93,57 @@ ${this.network.organizations[0].orderers.map(orderer => `
       // Initiate the channel entity
       const clientConfig: ClientConfig = { networkProfile: this.filePath };
       const channelClient = new Channels(clientConfig);
+      await channelClient.init();
 
+      // load the admin user into the client
+      const adminLoaded = await this._loadAdminAccount(channelClient);
+      if(!adminLoaded) {
+        e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+        return false;
+      }
+
+      // create the provided channel
       const isCreated = await channelClient.createChannel(channelName, channelConfigPath);
       if(!isCreated) {
-        e(`Error channel (${channelName}) creation !!! `);
+        e(`Error channel (${channelName}) creation !!!`);
         return false;
       }
 
       l(`Channel (${channelName}) creation successfully !!!`);
       return true;
     } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  private async _loadAdminAccount(channel: Channels): Promise<boolean> {
+    try {
+      // check if admin account exist on wallet
+      const identity = await channel.wallet.getIdentity(this.admin.name);
+      if(identity.type !== 'X.509') {
+        e(`Identity type in the current wallet not supported (type ${identity.type})`);
+        return false;
+      }
+
+      // cast the identity as X509 identity
+      const adminIdentity: X509Identity = identity as X509Identity;
+      const adminKey = adminIdentity.credentials.privateKey;
+      const adminCert = adminIdentity.credentials.certificate;
+
+      // Create user context
+      const user = await channel.client.createUser({
+        username: 'peer' + this.network.organizations[0].name + 'Admin',
+        mspid: this.network.organizations[0].mspName,
+        cryptoContent: {
+          privateKeyPEM: adminKey,
+          signedCertPEM: adminCert
+        },
+        skipPersistence: false
+      });
+
+      return true;
+    } catch(err) {
       e(err);
       return false;
     }

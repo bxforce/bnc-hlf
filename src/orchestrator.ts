@@ -688,7 +688,7 @@ export class Orchestrator {
    */
   async createChannel(channelName: string, channeltxPath: string, deploymentConfigPath: string): Promise<void> {
     l(`[Channel] - Request to create a new channel (${channelName})`);
-    const network: Network = await Orchestrator._parseGenesis(deploymentConfigPath);
+    const network: Network = await Orchestrator._parse(deploymentConfigPath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
     const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);

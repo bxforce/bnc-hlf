@@ -144,7 +144,7 @@ export class Organization {
   }
 
   getOrdererExtraHost(): Orderer[] {
-    return this.orderers.filter(orderer => this.engineHost(orderer.options.engineName) ! == '127.0.0.1');
+    return this.orderers.filter(orderer => this.engineHost(orderer.options.engineName) !== '127.0.0.1');
   }
 
 }
