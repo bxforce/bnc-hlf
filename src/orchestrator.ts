@@ -25,7 +25,7 @@ import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 import { SysWrapper } from './utils/sysWrapper';
-import { BNC_NETWORK, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
+import { BNC_NETWORK, CHANNEL_DEFAULT_NAME, ENABLE_CONTAINER_LOGGING, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
 import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
 import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
@@ -42,6 +42,7 @@ import existsFolder = SysWrapper.existsFolder;
 import { Utils } from './utils/utils';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { DockerComposeCaGenerator } from './generators/docker-compose/dockerComposeCa.yaml';
+import getDockerComposePath = Utils.getDockerComposePath;
 
 /**
  * Main tools orchestrator
@@ -90,6 +91,19 @@ export class Orchestrator {
       return;
     }
 
+    // Check if HLF binaries exists
+    const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
+    const binariesFolderExists = await existsFolder(binariesFolderPath);
+    if (!binariesFolderExists) {
+      l('[channel config]: start downloading HLF binaries...');
+      const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
+      if (!isDownloaded) {
+        e('[channel config]: Error while downloading HLF binaries files');
+        return;
+      }
+      l('[channel config]: HLF binaries downloaded !!!');
+    }
+
     l('[configtx] Start generating configtx.yaml file...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
     await configTx.save();
@@ -98,29 +112,11 @@ export class Orchestrator {
 
   /**
    * Generate the Genesis template file
-   * @param configGenesisFilePath full path of the deployment configuration file
+   * @param configGenesisFilePath
    */
   async generateGenesis(configGenesisFilePath: string) {
     const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
-    await createFolder(path);
-    const isNetworkValid = network.validate();
-    if (!isNetworkValid) {
-      return;
-    }
-
-    // Check if HLF binaries exists
-    const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
-    const binariesFolderExists = await existsFolder(binariesFolderPath);
-    if (!binariesFolderExists) {
-      l('[genesis]: start downloading HLF binaries...');
-      const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
-      if (!isDownloaded) {
-        e('[genesis]: Error while downloading HLF binaries files');
-        return;
-      }
-      l('[genesis]: Genesis: HLF binaries downloaded !!!');
-    }
 
     l('[genesis]: start generating genesis block...');
     const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
@@ -128,6 +124,36 @@ export class Orchestrator {
     const gen = await configTx.generateGenesisBlock();
 
     l(`[genesis]: block generated --> ${gen} !!!`);
+  }
+
+  /**
+   * Generate the Channel configuration file
+   * @param configGenesisFilePath
+   */
+  async generateConfigChannel(configGenesisFilePath: string) {
+    const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+    l('[channel config]: start generating channel configuration...');
+    const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+    const gen = await configTx.generateConfigTx(CHANNEL_DEFAULT_NAME);
+
+    l(`[channel config]: channel configuration generated --> ${gen} !!!`);
+  }
+
+  /**
+   * Generate the anchor peer update
+   * @param configGenesisFilePath
+   */
+  async generateAnchorPeer(configGenesisFilePath: string) {
+    const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+    l('[anchor peer]: start generating anchor peer update...');
+    const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+    const gen = await configTx.generateAnchorPeer(CHANNEL_DEFAULT_NAME);
+
+    l(`[anchor peer]: anchor peer generated --> ${gen} !!!`);
   }
 
   /**
@@ -280,13 +306,19 @@ export class Orchestrator {
    */
   async deployHLFContainers(configFilePath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
     const network: Network = await Orchestrator._parse(configFilePath);
+    const isNetworkValid = network.validate();
+    if (!isNetworkValid) {
+      return;
+    }
     const organization: Organization = network.organizations[0];
     l('[End] Blockchain configuration files parsed');
 
-    // Generate dynamically crypto
-    const homedir = require('os').homedir();
-    const path = join(homedir, this.networkRootPath);
+    // Assign & check root path
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
     await createFolder(path);
+
+    // Auto-create docker-compose folder if not exists
+    await createFolder(getDockerComposePath(path));
 
     const options: DockerComposeYamlOptions = {
       networkRootPath: path,
@@ -299,8 +331,8 @@ export class Orchestrator {
       }
     };
 
-    l('Creating Peer base');
-    const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options);
+    l('Creating Peer base docker compose file');
+    const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
     await peerBaseGenerator.createTemplateBase();
 
     l('Creating Docker network');
@@ -315,15 +347,14 @@ export class Orchestrator {
       const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options);
       l(`'Creating Peer ${peer.name} container template`);
       await peerGenerator.createTemplatePeers();
-      l(`'Starting Peer ${peer.name} container`);
-      const started = await peerGenerator.startPeer(peer);
-      l(`Peer ${peer.name} started (${started})`);
+      l(`'Starting Peer containers`);
+      await peerGenerator.startPeers();
     }
 
     if (enableOrderers) {
       l('Creating Orderers Container & Deploy');
       const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options);
-      // await ordererGenerator.createTemplateOrderers();
+      await ordererGenerator.createTemplateOrderers();
       const ordererStarted = await ordererGenerator.startOrderers();
       l(`Orderers started (${ordererStarted})`);
     }
@@ -370,6 +401,58 @@ export class Orchestrator {
       { name: this.defaultCAAdmin.name, password: this.defaultCAAdmin.password });
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
+  }
+
+  /**
+   * Stop all container of a blockchain
+   * @param deployConfigPath the deployment configuration file
+   * @param deleteNetwork
+   * @param deleteVolume
+   */
+  async stopBlockchainContainer(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean): Promise<boolean> {
+    try {
+      const network: Network = await Orchestrator._parse(deployConfigPath);
+
+      // loop on organization & peers && orderers
+      for(const org of network.organizations) {
+        // build list of docker services/volumes to delete
+        const volumes: string[] = [];
+        const services: string[] = [];
+        for(const peer of org.peers) {
+          services.push(`${peer.name}.${org.fullName}`);
+          services.push(`${peer.name}.${org.fullName}.couchdb`);
+          volumes.push(`${peer.name}.${org.fullName}`);
+        }
+        for(const orderer of org.orderers) {
+          services.push(`{orderer.name}.${org.fullName}`);
+          volumes.push(`{orderer.name}.${org.fullName}`);
+        }
+
+        // Now check all container within all organization engine
+        for(const engine of org.engines) {
+          const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+          const containerDeleted = await docker.stopContainerList(services);
+          if(!containerDeleted) {
+            e('Error while deleting the docker container for peer & orderer');
+            return false;
+          }
+
+          // delete the network
+          if(deleteNetwork) {
+            // TODO API to delete network not yet implemented
+          }
+
+          if(deleteVolume) {
+            // TODO API to delete volumes not yet implemented
+          }
+        }
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
   }
 
   /**

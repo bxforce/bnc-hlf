@@ -138,4 +138,13 @@ export class Organization {
     return this.engines.find(eng => eng.name === engineName);
   }
 
+  getPeerExtraHost(): Peer[] {
+    const peers = this.peers.filter(peer => this.engineHost(peer.options.engineName) !== '127.0.0.1');
+    return peers;
+  }
+
+  getOrdererExtraHost(): Orderer[] {
+    return this.orderers.filter(orderer => this.engineHost(orderer.options.engineName) ! == '127.0.0.1');
+  }
+
 }

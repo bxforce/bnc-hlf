@@ -33,6 +33,14 @@ const tasks = {
     return await CLI.generateGenesis(filePath);
   },
 
+  async generateChannelConfig(genesisConfigFilePath: string) {
+    return await CLI.generateChannelConfig(genesisConfigFilePath);
+  },
+
+  async generateAnchorPeer(genesisConfigFilePath: string) {
+    return await CLI.generateAnchorPeer(genesisConfigFilePath);
+  },
+
   async generateOrdererCredentials(genesisConfigFilePath: string) {
     return await CLI.generateOrdererCredentials(genesisConfigFilePath);
   },
@@ -80,11 +88,18 @@ const tasks = {
   async invokeChaincode() {
     l('[Invoke Chaincode] Not yet implemented');
   },
+
   async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any) {
     l('Request Init command ...');
 
+    // Generate the configtx.yaml file (mainly for genesis block)
+    // await CLI.generateConfigtx(genesisConfigPath);
+
     if (!(genesis || configtx || anchortx)) {
       l('[Init]: generate all config files (genesis, configtx, anchortx)...');
+      await CLI.generateGenesis(genesisConfigPath);
+      await CLI.generateChannelConfig(genesisConfigPath);
+      await CLI.generateAnchorPeer(genesisConfigPath);
 
     } else {
       if (genesis) {
@@ -96,15 +111,19 @@ const tasks = {
       }
 
       if (configtx) {
-        l('[Init]: generate configtx.yaml file... ');
+        l('[Init]: generate channel config file... ');
 
-        await CLI.generateConfigtx(genesisConfigPath);
+        await CLI.generateChannelConfig(genesisConfigPath);
 
-        l('[Init]: configtx.yaml file generated done !!! ');
+        l('[Init]: channel configuration generated done !!! ');
       }
 
       if (anchortx) {
-        l('AnchorTx generated not yet supported');
+        l('[Init]: generate the anchor peer update file...');
+
+        await CLI.generateAnchorPeer(genesisConfigPath);
+
+        l('[Init]: anchor peer update generated done !!!');
       }
     }
 
@@ -118,12 +137,12 @@ const tasks = {
     }
     //l('config file: ' + config;
   },
-  start(config: string) {
-    l('[start] not yet implemented');
-    //l('config file: ' + config;
-  },
-  async stop() {
-    l('[stop] not yet implemented');
+  async stop(deployConfigFilePath: string) {
+    l('Request stop command ...');
+
+    await CLI.stopBlockchain(deployConfigFilePath, false, false);
+
+    l('Blockchain stopped !!!');
   }
   // async createChannel(channeltxPath, nameChannel, nameOrg) {
   //   return await CLI.createChannel(channeltxPath, nameChannel, nameOrg);
@@ -137,12 +156,14 @@ const tasks = {
   // }
 };
 
+// --> start official commands
+
 program
   .command('init')
-  .option('--genesis', 'generate genesis_block')
-  .option('--configtx', 'generate configTx')
-  .option('--anchortx', 'generate anchorTx')
-  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment defintion file')
+  .option('--genesis', 'generate genesis block')
+  .option('--configtx', 'generate channel configuration file')
+  .option('--anchortx', 'generate anchor peer update file')
+  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
   .action(async cmd => {
     await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });
@@ -164,6 +185,24 @@ program
       await tasks.generateOrdererCredentials(cmd.config);
     }
   });
+
+program
+  .command('start')
+  .description('create/start network')
+  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async cmd => {
+    await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
+  });
+
+program
+  .command('stop')
+  .description('stop the blockchain')
+  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .action(async (cmd: any) => {
+    await tasks.stop(cmd.config);
+  });
+
+// --> end official commands
 
 program
   .command('new')
@@ -250,20 +289,6 @@ program
   .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
   .action(async cmd => {
     await tasks.enrollConfig(cmd.config, cmd.admin);
-  });
-
-program
-  .command('start')
-  .description('create/start network')
-  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
-  .action(async cmd => {
-    await tasks.start(cmd.config);
-  });
-program
-  .command('stop')
-  .description('stop network')
-  .action(async () => {
-    await tasks.stop();
   });
 
 const channelCmd = program.command('channel');

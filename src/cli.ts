@@ -17,6 +17,7 @@ limitations under the License.
 /* tslint:disable:no-unused-variable */
 import {Orchestrator} from './orchestrator';
 import { Type_User }  from './utils/constants';
+import { Network } from './models/network';
 
 /**
  *
@@ -56,6 +57,18 @@ export class CLI {
   }
 
   /**
+   * Stop the blockchain already deployed using the deployment config file
+   * @param deployConfigPath
+   * @param deleteNetwork
+   * @param deleteVolume
+   */
+  static async stopBlockchain(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.stopBlockchainContainer(deployConfigPath, deleteNetwork, deleteVolume);
+    return orchEngine;
+  }
+
+  /**
    * Generate the Configtx yaml file
    * @param configGenesisFilePath genesis configuration input file
    */
@@ -67,11 +80,31 @@ export class CLI {
 
   /**
    * Generate the genesis block file
-   * @param configGenesisFilePath genesis configuration input file
+   * @param configGenesisFilePath
    */
   static async generateGenesis(configGenesisFilePath: string) {
     const orchEngine = new Orchestrator();
     await orchEngine.generateGenesis(configGenesisFilePath);
+    return orchEngine;
+  }
+
+  /**
+   * Generate the channel configuration file
+   * @param configGenesisFilePath
+   */
+  static async generateChannelConfig(configGenesisFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateConfigChannel(configGenesisFilePath);
+    return orchEngine;
+  }
+
+  /**
+   * Generate the anchor peer update file
+   * @param configGenesisFilePath
+   */
+  static async generateAnchorPeer(configGenesisFilePath: string) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateAnchorPeer(configGenesisFilePath);
     return orchEngine;
   }
 

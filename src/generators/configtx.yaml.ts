@@ -19,7 +19,7 @@ import { Network } from '../models/network';
 import { Utils } from '../utils/utils';
 import { e } from '../utils/logs';
 import { SysWrapper } from '../utils/sysWrapper';
-import { CHANNEL_NAME_DEFAULT, GENESIS_FILE_NAME } from '../utils/constants';
+import { CHANNEL_RAFT_ID, ConsensusType, GENESIS_FILE_NAME } from '../utils/constants';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
@@ -27,6 +27,7 @@ import getArtifactsPath = Utils.getArtifactsPath;
 import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import existsPath = SysWrapper.existsPath;
+import existsFolder = SysWrapper.existsFolder;
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
@@ -45,13 +46,13 @@ Organizations:
     Policies: &${this.network.ordererOrganization.name}POLICIES
         Readers:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+            Rule: "OR('${this.network.ordererOrganization.mspName}.member')"
         Writers:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.name}.member')"
+            Rule: "OR('${this.network.ordererOrganization.mspName}.member')"
         Admins:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.name}.admin')"
+            Rule: "OR('${this.network.ordererOrganization.mspName}.admin')"
     OrdererEndpoints:
 ${this.network.ordererOrganization.orderers.map((ord, i) => `
         - ${ord.options.host}:${ord.options.ports[0]}
@@ -59,22 +60,22 @@ ${this.network.ordererOrganization.orderers.map((ord, i) => `
   
 ${this.network.organizations.map(org => `
   - &${org.name}
-    Name: ${org.name}
+    Name: ${org.mspName}
     ID: ${org.mspName}
     MSPDir: ${getOrganizationMspPath(this.network.options.networkConfigPath, org)}
     Policies: &${org.name}POLICIES
         Readers:
             Type: Signature
-            Rule: "OR('${org.name}.member')"
+            Rule: "OR('${org.mspName}.member')"
         Writers:
             Type: Signature
-            Rule: "OR('${org.name}.member')"
+            Rule: "OR('${org.mspName}.member')"
         Admins:
             Type: Signature
-            Rule: "OR('${org.name}.admin')"
+            Rule: "OR('${org.mspName}.admin')"
         Endorsement:
             Type: Signature
-            Rule: "OR('${org.name}.member')"
+            Rule: "OR('${org.mspName}.member')"
     AnchorPeers:
         - Host: ${org.peers[0].options.host}
           port: ${org.peers[0].options.ports[0]}
@@ -194,6 +195,17 @@ Channel: &ChannelDefaults
         <<: *ChannelCapabilities
 
 Profiles:
+    BncChannel:
+        Consortium: BncConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+${this.network.organizations.map(org => `
+                - *${org.name}
+`).join('')}                        
+            Capabilities:
+                <<: *ApplicationCapabilities
     BncRaft:
         <<: *ChannelDefaults
         Orderer:
@@ -240,7 +252,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 set -x
-configtxgen --configPath ${this.path} -profile BncRaft -channelID ${CHANNEL_NAME_DEFAULT} -outputBlock ${this.path}/${GENESIS_FILE_NAME}
+configtxgen --configPath ${this.path} -profile BncRaft -channelID ${CHANNEL_RAFT_ID} -outputBlock ${this.path}/${GENESIS_FILE_NAME}
 res=$?
 set +x
 if [ $res -ne 0 ]; then
@@ -252,6 +264,13 @@ fi
     try {
       // check artifact folder path
       await SysWrapper.createFolder(this.path);
+
+      // check if all needed files and folder exists
+      const isValid = await this._validate();
+      if(!isValid) {
+        e('Missing files/folder are detected to generate the genesis block - exit !!!');
+        return false;
+      }
 
       // check if configtx.yaml exists
       const configtxPath = `${this.path}/configtx.yaml`; // TODO differentiate between different configtx of different organization
@@ -270,4 +289,133 @@ fi
       return false;
     }
   }
+
+  /**
+   * Generate the channel configuration tx file
+   */
+  async generateConfigTx(channelName: string): Promise<boolean> {
+    const scriptContent = `
+export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
+export FABRIC_CFG_PATH=${this.network.options.networkConfigPath}  
+
+which configtxgen
+if [ "$?" -ne 0 ]; then
+  echo "configtxgen tool not found. exiting"
+  exit 1
+fi    
+  
+set -x
+configtxgen --configPath ${this.path} -profile BncChannel -outputCreateChannelTx ${this.path}/${channelName}.tx -channelID ${channelName}
+res=$?
+set +x
+if [ $res -ne 0 ]; then
+  echo "Failed to generate channel configuration transaction..."
+  exit 1
+fi
+    `;
+
+    try {
+      // check artifact folder path
+      await SysWrapper.createFolder(this.path);
+
+      // check if configtx.yaml exists
+      const channelTxPath = `${this.path}/${channelName}.tx`;
+      const channelExist = existsPath(channelTxPath);
+      if (!channelExist) {
+        e(`Configuration channel ${channelName} does not exists, exit now !!! `);
+        return false;
+      }
+
+      // execute the scripts
+      await execContent(scriptContent);
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+
+  }
+
+  /**
+   * Generate the anchor peer update
+   */
+  async generateAnchorPeer(channelName: string): Promise<boolean> {
+
+    try {
+      // check artifact folder path
+      await SysWrapper.createFolder(this.path);
+
+      for(const org of this.network.organizations) {
+        const anchorFile = `${org.mspName}anchors.tx`;
+        const scriptContent = `
+export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
+export FABRIC_CFG_PATH=${this.network.options.networkConfigPath}  
+
+which configtxgen
+if [ "$?" -ne 0 ]; then
+  echo "configtxgen tool not found. exiting"
+  exit 1
+fi    
+  
+set -x
+configtxgen --configPath ${this.path} -profile BncChannel -outputAnchorPeersUpdate ${this.path}/${anchorFile} -channelID ${channelName} -asOrg ${org.mspName}
+res=$?
+set +x
+if [ $res -ne 0 ]; then
+  echo "Failed to generate anchor peer update for ${org.mspName}..."
+  exit 1
+fi
+    `;
+        // check if configtx.yaml exists
+        const anchorPath = `${this.path}/${anchorFile}`;
+        const anchorExist = existsPath(anchorPath);
+        if (!anchorExist) {
+          e(`Anchor peer update ${anchorPath} does not exists, exit now !!! `);
+          return false;
+        }
+
+        // execute the scripts
+        await execContent(scriptContent);
+
+      }
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  private async _validate(): Promise<boolean> {
+    try {
+      // Check org msp folder
+      const mspFolder = `${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp`;
+      const mspExists = await existsFolder(mspFolder);
+      if(!mspExists) {
+        e(`MSP folder not exists on: ${mspFolder}`);
+        return false;
+      }
+
+      // check orderer consenter ssl certs
+      if(this.network.options.consensus === ConsensusType.RAFT) {
+        for(const org of this.network.organizations) {
+          for (const orderer of org.orderers) {
+            const ordCert = `${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer)}/server.crt`;
+            const certExists = await existsPath(ordCert);
+            if(!certExists) {
+              e(`Orderer SSL certs not exists on: ${ordCert}`);
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
+
 }

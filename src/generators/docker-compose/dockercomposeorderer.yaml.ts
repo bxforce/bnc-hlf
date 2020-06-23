@@ -16,7 +16,7 @@ limitations under the License.
 
 import { BaseGenerator } from '../base';
 import { DockerComposeYamlOptions } from '../../utils/data-type';
-import { e } from '../../utils/logs';
+import { e, l } from '../../utils/logs';
 import { DockerEngine } from '../../agents/docker-agent';
 import { Utils } from '../../utils/utils';
 import getDockerComposePath = Utils.getDockerComposePath;
@@ -55,11 +55,11 @@ ${this.options.org.orderers.map(orderer => `
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${orderer.name}.${this.options.org.fullName}
     extra_hosts:
-${this.options.org.peers
+${this.options.org.getPeerExtraHost()
       .map(peerHost => `
       - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"
 `).join('')}
-${this.options.org.orderers
+${this.options.org.getOrdererExtraHost()
       .map(ordererHost => `
       - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
 `).join('')}
@@ -106,10 +106,14 @@ ${this.options.org.orderers
     try {
       const serviceName = `${orderer.name}.${this.options.org.fullName}`;
 
+      l(`Starting Orderer ${serviceName}...`);
+
       const engine = this.options.org.getEngine(orderer.options.engineName);
       const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
 
       await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
+
+      l(`Service Orderer ${serviceName} started successfully !!!`);
 
       return true;
     } catch (err) {
