@@ -29,6 +29,8 @@ import { Utils } from '../../utils/utils';
 import getPeerMspPath = Utils.getPeerMspPath;
 import getPeerTlsPath = Utils.getPeerTlsPath;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
+import getPropertiesPath = Utils.getPropertiesPath;
+import copyFile = SysWrapper.copyFile;
 
 export interface AdminCAAccount {
   name: string;
@@ -72,7 +74,7 @@ certificateAuthorities:
               path: string,
               private options?: DockerComposeYamlOptions,
               private admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }) {
-    super(filename, path);
+    super(filename, getPropertiesPath(path));
   }
 
   /**
@@ -112,6 +114,14 @@ certificateAuthorities:
       const orgMspPath = getOrganizationMspPath(this.options.networkRootPath, this.options.org);
       await createFile(`${orgMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
       await this.generateConfigOUFile(`${orgMspPath}/config.yaml`);
+
+      // copy ca tls certs if secure enabled
+      if(this.options.org.isSecure) {
+        const fromTlsCaCerts = `${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem`;
+        const toFile = `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/tlsca/tlsca.${this.options.org.fullName}-cert.pem`;
+        await copyFile(fromTlsCaCerts, toFile);
+        await copyFile(fromTlsCaCerts, `${orgMspPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
+      }
 
       // generate NodeOU & enroll & store peer crypto credentials
       d('Register & Enroll Organization peers');
@@ -164,6 +174,9 @@ certificateAuthorities:
 
       // create base peer
       await ensureDir(basePeerPath);
+
+      //create the tlsca folder
+      await ensureDir(`${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/tlsca`);
 
       // create msp folder for every peer
       for (let peer of this.options.org.peers) {

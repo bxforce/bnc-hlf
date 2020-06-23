@@ -30,6 +30,8 @@ import createFile = SysWrapper.createFile;
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererMspPath = Utils.getOrdererMspPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
+import getPropertiesPath = Utils.getPropertiesPath;
+import copyFile = SysWrapper.copyFile;
 
 /**
  * Class responsible to generate Ordering crypto & certificates credentials
@@ -75,7 +77,7 @@ certificateAuthorities:
               private network: Network,
               private admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }
   ) {
-    super(filename, path);
+    super(filename, getPropertiesPath(path));
   }
 
   /**
@@ -115,7 +117,11 @@ certificateAuthorities:
       await createFile(`${ordOrgRootPath}/msp/admincerts/admin@${domain}-cert.pem`, adminCert);
       await createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, adminRootCert);
       await createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, adminRootCert);
-      // TODO add here tls certificate in case secure
+
+      if(this.network.ordererOrganization.isSecure) {
+        const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
+        await copyFile(tlsCaCerts, `${ordOrgRootPath}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
+      }
 
       d('Register & Enroll orderers');
       for (const orderer of this.network.ordererOrganization.orderers) {
@@ -169,6 +175,7 @@ certificateAuthorities:
       await ensureDir(orderOrgRootPath);
 
       await SysWrapper.createFolder(`${orderOrgRootPath}/ca`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/tlsca`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp/admincerts`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp/cacerts`);
