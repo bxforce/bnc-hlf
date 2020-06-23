@@ -290,37 +290,6 @@ fi
     }
   }
 
-  private async _validate(): Promise<boolean> {
-    try {
-      // Check org msp folder
-      const mspFolder = `${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp`;
-      const mspExists = await existsFolder(mspFolder);
-      if(!mspExists) {
-        e(`MSP folder not exists on: ${mspFolder}`);
-        return false;
-      }
-
-      // check orderer consenter ssl certs
-      if(this.network.options.consensus === ConsensusType.RAFT) {
-        for(const org of this.network.organizations) {
-          for (const orderer of org.orderers) {
-            const ordCert = `${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer)}/server.crt`;
-            const certExists = await existsPath(ordCert);
-            if(!certExists) {
-              e(`Orderer SSL certs not exists on: ${ordCert}`);
-              return false;
-            }
-          }
-        }
-      }
-
-      return true;
-    } catch(err) {
-      e(err);
-      return false;
-    }
-  }
-
   /**
    * Generate the channel configuration tx file
    */
@@ -416,6 +385,37 @@ fi
       e(err);
       return false;
     }
-
   }
+
+  private async _validate(): Promise<boolean> {
+    try {
+      // Check org msp folder
+      const mspFolder = `${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp`;
+      const mspExists = await existsFolder(mspFolder);
+      if(!mspExists) {
+        e(`MSP folder not exists on: ${mspFolder}`);
+        return false;
+      }
+
+      // check orderer consenter ssl certs
+      if(this.network.options.consensus === ConsensusType.RAFT) {
+        for(const org of this.network.organizations) {
+          for (const orderer of org.orderers) {
+            const ordCert = `${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer)}/server.crt`;
+            const certExists = await existsPath(ordCert);
+            if(!certExists) {
+              e(`Orderer SSL certs not exists on: ${ordCert}`);
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
+
 }
