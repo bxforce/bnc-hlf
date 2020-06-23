@@ -152,4 +152,8 @@ export namespace Utils {
   export function getDockerComposePath(rootPath: string): string {
     return `${rootPath}/docker-compose`;
   }
+
+  export function getPropertiesPath(rootPath: string): string {
+    return `${rootPath}/settings`;
+  }
 }
