@@ -55,6 +55,7 @@ ${this.options.org.orderers.map(orderer => `
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${orderer.name}.${this.options.org.fullName}
     extra_hosts:
+      - "bnc_test: 127.0.0.1"
 ${this.options.org.getPeerExtraHost()
       .map(peerHost => `
       - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"

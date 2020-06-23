@@ -21,7 +21,7 @@ import { SysWrapper } from '../../utils/sysWrapper';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
-import { HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
+import { HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
 import { Peer } from '../../models/peer';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import createFile = SysWrapper.createFile;
@@ -36,6 +36,7 @@ export interface AdminCAAccount {
 }
 
 /**
+ * Class responsible to generate organization keys and certificates credentials
  *
  * @author wassim.znaidi@gmail.com
  * @author ahmed.souissi@irt-systemx.fr
@@ -56,11 +57,11 @@ client:
 
 certificateAuthorities:
   ${this.options.org.caName}:
-    url: http://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.ports}
+    url: http${this.options.org.isSecure ? 's' : ''}://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.ports}
     httpOptions:
       verify: false
     tlsCACerts:
-      path: ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/ca
+      path: ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/msp/tlscacerts
     registrar:
       - enrollId: ${this.admin.name}
         enrollSecret: ${this.admin.password}
@@ -261,6 +262,7 @@ NodeOUs:
         enrollmentID: `${peer.name}.${this.options.org.fullName}`,
         enrollmentSecret: `${peer.name}pw`,
         role: HLF_CLIENT_ACCOUNT_ROLE.peer,
+        maxEnrollments: MAX_ENROLLMENT_COUNT,
         affiliation: ''
       };
       const peerEnrollmentResponse = await membership.addUser(params, mspId);

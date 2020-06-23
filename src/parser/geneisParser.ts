@@ -108,6 +108,11 @@ export class GenesisParser extends BaseParser {
 
     network.ordererOrganization = ordererOrganization;
 
+    // Raft consensus must be always secure
+    if(network.options.consensus === ConsensusType.RAFT) {
+      network.ordererOrganization.isSecure = true;
+    }
+
     return network;
   }
 }

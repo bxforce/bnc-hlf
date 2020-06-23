@@ -22,7 +22,7 @@ import { ensureDir } from 'fs-extra';
 import { SysWrapper } from '../../utils/sysWrapper';
 import { Orderer } from '../../models/orderer';
 import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
-import { ConsensusType, HLF_CLIENT_ACCOUNT_ROLE } from '../../utils/constants';
+import { ConsensusType, HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Utils } from '../../utils/utils';
@@ -52,7 +52,7 @@ client:
 
 certificateAuthorities:
   ${this.network.ordererOrganization.caName}:
-    url: http://${this.network.ordererOrganization.ca.options.host}:${this.network.ordererOrganization.ca.options.ports}
+    url: http${this.network.ordererOrganization.isSecure ? 's' : ''}://${this.network.ordererOrganization.ca.options.host}:${this.network.ordererOrganization.ca.options.ports}
     httpOptions:
       verify: false
     tlsCACerts:
@@ -231,7 +231,7 @@ certificateAuthorities:
         enrollmentID: `${this.network.ordererOrganization.ordererFullName(orderer)}`,
         enrollmentSecret: `${orderer.name}pw`,
         role: HLF_CLIENT_ACCOUNT_ROLE.orderer,
-        maxEnrollments: 3,
+        maxEnrollments: MAX_ENROLLMENT_COUNT,
         affiliation: ''
       };
       const ordererEnrollmentResponse = await membership.addUser(params, mspId);
