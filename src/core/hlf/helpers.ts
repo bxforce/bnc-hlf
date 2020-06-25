@@ -103,6 +103,13 @@ export class ClientHelper {
   }
 
   /**
+   * Get client network configuration (passed through the connection profile)
+   */
+  public get networkConfig(): any {
+    return (this.client as any)._network_config as Client;
+  }
+
+  /**
    * Parse the provided config file asynchronously.
    * Both yaml and json extension are supported
    * @param configFullPath

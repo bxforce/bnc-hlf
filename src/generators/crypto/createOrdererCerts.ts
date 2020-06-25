@@ -121,6 +121,8 @@ certificateAuthorities:
       if(this.network.ordererOrganization.isSecure) {
         const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
         await copyFile(tlsCaCerts, `${ordOrgRootPath}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
+
+        // TODO msp/tlscacert
       }
 
       d('Register & Enroll orderers');
