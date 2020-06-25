@@ -121,8 +121,7 @@ certificateAuthorities:
       if(this.network.ordererOrganization.isSecure) {
         const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
         await copyFile(tlsCaCerts, `${ordOrgRootPath}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
-
-        // TODO msp/tlscacert
+        await copyFile(tlsCaCerts, `${ordOrgRootPath}/msp/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
       }
 
       d('Register & Enroll orderers');
@@ -145,6 +144,9 @@ certificateAuthorities:
 
         // Generate TLS file if it's enabled
         if (this.network.ordererOrganization.isSecure || this.network.options.consensus === ConsensusType.RAFT) {
+          const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
+          await copyFile(tlsCaCerts, `${ordererMspPath}/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
+
           const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
           const {
             key: ordererTlsKey,
@@ -153,7 +155,8 @@ certificateAuthorities:
           } = ordererTlsEnrollment;
 
           const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
-          await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
+          await copyFile(tlsCaCerts, `${ordererTlsPath}/ca.crt`);
+          // await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
           await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
           await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
         }
