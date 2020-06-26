@@ -117,6 +117,7 @@ export class Organization {
     }
 
     const index = pIndex === 0 ? 1 : 0;
+    const indexTest = pIndex + 1 % this.peers.length;
     const peer = this.peers.find(p => p.options.number === index);
     return `${peer.name}.${this.fullName}:${peer.options.ports[0]}`;
   }

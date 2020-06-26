@@ -46,7 +46,7 @@ services:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
       - FABRIC_CA_SERVER_CA_NAME=${this.options.org.caName}
       - FABRIC_CA_SERVER_TLS_ENABLED=${this.options.org.isSecure}
-      - FABRIC_CA_SERVER_CSR_CN=ca.tls
+      - FABRIC_CA_SERVER_CSR_CN=${this.options.org.caName}.tls
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
     ports:

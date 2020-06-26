@@ -119,7 +119,7 @@ certificateAuthorities:
       await createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, adminRootCert);
 
       if(this.network.ordererOrganization.isSecure) {
-        const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
+        const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/ca-cert.pem`;
         await copyFile(tlsCaCerts, `${ordOrgRootPath}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
         await copyFile(tlsCaCerts, `${ordOrgRootPath}/msp/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
       }
@@ -144,7 +144,7 @@ certificateAuthorities:
 
         // Generate TLS file if it's enabled
         if (this.network.ordererOrganization.isSecure || this.network.options.consensus === ConsensusType.RAFT) {
-          const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
+          const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/ca-cert.pem`;
           await copyFile(tlsCaCerts, `${ordererMspPath}/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
 
           const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);

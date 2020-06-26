@@ -113,11 +113,12 @@ certificateAuthorities:
       d('Create Organization MSP');
       const orgMspPath = getOrganizationMspPath(this.options.networkRootPath, this.options.org);
       await createFile(`${orgMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
+      await createFile(`${orgMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
       await this.generateConfigOUFile(`${orgMspPath}/config.yaml`);
 
       // copy ca tls certs if secure enabled
       if(this.options.org.isSecure) {
-        const fromTlsCaCerts = `${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/tls-cert.pem`;
+        const fromTlsCaCerts = `${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/ca-cert.pem`;
         const toFile = `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/tlsca/tlsca.${this.options.org.fullName}-cert.pem`;
         await copyFile(fromTlsCaCerts, toFile);
         await copyFile(fromTlsCaCerts, `${orgMspPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
