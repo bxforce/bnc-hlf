@@ -77,4 +77,4 @@ export const DOCKER_CA_DELAY = 3000;
 export const MAX_ENROLLMENT_COUNT = 3;
 export const ENABLE_CONTAINER_LOGGING = true;
 export const CHANNEL_RAFT_ID = 'bnc-channel';
-export const CHANNEL_DEFAULT_NAME = 'myChannel';
+export const CHANNEL_DEFAULT_NAME = 'mychannel';

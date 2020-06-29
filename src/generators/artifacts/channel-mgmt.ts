@@ -46,15 +46,13 @@ client:
       path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
 
 orderers:
-${this.network.organizations[0].orderers.map(orderer => `
-    ${orderer.name}.${this.network.organizations[0].fullName}:
-      url: grpcs://localhost:${orderer.options.ports[0]}
+    ${this.network.ordererOrganization.orderers[0].name}.${this.network.ordererOrganization.domainName}:
+      url: grpcs://localhost:${this.network.ordererOrganization.orderers[0].options.ports[0]}
       grpcOptions:
-        ssl-target-name-override: ${orderer.name}.${this.network.organizations[0].fullName}
-        grpc-max-send-message-length: 15
+        ssl-target-name-override: ${this.network.ordererOrganization.orderers[0].name}.${this.network.ordererOrganization.domainName}
+        grpc-max-send-message-length: 40000
       tlsCACerts:
-        path: ${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.network.organizations[0].domainName}/orderers/${this.network.organizations[0].ordererName(orderer)}/tls/ca.crt
-`).join('')}
+        path: ${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.network.organizations[0].domainName}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem
   `;
 
   /**
