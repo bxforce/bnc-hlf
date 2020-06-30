@@ -23,6 +23,7 @@ import getDockerComposePath = Utils.getDockerComposePath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constants';
 import { Orderer } from '../../models/orderer';
+import { Network } from '../../models/network';
 
 /**
  * Class responsible to generate Orderer compose file
@@ -51,7 +52,6 @@ ${this.options.org.orderers.map(orderer => `
       file:   base/docker-compose-base.yaml
       service: orderer-base  
     environment:
-      - ORDERER_GENERAL_LOCALMSPID=${orderer.mspName}
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${this.options.org.ordererName(orderer)}
     extra_hosts:
@@ -80,8 +80,9 @@ ${this.options.org.getOrdererExtraHost()
    * Constructor
    * @param filename
    * @param options
+   * @param network
    */
-  constructor(filename: string, private options: DockerComposeYamlOptions) {
+  constructor(filename: string, private options: DockerComposeYamlOptions, private network?: Network) {
     super(filename, getDockerComposePath(options.networkRootPath));
   }
 
