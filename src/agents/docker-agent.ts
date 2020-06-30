@@ -149,6 +149,7 @@ export class DockerEngine {
       for (let containerInfo of foundContainerInfos) {
         const container: DockerContainer = this.getContainer(containerInfo.Id);
         await container.stop();
+        await container.remove();
       }
 
       return true;

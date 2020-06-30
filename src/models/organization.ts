@@ -147,4 +147,17 @@ export class Organization {
     return this.orderers.filter(orderer => this.engineHost(orderer.options.engineName) !== '127.0.0.1');
   }
 
+  get adminUser(): string {
+    return `${this.name}admin`;
+
+  }
+
+  get adminUserPass(): string {
+    return `${this.name}adminpw`;
+  }
+
+  get adminUserFull(): string {
+    return `Admin@${this.fullName}`;
+  }
+
 }

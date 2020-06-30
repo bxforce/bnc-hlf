@@ -58,4 +58,16 @@ export class OrdererOrganization {
   get fullName(): string {
     return `${this.name}.${this.domainName}`;
   }
+
+  get adminUser(): string {
+    return `${this.name}Admin`;
+  }
+
+  get adminUserPass(): string {
+    return `${this.name}Adminpw`;
+  }
+
+  get adminUserFull(): string {
+    return `Admin@${this.domainName}`;
+  }
 }

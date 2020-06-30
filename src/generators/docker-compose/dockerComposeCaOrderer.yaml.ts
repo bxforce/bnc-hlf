@@ -137,4 +137,20 @@ services:
     }
   }
 
+  async stopOrdererCa(): Promise<boolean> {
+    try {
+      const caIsRunning = await this.dockerEngine.doesContainerExist(`${this.caName}`);
+      if (!caIsRunning) {
+        l(`CA container (${this.caName}) is not running`);
+        return true;
+      }
+
+      // stop and remove running container
+      return await this.dockerEngine.stopContainerList([`${this.caName}`]);
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
 }

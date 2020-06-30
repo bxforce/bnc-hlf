@@ -486,6 +486,10 @@ export class Orchestrator {
       { name: Orchestrator.defaultCAAdmin.name, password: Orchestrator.defaultCAAdmin.password });
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
+
+    // l('[Orderer Cred]: stopping CA container...');
+    // const isCaStopped =  await ca.stopOrdererCa();
+    // l(`[Orderer Cred]: CA container stopped --> ${isCaStopped}!!!`); // TODO not working
   }
 
   /**

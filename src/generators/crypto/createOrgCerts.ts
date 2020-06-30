@@ -224,12 +224,12 @@ certificateAuthorities:
       // create user admin folder
       const organizationUserPath = getOrganizationUsersPath(this.options.networkRootPath, this.options.org);
       await SysWrapper.createFolder(`${organizationUserPath}`);
-      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}`);
-      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp`);
-      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/cacerts`);
-      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/keystore`);
-      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/signcerts`);
-      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/tlscacerts`);
+      await SysWrapper.createFolder(`${organizationUserPath}/${this.options.org.adminUserFull}`);
+      await SysWrapper.createFolder(`${organizationUserPath}/${this.options.org.adminUserFull}/msp`);
+      await SysWrapper.createFolder(`${organizationUserPath}/${this.options.org.adminUserFull}/msp/cacerts`);
+      await SysWrapper.createFolder(`${organizationUserPath}/${this.options.org.adminUserFull}/msp/keystore`);
+      await SysWrapper.createFolder(`${organizationUserPath}/${this.options.org.adminUserFull}/msp/signcerts`);
+      await SysWrapper.createFolder(`${organizationUserPath}/${this.options.org.adminUserFull}/msp/tlscacerts`);
 
       return true;
     } catch (err) {
@@ -357,15 +357,15 @@ NodeOUs:
   private async _generateAdminOrgFiles(organization: Organization, membership: Membership, mspId: string): Promise<EnrollmentResponse> {
     try {
       const organizationUserPath = getOrganizationUsersPath(this.options.networkRootPath, this.options.org);
-      const mspAdminPath = `${organizationUserPath}/Admin@${this.options.org.fullName}/msp`;
+      const mspAdminPath = `${organizationUserPath}/${this.options.org.adminUserFull}/msp`;
 
       // add config.yaml file
       await this.generateConfigOUFile(`${mspAdminPath}/config.yaml`);
 
       // enroll & store organization admin credentials
       const params: UserParams = {
-        enrollmentID: `${organization.name}admin`,
-        enrollmentSecret: `${organization.name}adminpw`,
+        enrollmentID: `${organization.adminUser}`,
+        enrollmentSecret: `${organization.adminUserPass}`,
         role: HLF_CLIENT_ACCOUNT_ROLE.admin,
         maxEnrollments: MAX_ENROLLMENT_COUNT,
         affiliation: ''
