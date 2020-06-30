@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as fs from 'fs';
 import { safeLoad } from 'js-yaml';
 import * as Client from 'fabric-client';
 import { resolve, join } from 'path';
@@ -33,6 +32,8 @@ export interface ClientConfig {
 }
 
 /**
+ * Class responsible to initialize the fabric-client (used mainly to manage channel)
+ * and the wallet instance
  *
  * @author wassim.znaidi@gmail.com
  */

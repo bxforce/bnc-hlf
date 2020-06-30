@@ -67,6 +67,11 @@ export const enum HLF_WALLET_TYPE {
 }
 
 export const ORDERER_DEFAULT_PORT = 7050;
+export const PEER_DEFAULT_PORT = {
+  event: 7051,
+  event_chaincode: 7052,
+  event_hub: 7053
+};
 
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;
