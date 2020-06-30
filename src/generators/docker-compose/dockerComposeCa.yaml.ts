@@ -62,6 +62,7 @@ services:
    *
    * @param filename
    * @param path
+   * @param network
    * @param options
    * @param dockerEngine
    */
@@ -117,6 +118,24 @@ services:
       d('Folder OwnerShip updated successfully');
 
       return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  /**
+   * Stop the CA container.
+   */
+  async stopOrgCa(): Promise<Boolean> {
+    try {
+      const caIsRunning = await this.dockerEngine.doesContainerExist(`${this.options.org.caName}`);
+      if (!caIsRunning) {
+        l(`CA ${this.options.org.caName} container is not running`);
+        return true;
+      }
+
+      return await this.dockerEngine.stopContainer(`${this.options.org.caName}`, true);
     } catch (err) {
       e(err);
       return false;

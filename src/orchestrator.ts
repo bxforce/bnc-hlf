@@ -336,17 +336,17 @@ export class Orchestrator {
    */
   async generatePeersCredentials(deploymentConfigFilePath: string) {
     // TODO check if files exists already for the same peers/organizations
-    const path = this._getDefaultPath();
+    l('[Peer Cred]: start parsing deployment file...');
+    const network = await Orchestrator._parse(deploymentConfigFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
     await createFolder(path);
 
-    l('Peer MSP: start parsing deployment file...');
-    const network = await Orchestrator._parse(deploymentConfigFilePath);
     const isNetworkValid = network.validate();
     if (!isNetworkValid) {
-      e('Deployment config file is not valid');
+      e('[Peer Cred]: Deployment config file is not valid');
       return;
     }
-    l('Peer MSP: deploy config parsed !!!');
+    l('[Peer Cred]: parsing deploy config done !!!');
 
     // Start the CA container if not
     const options: DockerComposeYamlOptions = {
@@ -361,23 +361,26 @@ export class Orchestrator {
     };
     const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
     await engine.createNetwork({ Name: options.composeNetwork });
-    l('Peer MSP: docker engine configured !!!');
+    l('[Peer Cred]: docker engine configured !!!');
 
-    l('Peer MSP: start CA container...');
-    const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, options, engine);
+    l('[Peer Cred]: start CA container...');
+    const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, network, options, engine);
     await ca.save();
     const caStarted = await ca.startOrgCa();
     if (!caStarted) {
-      e('Peer MSP: Error while starting the Organization CA container !!!');
+      e('[Peer Cred]: Error while starting the Organization CA container !!!');
       return;
     }
-    l(`Peer MSP: CA container started (${caStarted}) !!!`);
+    l(`[Peer Cred]: CA container started (${caStarted}) !!!`);
 
-    l(`Peer MSP: start create peer crypto & certs credentials...`);
+    l(`[Peer Cred]: start create peer crypto & certs credentials...`);
     const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, options);
     const isGenerated = await orgCertsGenerator.buildCertificate();
+    l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
 
-    l(`Peer MSP: credentials generated (${isGenerated}) !!! `);
+    l('[Peer Cred]: stopping CA container...');
+    const isCaStopped =  await ca.stopOrgCa();
+    l(`[Peer Cred]: CA container stopped --> ${isCaStopped}!!!`);
   }
 
   /**
@@ -487,9 +490,9 @@ export class Orchestrator {
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
 
-    // l('[Orderer Cred]: stopping CA container...');
-    // const isCaStopped =  await ca.stopOrdererCa();
-    // l(`[Orderer Cred]: CA container stopped --> ${isCaStopped}!!!`); // TODO not working
+    l('[Orderer Cred]: stopping CA container...');
+    const isCaStopped =  await ca.stopOrdererCa();
+    l(`[Orderer Cred]: CA container stopped --> ${isCaStopped}!!!`);
   }
 
   /**
@@ -513,14 +516,15 @@ export class Orchestrator {
           volumes.push(`${peer.name}.${org.fullName}`);
         }
         for(const orderer of org.orderers) {
-          services.push(`{orderer.name}.${org.fullName}`);
-          volumes.push(`{orderer.name}.${org.fullName}`);
+          services.push(`${orderer.name}.${org.domainName}`);
+          volumes.push(`${orderer.name}.${org.domainName}`);
         }
 
         // Now check all container within all organization engine
         for(const engine of org.engines) {
-          const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-          const containerDeleted = await docker.stopContainerList(services);
+          const docker = new DockerEngine({ socketPath: '/var/run/docker.sock' }); // TODO configure local docker remote engine
+          // const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+          const containerDeleted = await docker.stopContainerList(services, false);
           if(!containerDeleted) {
             e('Error while deleting the docker container for peer & orderer');
             return false;

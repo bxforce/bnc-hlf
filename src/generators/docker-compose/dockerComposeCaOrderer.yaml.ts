@@ -137,6 +137,9 @@ services:
     }
   }
 
+  /**
+   * Stop the CA container.
+   */
   async stopOrdererCa(): Promise<boolean> {
     try {
       const caIsRunning = await this.dockerEngine.doesContainerExist(`${this.caName}`);
@@ -146,7 +149,7 @@ services:
       }
 
       // stop and remove running container
-      return await this.dockerEngine.stopContainerList([`${this.caName}`]);
+      return await this.dockerEngine.stopContainer(`${this.caName}`, true);
     } catch (err) {
       e(err);
       return false;
