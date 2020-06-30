@@ -73,6 +73,14 @@ export const PEER_DEFAULT_PORT = {
   event_hub: 7053
 };
 
+export const DEFAULT_CA_ADMIN = {
+  name: 'admin',
+  password: 'adminpw'
+};
+
+/* default folder to store all generated tools files and data */
+export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
+
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;
 export const updateTimeout = 60000;

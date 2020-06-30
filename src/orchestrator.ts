@@ -25,7 +25,17 @@ import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 import { SysWrapper } from './utils/sysWrapper';
-import { BNC_NETWORK, CHANNEL_DEFAULT_NAME, ENABLE_CONTAINER_LOGGING, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
+import {
+  BNC_NETWORK,
+  CHANNEL_DEFAULT_NAME,
+  DEFAULT_CA_ADMIN,
+  ENABLE_CONTAINER_LOGGING,
+  EXTERNAL_HLF_VERSION,
+  HLF_CA_VERSION,
+  HLF_CLIENT_ACCOUNT_ROLE,
+  HLF_VERSION,
+  NETWORK_ROOT_PATH
+} from './utils/constants';
 import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
 import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
@@ -137,14 +147,6 @@ export class Orchestrator {
     }
   }
 
-  static defaultCAAdmin = {
-    name: 'admin',
-    password: 'adminpw'
-  };
-
-  /* default folder to store all generated tools files and data */
-  networkRootPath = './hyperledger-fabric-network';
-
   /**
    * Parse and validate deployment file
    * @param configFilePath full path of the deployment configuration file
@@ -255,7 +257,7 @@ export class Orchestrator {
     // Generate dynamically crypto
     const homedir = require('os').homedir();
     // const path = network.options.networkConfigPath ? network.options.networkConfigPath : join(homedir, this.networkRootPath);
-    const path = join(homedir, this.networkRootPath);
+    const path = join(homedir, NETWORK_ROOT_PATH);
     await createFolder(path);
 
     const options: DockerComposeYamlOptions = {
@@ -486,7 +488,7 @@ export class Orchestrator {
     const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
       path,
       network,
-      { name: Orchestrator.defaultCAAdmin.name, password: Orchestrator.defaultCAAdmin.password });
+      { name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password });
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
 
@@ -616,8 +618,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: Orchestrator.defaultCAAdmin.name,
-        secret: Orchestrator.defaultCAAdmin.password
+        name: DEFAULT_CA_ADMIN.name,
+        secret: DEFAULT_CA_ADMIN.password
       }
     };
     const membership = new Membership(config);
@@ -652,8 +654,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: Orchestrator.defaultCAAdmin.name,
-        secret: Orchestrator.defaultCAAdmin.password
+        name: DEFAULT_CA_ADMIN.name,
+        secret: DEFAULT_CA_ADMIN.password
       }
     };
     const membership = new Membership(config);
@@ -678,8 +680,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: Orchestrator.defaultCAAdmin.name,
-        secret: Orchestrator.defaultCAAdmin.password
+        name: DEFAULT_CA_ADMIN.name,
+        secret: DEFAULT_CA_ADMIN.password
       }
     };
     const membership = new Membership(config);
@@ -711,6 +713,6 @@ export class Orchestrator {
    */
   private _getDefaultPath(): string {
     const homedir = require('os').homedir();
-    return join(homedir, this.networkRootPath);
+    return join(homedir, NETWORK_ROOT_PATH);
   }
 }
