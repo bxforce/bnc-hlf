@@ -129,26 +129,6 @@ export class ClientHelper {
   }
 
   /**
-   * Parse the provided config file synchronously.
-   * Both yaml and json extension are supported
-   * @param configFullPath
-   */
-  // parseConfigFileSync(configFullPath = this.clientConfig.networkProfile): any {
-  //   const networkProfilePath = this.renderVariables(configFullPath as string);
-  //   try {
-  //     const profileStr = fs.readFileSync(networkProfilePath, 'utf-8');
-  //     if (/\.json$/.test(networkProfilePath)) {
-  //       return JSON.parse(profileStr);
-  //     } else {
-  //       return safeLoad(profileStr);
-  //     }
-  //   } catch (err) {
-  //     e(err);
-  //     return '';
-  //   }
-  // }
-
-  /**
    * Get the name of the lonely file with the folder
    * @param folderPath
    */

@@ -64,16 +64,16 @@ ${this.network.organizations.map(org => `
     Policies: &${org.name}POLICIES
         Readers:
             Type: Signature
-            Rule: "OR('${org.mspName}.member')"
+            Rule: "OR('${org.mspName}.admin', '${org.mspName}.peer', '${org.mspName}.client')"
         Writers:
             Type: Signature
-            Rule: "OR('${org.mspName}.member')"
+            Rule: "OR('${org.mspName}.admin', '${org.mspName}.client')"
         Admins:
             Type: Signature
             Rule: "OR('${org.mspName}.admin')"
         Endorsement:
             Type: Signature
-            Rule: "OR('${org.mspName}.member')"
+            Rule: "OR('${org.mspName}.peer')"
     AnchorPeers:
         - Host: ${org.peers[0].options.host}
           port: ${org.peers[0].options.ports[0]}
@@ -88,28 +88,6 @@ Capabilities:
         V2_0: true
 
 Application: &ApplicationDefaults
-    ACLs: &ACLsDefault
-        _lifecycle/CheckCommitReadiness: /Channel/Application/Writers
-        _lifecycle/CommitChaincodeDefinition: /Channel/Application/Writers
-        _lifecycle/QueryChaincodeDefinition: /Channel/Application/Readers
-        _lifecycle/QueryChaincodeDefinitions: /Channel/Application/Readers
-        lscc/ChaincodeExists: /Channel/Application/Readers
-        lscc/GetDeploymentSpec: /Channel/Application/Readers
-        lscc/GetChaincodeData: /Channel/Application/Readers
-        lscc/GetInstantiatedChaincodes: /Channel/Application/Readers
-        qscc/GetChainInfo: /Channel/Application/Readers
-        qscc/GetBlockByNumber: /Channel/Application/Readers
-        qscc/GetBlockByHash: /Channel/Application/Readers
-        qscc/GetTransactionByID: /Channel/Application/Readers
-        qscc/GetBlockByTxID: /Channel/Application/Readers
-        cscc/GetConfigBlock: /Channel/Application/Readers
-        cscc/GetConfigTree: /Channel/Application/Readers
-        cscc/SimulateConfigTreeUpdate: /Channel/Application/Readers
-        peer/Propose: /Channel/Application/Writers
-        peer/ChaincodeToChaincode: /Channel/Application/Readers
-        event/Block: /Channel/Application/Readers
-        event/FilteredBlock: /Channel/Application/Readers
-
     Organizations:
 
     Policies: &ApplicationDefaultPolicies
@@ -144,7 +122,6 @@ ${org.orderers.map((ord, i) => `
         MaxMessageCount: 10
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
-    MaxChannels: 0
     EtcdRaft:
         Consenters:
 ${this.network.organizations.map(org => `
@@ -154,13 +131,7 @@ ${org.orderers.map((ord, i) => `
               ClientTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
               ServerTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
 `).join('')}
-`).join('')}        
-        Options:
-            TickInterval: 500ms
-            ElectionTick: 10
-            HeartbeatTick: 1
-            MaxInflightBlocks: 5
-            SnapshotIntervalSize: 16 MB
+`).join('')}
     Organizations:
     Policies:
         Readers:
@@ -208,15 +179,10 @@ ${this.network.organizations.map(org => `
         <<: *ChannelDefaults
         Orderer:
             <<: *OrdererDefaults
-            OrdererType: etcdraft
             Organizations:
-            - *${this.network.ordererOrganization.name}
+                - *${this.network.ordererOrganization.name}
             Capabilities:
                 <<: *OrdererCapabilities       
-        Application:
-            <<: *ApplicationDefaults
-            Organizations:
-                - <<: *${this.network.ordererOrganization.name}
         Consortiums:
             BncConsortium:
                 Organizations:

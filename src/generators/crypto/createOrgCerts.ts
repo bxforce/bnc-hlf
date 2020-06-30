@@ -31,6 +31,8 @@ import getPeerTlsPath = Utils.getPeerTlsPath;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import getPropertiesPath = Utils.getPropertiesPath;
 import copyFile = SysWrapper.copyFile;
+import getOrganizationUsersPath = Utils.getOrganizationUsersPath;
+import { Organization } from '../../models/organization';
 
 export interface AdminCAAccount {
   name: string;
@@ -103,33 +105,51 @@ certificateAuthorities:
       // Generate & store admin certificate
       d('Enroll CA Registrar');
       const caAdminEnrollment = await this._generateCAAdminOrgMspFiles(membership, orgMspId);
-      const {
-        key: caAdminKey,
-        certificate: caAdminCertificate,
-        rootCertificate: caAdminRootCertificate
-      } = caAdminEnrollment;
+      // const {
+      //   key: caAdminKey,
+      //   certificate: caAdminCertificate,
+      //   rootCertificate: caAdminRootCertificate
+      // } = caAdminEnrollment;
       d('Enroll CA Registrar done !!!');
 
-      d('Create Organization MSP');
-      const orgMspPath = getOrganizationMspPath(this.options.networkRootPath, this.options.org);
-      await createFile(`${orgMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
-      await createFile(`${orgMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
-      await this.generateConfigOUFile(`${orgMspPath}/config.yaml`);
-
       // copy ca tls certs if secure enabled
+      const orgMspPath = getOrganizationMspPath(this.options.networkRootPath, this.options.org);
+      const fromTlsCaCerts = `${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/ca-cert.pem`;
       if(this.options.org.isSecure) {
-        const fromTlsCaCerts = `${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}/crypto/ca-cert.pem`;
         const toFile = `${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/tlsca/tlsca.${this.options.org.fullName}-cert.pem`;
         await copyFile(fromTlsCaCerts, toFile);
-        await copyFile(fromTlsCaCerts, `${orgMspPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
       }
 
+      d('Start register & enroll organization admin');
+      const orgAdminEnrollment = await this._generateAdminOrgFiles(this.options.org, membership, orgMspId);
+      const {
+        key: orgAdminKey,
+        certificate: orgAdminCertificate,
+        rootCertificate: orgAdminRootCertificate
+      } = orgAdminEnrollment.enrollment;
+
+      // Store generated files
+      const organizationUserPath = getOrganizationUsersPath(this.options.networkRootPath, this.options.org);
+      const mspAdminPath = `${organizationUserPath}/Admin@${this.options.org.fullName}/msp`;
+      await createFile(`${mspAdminPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, orgAdminRootCertificate);
+      await createFile(`${mspAdminPath}/keystore/priv_sk`, orgAdminKey.toBytes());
+      await createFile(`${mspAdminPath}/signcerts/Admin@${this.options.org.fullName}-cert.pem`, orgAdminCertificate);
+      if(this.options.org.isSecure) {
+        await copyFile(fromTlsCaCerts, `${mspAdminPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
+        await copyFile(fromTlsCaCerts, `${orgMspPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
+      }
+      d('Register & enroll organization admin dne !!!');
+
+      d('Create Organization MSP');
+      await createFile(`${orgMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, orgAdminRootCertificate);
+      await createFile(`${orgMspPath}/admincerts/Admin@${this.options.org.fullName}-cert.pem`, orgAdminCertificate);
+      await this.generateConfigOUFile(`${orgMspPath}/config.yaml`);
+
       // generate NodeOU & enroll & store peer crypto credentials
-      d('Register & Enroll Organization peers');
+      d('Start register & enroll Organization peers...');
       for (const peer of this.options.org.peers) {
         const peerMspPath = getPeerMspPath(this.options.networkRootPath, this.options.org, peer);
         const peerEnrollment = await this._generatePeerMspFiles(peer, membership, orgMspId);
-        // TODO check enrollment
         const {
           key: peerKey,
           certificate: peerCertificate,
@@ -137,8 +157,8 @@ certificateAuthorities:
         } = peerEnrollment.enrollment;
 
         // Store all generated files
-        await createFile(`${peerMspPath}/admincerts/admin@${this.options.org.fullName}-cert.pem`, caAdminCertificate);
-        await createFile(`${peerMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, caAdminRootCertificate);
+        await createFile(`${peerMspPath}/admincerts/Admin@${this.options.org.fullName}-cert.pem`, orgAdminCertificate);
+        await createFile(`${peerMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, orgAdminRootCertificate);
         await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
         await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
 
@@ -200,6 +220,17 @@ certificateAuthorities:
       await SysWrapper.createFolder(`${organizationMspPath}/admincerts`);
       await SysWrapper.createFolder(`${organizationMspPath}/cacerts`);
       await SysWrapper.createFolder(`${organizationMspPath}/tlscacerts`);
+
+      // create user admin folder
+      const organizationUserPath = getOrganizationUsersPath(this.options.networkRootPath, this.options.org);
+      await SysWrapper.createFolder(`${organizationUserPath}`);
+      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}`);
+      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp`);
+      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/cacerts`);
+      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/keystore`);
+      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/signcerts`);
+      await SysWrapper.createFolder(`${organizationUserPath}/Admin@${this.options.org.fullName}/msp/tlscacerts`);
+
       return true;
     } catch (err) {
       e(err);
@@ -311,6 +342,40 @@ NodeOUs:
       return peerTlsEnrollment;
     } catch (err) {
       e(`Error tls enrolling the peer ${peer.name}`);
+      e(err);
+      throw err;
+    }
+  }
+
+  /**
+   * Generate the MSP file for the organization admin
+   * @param organization
+   * @param membership
+   * @param mspId
+   * @private
+   */
+  private async _generateAdminOrgFiles(organization: Organization, membership: Membership, mspId: string): Promise<EnrollmentResponse> {
+    try {
+      const organizationUserPath = getOrganizationUsersPath(this.options.networkRootPath, this.options.org);
+      const mspAdminPath = `${organizationUserPath}/Admin@${this.options.org.fullName}/msp`;
+
+      // add config.yaml file
+      await this.generateConfigOUFile(`${mspAdminPath}/config.yaml`);
+
+      // enroll & store organization admin credentials
+      const params: UserParams = {
+        enrollmentID: `${organization.name}admin`,
+        enrollmentSecret: `${organization.name}adminpw`,
+        role: HLF_CLIENT_ACCOUNT_ROLE.admin,
+        maxEnrollments: MAX_ENROLLMENT_COUNT,
+        affiliation: ''
+      };
+      const orgAdminEnrollmentResponse = await membership.addUser(params, mspId);
+      d(`Admin Organization is enrolled successfully`);
+
+      return orgAdminEnrollmentResponse;
+    } catch (err) {
+      e(`Error enrolling the organization admin`);
       e(err);
       throw err;
     }

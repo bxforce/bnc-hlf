@@ -105,6 +105,13 @@ export namespace Utils {
   }
 
   /**
+   * Retrieve the organization user path
+   */
+  export function getOrganizationUsersPath(rootPath: string, organization: Organization): string {
+    return `${rootPath}/organizations/peerOrganizations/${organization.fullName}/users`;
+  }
+
+  /**
    * Return the full path MSP Orderer Organization path
    * @param rootPath
    * @param ordererDomain

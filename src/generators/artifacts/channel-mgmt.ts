@@ -86,7 +86,7 @@ orderers:
       }
 
       // store the connection profile
-      await this.save();
+      // await this.save();
 
       // Initiate the channel entity
       const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -94,7 +94,8 @@ orderers:
       await channelClient.init();
 
       // load the admin user into the client
-      const adminLoaded = await this._loadAdminAccount(channelClient);
+      const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+      // const adminLoaded = await this._loadAdminAccount(channelClient);
       if(!adminLoaded) {
         e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
         return false;
@@ -119,6 +120,39 @@ orderers:
     try {
       // check if admin account exist on wallet
       const identity = await channel.wallet.getIdentity(this.admin.name);
+      if(identity.type !== 'X.509') {
+        e(`Identity type in the current wallet not supported (type ${identity.type})`);
+        return false;
+      }
+
+      // cast the identity as X509 identity
+      const adminIdentity: X509Identity = identity as X509Identity;
+      const adminKey = adminIdentity.credentials.privateKey;
+      const adminCert = adminIdentity.credentials.certificate;
+
+      // Create user context
+      const user = await channel.client.createUser({
+        username: 'peer' + this.network.organizations[0].name + 'Admin',
+        mspid: this.network.organizations[0].mspName,
+        cryptoContent: {
+          privateKeyPEM: adminKey,
+          signedCertPEM: adminCert
+        },
+        skipPersistence: false
+      });
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
+
+  private async _loadOrgAdminAccount(channel: Channels, organizationName: string): Promise<boolean> {
+    try {
+      // check if org admin account exist on wallet
+      const identity = await channel.wallet.getIdentity(`${organizationName}admin`);
+
       if(identity.type !== 'X.509') {
         e(`Identity type in the current wallet not supported (type ${identity.type})`);
         return false;
