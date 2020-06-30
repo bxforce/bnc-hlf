@@ -24,6 +24,7 @@ import delay = Utils.delay;
 import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
 import changeOwnership = Utils.changeOwnership;
 import getDockerComposePath = Utils.getDockerComposePath;
+import { Network } from '../../models/network';
 
 /**
  *
@@ -40,7 +41,7 @@ networks:
 services:
   ${this.options.org.caName}:
     container_name: ${this.options.org.caName}
-    image: hyperledger/fabric-ca
+    image: hyperledger/fabric-ca:${this.network.options.hyperledgerCAVersion}
     command: sh -c 'fabric-ca-server start -d -b ${this.options.org.ca.options.user}:${this.options.org.ca.options.password} --port ${this.options.org.ca.options.ports} --cfg.identities.allowremove'
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
@@ -64,7 +65,11 @@ services:
    * @param options
    * @param dockerEngine
    */
-  constructor(filename: string, path: string, private options?: DockerComposeYamlOptions, private readonly dockerEngine?: DockerEngine) {
+  constructor(filename: string,
+              path: string,
+              private network: Network,
+              private options?: DockerComposeYamlOptions,
+              private readonly dockerEngine?: DockerEngine) {
     super(filename, getDockerComposePath(options.networkRootPath));
 
     if (!this.dockerEngine) {

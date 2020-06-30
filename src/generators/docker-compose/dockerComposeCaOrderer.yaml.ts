@@ -44,7 +44,7 @@ networks:
 services:
   ${this.network.ordererOrganization.caName}:
     container_name: ${this.network.ordererOrganization.caName}
-    image: hyperledger/fabric-ca
+    image: hyperledger/fabric-ca:${this.network.options.hyperledgerCAVersion}
     command: sh -c 'fabric-ca-server start -d -b ${this.network.ordererOrganization.ca.options.user}:${this.network.ordererOrganization.ca.options.password} --port ${this.network.ordererOrganization.ca.options?.ports} --cfg.identities.allowremove'
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
