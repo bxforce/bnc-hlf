@@ -17,7 +17,6 @@ limitations under the License.
 import { BaseGenerator } from '../base';
 import { Network } from '../../models/network';
 import { AdminCAAccount } from '../crypto/createOrgCerts';
-import { Orchestrator } from '../../orchestrator';
 import { e, l } from '../../utils/logs';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Channels } from '../../core/hlf/channels';
