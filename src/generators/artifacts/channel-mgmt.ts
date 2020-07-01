@@ -17,7 +17,6 @@ limitations under the License.
 import { BaseGenerator } from '../base';
 import { Network } from '../../models/network';
 import { AdminCAAccount } from '../crypto/createOrgCerts';
-import { Orchestrator } from '../../orchestrator';
 import { e, l } from '../../utils/logs';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Channels } from '../../core/hlf/channels';
@@ -26,7 +25,7 @@ import existsPath = SysWrapper.existsPath;
 import { Utils } from '../../utils/utils';
 import getPropertiesPath = Utils.getPropertiesPath;
 import { X509Identity } from 'fabric-network';
-import { User } from '../../models/user';
+import { DEFAULT_CA_ADMIN } from '../../utils/constants';
 
 /**
  * Class responsible to create the hyperledger fabric channel instance
@@ -65,7 +64,7 @@ orderers:
   constructor(filename: string,
               path: string,
               private network: Network,
-              private admin: AdminCAAccount = { name: Orchestrator.defaultCAAdmin.name , password: Orchestrator.defaultCAAdmin.password }) {
+              private admin: AdminCAAccount = { name: DEFAULT_CA_ADMIN.name , password: DEFAULT_CA_ADMIN.password }) {
     super(filename, getPropertiesPath(path));
   }
 
