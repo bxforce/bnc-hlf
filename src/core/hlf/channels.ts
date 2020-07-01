@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { ChannelRequest, Orderer } from 'fabric-client';
+import { ChannelRequest, Orderer, Peer } from 'fabric-client';
 import { ensureFile } from 'fs-extra';
 import * as fs from 'fs';
 import { ClientConfig, ClientHelper } from './helpers';
@@ -32,6 +32,7 @@ import {channelTimeout} from '../../utils/constants';
  */
 export class Channels extends ClientHelper {
   public orderers: Orderer[] = [];
+  public peers: Peer[] = [];
 
   /**
    * Constructor
@@ -50,6 +51,8 @@ export class Channels extends ClientHelper {
 
     // build the list of configured orderers
     await this._loadOrderersFromConfig();
+    //build list of peers
+    await this._loadPeersFromConfig();
   }
 
   /**
@@ -104,7 +107,14 @@ export class Channels extends ClientHelper {
       d('Calling peers in organization "%s" to join the channel');
 
       d(`Successfully got the fabric client for the organization ${org_name}`);
-      let channel = this.client.getChannel(channel_name);
+      console.log('before')
+      //let channel = this.client.getChannel(channel_name);
+      let channel = this.client.newChannel(channel_name);
+      channel.addOrderer(this.orderers[0]);
+      console.log('hhhhhhhhhh', this.peers[0])
+      channel.addPeer(this.peers[0], this.config.userMsp);
+
+      console.log('after')
       if(!channel) {
         e('Channel NOT  found ')
         d(`Channel %s was not defined in the connection profile ${channel_name}`);
@@ -201,6 +211,23 @@ export class Channels extends ClientHelper {
 
         // store the orderer instance in the class field
         this.orderers.push(orderer);
+      }
+    }
+  }
+
+
+  private async _loadPeersFromConfig(): Promise<void> {
+    // @ts-ignore
+    console.log('loading peers')
+    const { peers } = this.config.networkProfile;
+    for(const key in peers) {
+      if(key) {
+        console.log('keeeeey', key)
+        const peer = this.client.getPeer(key);
+        console.log(peer)
+
+        // store the orderer instance in the class field
+        this.peers.push(peer);
       }
     }
   }
