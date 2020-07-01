@@ -23,6 +23,7 @@ import getDockerComposePath = Utils.getDockerComposePath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constants';
 import { Orderer } from '../../models/orderer';
+import { Network } from '../../models/network';
 
 /**
  * Class responsible to generate Orderer compose file
@@ -37,7 +38,7 @@ version: '2'
 volumes:
 ${this.options.org.orderers
     .map(orderer => `
-  ${orderer.name}.${this.options.org.fullName}:
+  ${orderer.name}.${this.options.org.domainName}:
 `).join('')}  
 
 networks:
@@ -46,14 +47,13 @@ networks:
 
 services:
 ${this.options.org.orderers.map(orderer => `
-  ${orderer.name}.${this.options.org.fullName}:
+  ${this.options.org.ordererName(orderer)}:
     extends:
       file:   base/docker-compose-base.yaml
       service: orderer-base  
     environment:
-      - ORDERER_GENERAL_LOCALMSPID=${orderer.mspName}
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
-    container_name: ${orderer.name}.${this.options.org.fullName}
+    container_name: ${this.options.org.ordererName(orderer)}
     extra_hosts:
       - "bnc_test: 127.0.0.1"
 ${this.options.org.getPeerExtraHost()
@@ -62,7 +62,7 @@ ${this.options.org.getPeerExtraHost()
 `).join('')}
 ${this.options.org.getOrdererExtraHost()
       .map(ordererHost => `
-      - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
+      - "${this.options.org.ordererName(ordererHost)}:${this.options.org.engineHost(ordererHost.options.engineName)}"
 `).join('')}
     networks:
       - ${this.options.composeNetwork}   
@@ -70,7 +70,7 @@ ${this.options.org.getOrdererExtraHost()
       - ${getArtifactsPath(this.options.networkRootPath)}/${GENESIS_FILE_NAME}:/var/hyperledger/orderer/orderer.genesis.block
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${this.options.org.ordererName(orderer)}/msp:/var/hyperledger/orderer/msp
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${this.options.org.ordererName(orderer)}/tls/:/var/hyperledger/orderer/tls
-      - ${orderer.name}.${this.options.org.fullName}:/var/hyperledger/production/orderer
+      - ${this.options.org.ordererName(orderer)}:/var/hyperledger/production/orderer
     ports:
       - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
 `).join('')}  
@@ -80,8 +80,9 @@ ${this.options.org.getOrdererExtraHost()
    * Constructor
    * @param filename
    * @param options
+   * @param network
    */
-  constructor(filename: string, private options: DockerComposeYamlOptions) {
+  constructor(filename: string, private options: DockerComposeYamlOptions, private network?: Network) {
     super(filename, getDockerComposePath(options.networkRootPath));
   }
 
@@ -105,7 +106,7 @@ ${this.options.org.getOrdererExtraHost()
    */
   async startOrderer(orderer: Orderer): Promise<boolean>  {
     try {
-      const serviceName = `${orderer.name}.${this.options.org.fullName}`;
+      const serviceName = `${orderer.name}.${this.options.org.domainName}`;
 
       l(`Starting Orderer ${serviceName}...`);
 

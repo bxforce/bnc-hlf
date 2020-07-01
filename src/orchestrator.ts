@@ -25,7 +25,17 @@ import { Network } from './models/network';
 import { GenesisParser } from './parser/geneisParser';
 import { ConfigtxYamlGenerator } from './generators/configtx.yaml';
 import { SysWrapper } from './utils/sysWrapper';
-import { BNC_NETWORK, CHANNEL_DEFAULT_NAME, ENABLE_CONTAINER_LOGGING, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_CLIENT_ACCOUNT_ROLE, HLF_VERSION } from './utils/constants';
+import {
+  BNC_NETWORK,
+  CHANNEL_DEFAULT_NAME,
+  DEFAULT_CA_ADMIN,
+  ENABLE_CONTAINER_LOGGING,
+  EXTERNAL_HLF_VERSION,
+  HLF_CA_VERSION,
+  HLF_CLIENT_ACCOUNT_ROLE,
+  HLF_VERSION,
+  NETWORK_ROOT_PATH
+} from './utils/constants';
 import { OrgCertsGenerator } from './generators/crypto/createOrgCerts';
 import { ClientConfig } from './core/hlf/helpers';
 import { Membership, UserParams } from './core/hlf/membership';
@@ -43,6 +53,8 @@ import { Utils } from './utils/utils';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { DockerComposeCaGenerator } from './generators/docker-compose/dockerComposeCa.yaml';
 import getDockerComposePath = Utils.getDockerComposePath;
+import { ChannelGenerator } from './generators/artifacts/channel-mgmt';
+import getArtifactsPath = Utils.getArtifactsPath;
 
 /**
  * Main tools orchestrator
@@ -52,13 +64,88 @@ import getDockerComposePath = Utils.getDockerComposePath;
  * @author ahmed souissi
  */
 export class Orchestrator {
-  /* default folder to store all generated tools files and data */
-  networkRootPath = './hyperledger-fabric-network';
 
-  defaultCAAdmin = {
-    name: 'admin',
-    password: 'adminpw'
-  };
+  // public async joinChannel(nameChannel, nameOrg, peers) {
+  //   await channel.joinChannel(nameChannel, peers, nameOrg);
+  // }
+  //
+  // public async updateChannel(anchortx, namech, nameorg) {
+  //   await channel.updateChannel(anchortx, namech, nameorg);
+  // }
+
+  /**
+   * Parse & validate deployment configuration file
+   * @param deploymentConfigPath
+   * @private
+   */
+  private static async _parse(deploymentConfigPath: string): Promise<Network> {
+    l('[Start] Start parsing the blockchain configuration file');
+    l('Validate input configuration file');
+    const validator = new ConfigurationValidator();
+    const isValid = validator.isValidDeployment(deploymentConfigPath);
+
+    if (!isValid) {
+      e('Configuration file is invalid');
+      return;
+    }
+    l('Configuration file valid');
+
+    let configParse = new DeploymentParser(deploymentConfigPath);
+    const network = await configParse.parse();
+    l('[End] Blockchain configuration files parsed');
+
+    return network;
+  }
+
+  /**
+   * Parse & validate genesis configuration file
+   * @param genesisConfigPath
+   * @private
+   */
+  private static async _parseGenesis(genesisConfigPath: string): Promise<Network | undefined> {
+    try {
+      l('Parsing genesis input file');
+      const validator = new ConfigurationValidator();
+      const isValid = validator.isValidGenesis(genesisConfigPath);
+      if (!isValid) {
+        e('Genesis configuration input file is invalid');
+        return;
+      }
+      l('Input genesis file validated');
+
+      l('Start parsing genesis input file');
+      const parser = new GenesisParser(genesisConfigPath);
+      const network: Network = await parser.parse();
+      l('Genesis input file parsed');
+
+      return network;
+    } catch (err) {
+      e(err);
+      return null;
+
+    }
+  }
+
+  /**
+   * download hyperledger fabric binaries
+   * @param folderPath folder where to store files
+   * @param network
+   * @private
+   */
+  private static async _downloadBinaries(folderPath: string, network: Network): Promise<boolean> {
+    try {
+      l('[Start] Download fabric binaries...');
+      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, network);
+      await downloadFabricBinariesGenerator.save();
+      await downloadFabricBinariesGenerator.run();
+      l('[End] Ran Download fabric binaries');
+
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
 
   /**
    * Parse and validate deployment file
@@ -170,7 +257,7 @@ export class Orchestrator {
     // Generate dynamically crypto
     const homedir = require('os').homedir();
     // const path = network.options.networkConfigPath ? network.options.networkConfigPath : join(homedir, this.networkRootPath);
-    const path = join(homedir, this.networkRootPath);
+    const path = join(homedir, NETWORK_ROOT_PATH);
     await createFolder(path);
 
     const options: DockerComposeYamlOptions = {
@@ -249,19 +336,19 @@ export class Orchestrator {
    * Generate Crypto & Certificate credentials for peers
    * @param deploymentConfigFilePath
    */
-  // TODO check if files exists already for the same peers/organizations
   async generatePeersCredentials(deploymentConfigFilePath: string) {
-    const path = this._getDefaultPath();
+    // TODO check if files exists already for the same peers/organizations
+    l('[Peer Cred]: start parsing deployment file...');
+    const network = await Orchestrator._parse(deploymentConfigFilePath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
     await createFolder(path);
 
-    l('Peer MSP: start parsing deployment file...');
-    const network = await Orchestrator._parse(deploymentConfigFilePath);
     const isNetworkValid = network.validate();
     if (!isNetworkValid) {
-      e('Deployment config file is not valid');
+      e('[Peer Cred]: Deployment config file is not valid');
       return;
     }
-    l('Peer MSP: deploy config parsed !!!');
+    l('[Peer Cred]: parsing deploy config done !!!');
 
     // Start the CA container if not
     const options: DockerComposeYamlOptions = {
@@ -276,23 +363,26 @@ export class Orchestrator {
     };
     const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' });
     await engine.createNetwork({ Name: options.composeNetwork });
-    l('Peer MSP: docker engine configured !!!');
+    l('[Peer Cred]: docker engine configured !!!');
 
-    l('Peer MSP: start CA container...');
-    const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, options, engine);
+    l('[Peer Cred]: start CA container...');
+    const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, network, options, engine);
     await ca.save();
     const caStarted = await ca.startOrgCa();
     if (!caStarted) {
-      e('Peer MSP: Error while starting the Organization CA container !!!');
+      e('[Peer Cred]: Error while starting the Organization CA container !!!');
       return;
     }
-    l(`Peer MSP: CA container started (${caStarted}) !!!`);
+    l(`[Peer Cred]: CA container started (${caStarted}) !!!`);
 
-    l(`Peer MSP: start create peer crypto & certs credentials...`);
+    l(`[Peer Cred]: start create peer crypto & certs credentials...`);
     const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, options);
     const isGenerated = await orgCertsGenerator.buildCertificate();
+    l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
 
-    l(`Peer MSP: credentials generated (${isGenerated}) !!! `);
+    l('[Peer Cred]: stopping CA container...');
+    const isCaStopped =  await ca.stopOrgCa();
+    l(`[Peer Cred]: CA container stopped --> ${isCaStopped}!!!`);
   }
 
   /**
@@ -361,11 +451,11 @@ export class Orchestrator {
   }
 
   /**
-   *
+   * Generate Crypto & Certificates credentials for orderers
    * @param genesisFilePath
    */
-  // TODO check if files exists already for the same orderers/organizations
   async generateOrdererCredentials(genesisFilePath: string) {
+    // TODO check if files exists already for the same orderers/organizations
     l('[Orderer Cred]: start parsing...');
     const network = await Orchestrator._parseGenesis(genesisFilePath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
@@ -398,9 +488,13 @@ export class Orchestrator {
     const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
       path,
       network,
-      { name: this.defaultCAAdmin.name, password: this.defaultCAAdmin.password });
+      { name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password });
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
+
+    l('[Orderer Cred]: stopping CA container...');
+    const isCaStopped =  await ca.stopOrdererCa();
+    l(`[Orderer Cred]: CA container stopped --> ${isCaStopped}!!!`);
   }
 
   /**
@@ -424,14 +518,15 @@ export class Orchestrator {
           volumes.push(`${peer.name}.${org.fullName}`);
         }
         for(const orderer of org.orderers) {
-          services.push(`{orderer.name}.${org.fullName}`);
-          volumes.push(`{orderer.name}.${org.fullName}`);
+          services.push(`${orderer.name}.${org.domainName}`);
+          volumes.push(`${orderer.name}.${org.domainName}`);
         }
 
         // Now check all container within all organization engine
         for(const engine of org.engines) {
-          const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-          const containerDeleted = await docker.stopContainerList(services);
+          const docker = new DockerEngine({ socketPath: '/var/run/docker.sock' }); // TODO configure local docker remote engine
+          // const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+          const containerDeleted = await docker.stopContainerList(services, false);
           if(!containerDeleted) {
             e('Error while deleting the docker container for peer & orderer');
             return false;
@@ -523,8 +618,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: this.defaultCAAdmin.name,
-        secret: this.defaultCAAdmin.password
+        name: DEFAULT_CA_ADMIN.name,
+        secret: DEFAULT_CA_ADMIN.password
       }
     };
     const membership = new Membership(config);
@@ -559,8 +654,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: this.defaultCAAdmin.name,
-        secret: this.defaultCAAdmin.password
+        name: DEFAULT_CA_ADMIN.name,
+        secret: DEFAULT_CA_ADMIN.password
       }
     };
     const membership = new Membership(config);
@@ -585,8 +680,8 @@ export class Orchestrator {
       networkProfile: networkProfilePath,
       keyStore: walletDirectoryPath,
       admin: {
-        name: this.defaultCAAdmin.name,
-        secret: this.defaultCAAdmin.password
+        name: DEFAULT_CA_ADMIN.name,
+        secret: DEFAULT_CA_ADMIN.password
       }
     };
     const membership = new Membership(config);
@@ -595,90 +690,21 @@ export class Orchestrator {
     return await membership.wallet.deleteIdentity(id);
   }
 
-  // public async createChannel(nameChannel, channeltxPath, nameOrg) {
-  //   await channel.createChannel(nameChannel, channeltxPath, nameOrg);
-  // }
-  //
-  // public async joinChannel(nameChannel, nameOrg, peers) {
-  //   await channel.joinChannel(nameChannel, peers, nameOrg);
-  // }
-  //
-  // public async updateChannel(anchortx, namech, nameorg) {
-  //   await channel.updateChannel(anchortx, namech, nameorg);
-  // }
-
   /**
-   * Parse & validate deployment configuration file
+   *
+   * @param channelName
+   * @param channeltxPath
    * @param deploymentConfigPath
-   * @private
    */
-  private static async _parse(deploymentConfigPath: string): Promise<Network> {
-    l('[Start] Start parsing the blockchain configuration file');
-    l('Validate input configuration file');
-    const validator = new ConfigurationValidator();
-    const isValid = validator.isValidDeployment(deploymentConfigPath);
+  async createChannel(channelName: string, channeltxPath: string, deploymentConfigPath: string): Promise<void> {
+    l(`[Channel] - Request to create a new channel (${channelName})`);
+    const network: Network = await Orchestrator._parse(deploymentConfigPath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
-    if (!isValid) {
-      e('Configuration file is invalid');
-      return;
-    }
-    l('Configuration file valid');
+    const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+    const created = await channelGenerator.setupChannel(channelName, `${getArtifactsPath(path)}/${channelName}.tx`);
 
-    let configParse = new DeploymentParser(deploymentConfigPath);
-    const network = await configParse.parse();
-    l('[End] Blockchain configuration files parsed');
-
-    return network;
-  }
-
-  /**
-   * Parse & validate genesis configuration file
-   * @param genesisConfigPath
-   * @private
-   */
-  private static async _parseGenesis(genesisConfigPath: string): Promise<Network | undefined> {
-    try {
-      l('Parsing genesis input file');
-      const validator = new ConfigurationValidator();
-      const isValid = validator.isValidGenesis(genesisConfigPath);
-      if (!isValid) {
-        e('Genesis configuration input file is invalid');
-        return;
-      }
-      l('Input genesis file validated');
-
-      l('Start parsing genesis input file');
-      const parser = new GenesisParser(genesisConfigPath);
-      const network: Network = await parser.parse();
-      l('Genesis input file parsed');
-
-      return network;
-    } catch (err) {
-      e(err);
-      return null;
-
-    }
-  }
-
-  /**
-   * download hyperledger fabric binaries
-   * @param folderPath folder where to store files
-   * @param network
-   * @private
-   */
-  private static async _downloadBinaries(folderPath: string, network: Network): Promise<boolean> {
-    try {
-      l('[Start] Download fabric binaries...');
-      const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, network);
-      await downloadFabricBinariesGenerator.save();
-      await downloadFabricBinariesGenerator.run();
-      l('[End] Ran Download fabric binaries');
-
-      return true;
-    } catch (err) {
-      e(err);
-      return false;
-    }
+    l(`[Channel] - Exit create channel request (${created}) !!!`);
   }
 
   /**
@@ -687,6 +713,6 @@ export class Orchestrator {
    */
   private _getDefaultPath(): string {
     const homedir = require('os').homedir();
-    return join(homedir, this.networkRootPath);
+    return join(homedir, NETWORK_ROOT_PATH);
   }
 }

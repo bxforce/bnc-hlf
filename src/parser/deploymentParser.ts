@@ -22,7 +22,7 @@ import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
 import { Ca } from '../models/ca';
 import { Network } from '../models/network';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT } from '../utils/constants';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
 import { OrdererOrganization } from '../models/ordererOrganization';
 
 /**
@@ -70,7 +70,8 @@ export class DeploymentParser extends BaseParser {
       externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
       consensus: consensus as ConsensusType,
       inside: false,
-      networkConfigPath: template_folder
+      networkConfigPath: template_folder,
+      forDeployment: true
     });
     network.organizations = organizations;
 
@@ -136,6 +137,7 @@ export class DeploymentParser extends BaseParser {
             consensus,
             ports: [`${index*1000+ORDERER_DEFAULT_PORT}`],
             number: index
+            // TODO set the host based on engine name
           })
         );
       });
@@ -151,7 +153,7 @@ export class DeploymentParser extends BaseParser {
           new Peer(peerName, {
             engineName: peerEngineName,
             number: index,
-            ports: [`7${index}51`, `7${index}52`, `7${index}53`],
+            ports: [`${index*1000+PEER_DEFAULT_PORT.event}`, `${index*1000+PEER_DEFAULT_PORT.event_chaincode}`, `${index*1000+PEER_DEFAULT_PORT.event_hub}`],
             couchDbPort: `5${index}84`,
             couchDB: db
           })

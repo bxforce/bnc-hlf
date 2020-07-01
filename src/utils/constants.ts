@@ -67,6 +67,19 @@ export const enum HLF_WALLET_TYPE {
 }
 
 export const ORDERER_DEFAULT_PORT = 7050;
+export const PEER_DEFAULT_PORT = {
+  event: 7051,
+  event_chaincode: 7052,
+  event_hub: 7053
+};
+
+export const DEFAULT_CA_ADMIN = {
+  name: 'admin',
+  password: 'adminpw'
+};
+
+/* default folder to store all generated tools files and data */
+export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
 
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;
@@ -76,5 +89,5 @@ export const BNC_NETWORK = 'bnc_network';
 export const DOCKER_CA_DELAY = 3000;
 export const MAX_ENROLLMENT_COUNT = 3;
 export const ENABLE_CONTAINER_LOGGING = true;
-export const CHANNEL_RAFT_ID = 'bnc-channel';
-export const CHANNEL_DEFAULT_NAME = 'myChannel';
+export const CHANNEL_RAFT_ID = 'system-channel';
+export const CHANNEL_DEFAULT_NAME = 'mychannel';

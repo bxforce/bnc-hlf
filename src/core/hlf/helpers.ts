@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as fs from 'fs';
 import { safeLoad } from 'js-yaml';
 import * as Client from 'fabric-client';
 import { resolve, join } from 'path';
@@ -33,6 +32,8 @@ export interface ClientConfig {
 }
 
 /**
+ * Class responsible to initialize the fabric-client (used mainly to manage channel)
+ * and the wallet instance
  *
  * @author wassim.znaidi@gmail.com
  */
@@ -103,6 +104,13 @@ export class ClientHelper {
   }
 
   /**
+   * Get client network configuration (passed through the connection profile)
+   */
+  public get networkConfig(): any {
+    return (this.client as any)._network_config as Client;
+  }
+
+  /**
    * Parse the provided config file asynchronously.
    * Both yaml and json extension are supported
    * @param configFullPath
@@ -118,26 +126,6 @@ export class ClientHelper {
       }
     } catch (err) {
       e(err);
-    }
-  }
-
-  /**
-   * Parse the provided config file synchronously.
-   * Both yaml and json extension are supported
-   * @param configFullPath
-   */
-  parseConfigFileSync(configFullPath = this.clientConfig.networkProfile): any {
-    const networkProfilePath = this.renderVariables(configFullPath as string);
-    try {
-      const profileStr = fs.readFileSync(networkProfilePath, 'utf-8');
-      if (/\.json$/.test(networkProfilePath)) {
-        return JSON.parse(profileStr);
-      } else {
-        return safeLoad(profileStr);
-      }
-    } catch (err) {
-      e(err);
-      return '';
     }
   }
 

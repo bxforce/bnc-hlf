@@ -105,23 +105,40 @@ certificateAuthorities:
       await membership.initCaClient(this.network.ordererOrganization.caName);
       d('CA initialized done');
 
-      d('Enroll Orderer CA Registrar & Create Orderer global MSP credentials');
-      const caAdminEnrollment = await OrdererCertsGenerator._generateCAAdmin(membership, ordererMspId);
-      const {
-        key: adminKey,
-        certificate: adminCert,
-        rootCertificate: adminRootCert
-      } = caAdminEnrollment;
+      d('Start enrolling Orderer CA Registrar...');
+      await OrdererCertsGenerator._generateCAAdmin(membership, ordererMspId);
+      d('Enrolling Orderer CA Registrar done !!!');
 
+      // copy ca tls certs if secure enabled
       const ordOrgRootPath = getOrdererOrganizationRootPath(rootPath, this.network.ordererOrganization.domainName);
-      await createFile(`${ordOrgRootPath}/msp/admincerts/admin@${domain}-cert.pem`, adminCert);
-      await createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, adminRootCert);
-      await createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, adminRootCert);
-
+      const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/ca-cert.pem`;
       if(this.network.ordererOrganization.isSecure) {
-        const tlsCaCerts = `${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}/crypto/tls-cert.pem`;
         await copyFile(tlsCaCerts, `${ordOrgRootPath}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
+        await copyFile(tlsCaCerts, `${ordOrgRootPath}/msp/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
       }
+
+      d('Start enrolling Orderer Admin user...');
+      const ordererAdminEnrollment = await this._generateOrdererAdminFiles(membership, ordererMspId);
+      const {
+        key: ordAdminKey,
+        certificate: ordAdminCert,
+        rootCertificate: ordAdminRootCert
+      } = ordererAdminEnrollment.enrollment;
+
+      const adminMspPath = `${ordOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}/msp`;
+      await createFile(`${adminMspPath}/admincerts/${this.network.ordererOrganization.adminUserFull}-cert.pem`, ordAdminCert);
+      await createFile(`${adminMspPath}/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
+      await createFile(`${adminMspPath}/keystore/priv_sk`, ordAdminKey.toBytes());
+      await createFile(`${adminMspPath}/signcerts/${this.network.ordererOrganization.adminUserFull}-cert.pem`, ordAdminCert);
+      if(this.network.ordererOrganization.isSecure) {
+        await copyFile(tlsCaCerts, `${adminMspPath}/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
+      }
+      d('Enrolling Orderer Admin user done !!!');
+
+      // Store orderer msp folder files
+      await createFile(`${ordOrgRootPath}/msp/admincerts/${this.network.ordererOrganization.adminUserFull}-cert.pem`, ordAdminCert);
+      await createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
+      await createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, ordAdminRootCert);
 
       d('Register & Enroll orderers');
       for (const orderer of this.network.ordererOrganization.orderers) {
@@ -136,13 +153,15 @@ certificateAuthorities:
         const ordererMspPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/msp`;
         const ordererFullName = this.network.ordererOrganization.ordererFullName(orderer);
 
-        await createFile(`${ordererMspPath}/admincerts/admin@${domain}-cert.pem`, adminCert);
-        await createFile(`${ordererMspPath}/cacerts/ca.${domain}-cert.pem`, adminRootCert);
+        await createFile(`${ordererMspPath}/admincerts/${this.network.ordererOrganization.adminUserFull}-cert.pem`, ordAdminCert);
+        await createFile(`${ordererMspPath}/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
         await createFile(`${ordererMspPath}/keystore/priv_sk`, ordererKey.toBytes());
         await createFile(`${ordererMspPath}/signcerts/${ordererFullName}-cert.pem`, ordererCert);
 
         // Generate TLS file if it's enabled
         if (this.network.ordererOrganization.isSecure || this.network.options.consensus === ConsensusType.RAFT) {
+          await copyFile(tlsCaCerts, `${ordererMspPath}/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
+
           const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
           const {
             key: ordererTlsKey,
@@ -151,7 +170,8 @@ certificateAuthorities:
           } = ordererTlsEnrollment;
 
           const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
-          await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
+          await copyFile(tlsCaCerts, `${ordererTlsPath}/ca.crt`);
+          // await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
           await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
           await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
         }
@@ -180,6 +200,16 @@ certificateAuthorities:
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp/admincerts`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp/cacerts`);
       await SysWrapper.createFolder(`${orderOrgRootPath}/msp/tlscacerts`);
+
+      // create user admin folder msp
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}/msp`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}/msp/admincerts`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}/msp/cacerts`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}/msp/keystore`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}/msp/signcerts`);
+      await SysWrapper.createFolder(`${orderOrgRootPath}/users/${this.network.ordererOrganization.adminUserFull}/msp/tlscacerts`);
 
       // create msp folder for every orderer
       for (let orderer of this.network.ordererOrganization.orderers) {
@@ -273,6 +303,33 @@ certificateAuthorities:
       return ordererTlsEnrollment;
     } catch (err) {
       e(`Error tls enrolling the orderer ${orderer.name}`);
+      e(err);
+      throw err;
+    }
+  }
+
+  /**
+   * Generate orderer organization admin user
+   * @param membership
+   * @param mspId
+   * @private
+   */
+  private async _generateOrdererAdminFiles(membership: Membership, mspId: string): Promise<EnrollmentResponse> {
+    try {
+      // enroll & store orderer admin user crypto credentials
+      const params: UserParams = {
+        enrollmentID: `${this.network.ordererOrganization.adminUser}`,
+        enrollmentSecret: `${this.network.ordererOrganization.adminUserPass}`,
+        role: HLF_CLIENT_ACCOUNT_ROLE.admin,
+        maxEnrollments: MAX_ENROLLMENT_COUNT,
+        affiliation: ''
+      };
+      const ordererEnrollmentResponse = await membership.addUser(params, mspId);
+      d(`Orderer Admin is enrolled successfully`);
+
+      return ordererEnrollmentResponse;
+    } catch (err) {
+      e(`Error enrolling the orderer admin user`);
       e(err);
       throw err;
     }

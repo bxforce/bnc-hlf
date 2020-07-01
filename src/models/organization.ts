@@ -117,6 +117,7 @@ export class Organization {
     }
 
     const index = pIndex === 0 ? 1 : 0;
+    const indexTest = pIndex + 1 % this.peers.length;
     const peer = this.peers.find(p => p.options.number === index);
     return `${peer.name}.${this.fullName}:${peer.options.ports[0]}`;
   }
@@ -144,6 +145,19 @@ export class Organization {
 
   getOrdererExtraHost(): Orderer[] {
     return this.orderers.filter(orderer => this.engineHost(orderer.options.engineName) !== '127.0.0.1');
+  }
+
+  get adminUser(): string {
+    return `${this.name}admin`;
+
+  }
+
+  get adminUserPass(): string {
+    return `${this.name}adminpw`;
+  }
+
+  get adminUserFull(): string {
+    return `Admin@${this.fullName}`;
   }
 
 }

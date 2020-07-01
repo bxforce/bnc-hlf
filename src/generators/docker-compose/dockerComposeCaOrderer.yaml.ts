@@ -44,13 +44,13 @@ networks:
 services:
   ${this.network.ordererOrganization.caName}:
     container_name: ${this.network.ordererOrganization.caName}
-    image: hyperledger/fabric-ca
+    image: hyperledger/fabric-ca:${this.network.options.hyperledgerCAVersion}
     command: sh -c 'fabric-ca-server start -d -b ${this.network.ordererOrganization.ca.options.user}:${this.network.ordererOrganization.ca.options.password} --port ${this.network.ordererOrganization.ca.options?.ports} --cfg.identities.allowremove'
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
       - FABRIC_CA_SERVER_CA_NAME=${this.network.ordererOrganization.caName}
       - FABRIC_CA_SERVER_TLS_ENABLED=${this.network.ordererOrganization.isSecure}
-      - FABRIC_CA_SERVER_CSR_CN=ca.tls
+      - FABRIC_CA_SERVER_CSR_CN=${this.network.ordererOrganization.caName}.tls
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
     ports:
@@ -131,6 +131,25 @@ services:
       d('Folder OwnerShip updated successfully');
 
       return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  /**
+   * Stop the CA container.
+   */
+  async stopOrdererCa(): Promise<boolean> {
+    try {
+      const caIsRunning = await this.dockerEngine.doesContainerExist(`${this.caName}`);
+      if (!caIsRunning) {
+        l(`CA container (${this.caName}) is not running`);
+        return true;
+      }
+
+      // stop and remove running container
+      return await this.dockerEngine.stopContainer(`${this.caName}`, true);
     } catch (err) {
       e(err);
       return false;

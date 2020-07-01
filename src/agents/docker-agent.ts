@@ -138,17 +138,12 @@ export class DockerEngine {
   /**
    * Remove all container existing in the list within the current docker engine
    * @param serviceNames
+   * @param remove remove the selected container
    */
-  async stopContainerList(serviceNames: string[]): Promise<boolean> {
+  async stopContainerList(serviceNames: string[], remove: boolean): Promise<boolean> {
     try {
-      // filter existing containers info
-      const containersInfo = await this.engine.listContainers();
-      const foundContainerInfos = containersInfo.filter(container => container.Names.filter(name => serviceNames.includes(name)).length > 0);
-
-      // retrieve container instance from one found and stop it
-      for (let containerInfo of foundContainerInfos) {
-        const container: DockerContainer = this.getContainer(containerInfo.Id);
-        await container.stop();
+      for(const serviceName of serviceNames) {
+        await this.stopContainer(serviceName, remove);
       }
 
       return true;
@@ -156,6 +151,43 @@ export class DockerEngine {
       e(err);
       return false;
     }
+  }
+
+  /**
+   * stop running container
+   * @param serviceName container service name
+   * @param remove remove container
+   */
+  async stopContainer(serviceName: string, remove: boolean): Promise<boolean> {
+    try {
+      // filter existing containers info
+      const containersInfo = await this.engine.listContainers();
+      const foundContainerInfos = containersInfo.filter(container => this.checkContainerName(serviceName, container.Names));
+
+      // retrieve container instance from one found and stop it
+      for (let containerInfo of foundContainerInfos) {
+        const container: DockerContainer = this.getContainer(containerInfo.Id);
+        await container.stop();
+
+        if(remove) {
+          await container.remove();
+        }
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      throw err;
+    }
+  }
+
+  checkContainerName(serviceName: string, containerNames: string[]): boolean {
+    for(const name of containerNames) {
+      if(name === serviceName || name === `/${serviceName}`) {
+        return true;
+      }
+    }
+    return false;
   }
 
   //Networks Management

@@ -19,15 +19,23 @@ import { ensureFile } from 'fs-extra';
 import * as fs from 'fs';
 import { ClientConfig, ClientHelper } from './helpers';
 import { d, e } from '../../utils/logs';
+import Client = require('fabric-client');
 
 /**
+ * Class responsible to manage HLF channel entity. Support currently:
+ * - Create channel
+ * - Join channel
  *
  * @author sahar.fehri@irt-systemx.fr
  * @author wassim.znaidi@gmail.com
  */
 export class Channels extends ClientHelper {
-  public orderers: Orderer[];
+  public orderers: Orderer[] = [];
 
+  /**
+   * Constructor
+   * @param config
+   */
   constructor(public config: ClientConfig) {
     super(config);
   }
@@ -36,7 +44,11 @@ export class Channels extends ClientHelper {
    * Initialize the fabric client from the config
    */
   async init() {
+    // initialize the client
     await super.init();
+
+    // build the list of configured orderers
+    await this._loadOrderersFromConfig();
   }
 
   /**
@@ -86,23 +98,29 @@ export class Channels extends ClientHelper {
   /**
    * Load the list of orderer from the config file
    */
-  private async loadOrderersFromConfig() {
-    const orderers = this.client.getConfigSetting('orderers');
+  private async _loadOrderersFromConfig(): Promise<void> {
+    // @ts-ignore
+    const { orderers } = this.config.networkProfile;
     for(const key in orderers) {
       if(key) {
-        const url = orderers[key].url;
-        const sslTargetOverride = orderers[key].grpcOptions[' ssl-target-name-override'];
+        // const url = orderers[key].url;
+        // const sslTargetOverride = orderers[key].grpcOptions[' ssl-target-name-override'];
+        //
+        // // read the CA Certs root
+        // const caRootPath = orderers[key].tlsCACerts.path;
+        // const data = fs.readFileSync(caRootPath);
+        // const caRoots = Buffer.from(data).toString();
+        // const orderer = this.client.newOrderer(url, {
+        //   'pem': caRoots,
+        //   'ssl-target-name-override': sslTargetOverride
+        // });
 
-        // read the CA Certs root
-        const caRootPath = orderers[key].tlsCACerts.path;
-        const data = fs.readFileSync(caRootPath);
-        const caRoots = Buffer.from(data).toString();
-        const orderer = this.client.newOrderer(url, {
-          'pem': caRoots,
-          'ssl-target-name-override': sslTargetOverride
-        });
+        // retrieve the orderer instance from the client
+        // as already configured in the connection profile
+        const orderer = this.client.getOrderer(key);
 
-        orderers.push(orderer);
+        // store the orderer instance in the class field
+        this.orderers.push(orderer);
       }
     }
   }

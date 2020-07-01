@@ -24,6 +24,7 @@ import delay = Utils.delay;
 import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
 import changeOwnership = Utils.changeOwnership;
 import getDockerComposePath = Utils.getDockerComposePath;
+import { Network } from '../../models/network';
 
 /**
  *
@@ -40,13 +41,13 @@ networks:
 services:
   ${this.options.org.caName}:
     container_name: ${this.options.org.caName}
-    image: hyperledger/fabric-ca
+    image: hyperledger/fabric-ca:${this.network.options.hyperledgerCAVersion}
     command: sh -c 'fabric-ca-server start -d -b ${this.options.org.ca.options.user}:${this.options.org.ca.options.password} --port ${this.options.org.ca.options.ports} --cfg.identities.allowremove'
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
       - FABRIC_CA_SERVER_CA_NAME=${this.options.org.caName}
       - FABRIC_CA_SERVER_TLS_ENABLED=${this.options.org.isSecure}
-      - FABRIC_CA_SERVER_CSR_CN=ca.tls
+      - FABRIC_CA_SERVER_CSR_CN=${this.options.org.caName}.tls
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
     ports:
@@ -61,10 +62,15 @@ services:
    *
    * @param filename
    * @param path
+   * @param network
    * @param options
    * @param dockerEngine
    */
-  constructor(filename: string, path: string, private options?: DockerComposeYamlOptions, private readonly dockerEngine?: DockerEngine) {
+  constructor(filename: string,
+              path: string,
+              private network: Network,
+              private options?: DockerComposeYamlOptions,
+              private readonly dockerEngine?: DockerEngine) {
     super(filename, getDockerComposePath(options.networkRootPath));
 
     if (!this.dockerEngine) {
@@ -112,6 +118,24 @@ services:
       d('Folder OwnerShip updated successfully');
 
       return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  /**
+   * Stop the CA container.
+   */
+  async stopOrgCa(): Promise<Boolean> {
+    try {
+      const caIsRunning = await this.dockerEngine.doesContainerExist(`${this.options.org.caName}`);
+      if (!caIsRunning) {
+        l(`CA ${this.options.org.caName} container is not running`);
+        return true;
+      }
+
+      return await this.dockerEngine.stopContainer(`${this.options.org.caName}`, true);
     } catch (err) {
       e(err);
       return false;

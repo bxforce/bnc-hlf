@@ -28,6 +28,7 @@ export class NetworkOptions {
   inside?: boolean = false;
   networkConfigPath?: string;
   consensus?: ConsensusType;
+  forDeployment?: boolean;
 }
 
 /**
