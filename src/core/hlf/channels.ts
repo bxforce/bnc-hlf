@@ -19,7 +19,6 @@ import { ensureFile } from 'fs-extra';
 import * as fs from 'fs';
 import { ClientConfig, ClientHelper } from './helpers';
 import { d, e } from '../../utils/logs';
-import Client = require('fabric-client');
 import {channelTimeout} from '../../utils/constants';
 
 /**
