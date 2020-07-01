@@ -106,10 +106,10 @@ export class Channels extends ClientHelper {
       d(`Successfully got the fabric client for the organization ${org_name}`);
       let channel = this.client.getChannel(channel_name);
       if(!channel) {
-        d('Channel NOT  found ')
+        e('Channel NOT  found ')
         d(`Channel %s was not defined in the connection profile ${channel_name}`);
 
-        return;
+        return false;
       }
       // next step is to get the genesis_block from the orderer,
       // the starting point for the channel that we want to join
