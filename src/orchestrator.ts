@@ -380,9 +380,9 @@ export class Orchestrator {
     const isGenerated = await orgCertsGenerator.buildCertificate();
     l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
 
-    l('[Peer Cred]: stopping CA container...');
-    const isCaStopped =  await ca.stopOrgCa();
-    l(`[Peer Cred]: CA container stopped --> ${isCaStopped}!!!`);
+    // l('[Peer Cred]: stopping CA container...');
+    // const isCaStopped =  await ca.stopOrgCa();
+    // l(`[Peer Cred]: CA container stopped --> ${isCaStopped}!!!`);
   }
 
   /**
@@ -492,9 +492,9 @@ export class Orchestrator {
     const isGenerated = await ordererGenerator.buildCertificate();
     l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
 
-    l('[Orderer Cred]: stopping CA container...');
-    const isCaStopped =  await ca.stopOrdererCa();
-    l(`[Orderer Cred]: CA container stopped --> ${isCaStopped}!!!`);
+    // l('[Orderer Cred]: stopping CA container...');
+    // const isCaStopped =  await ca.stopOrdererCa();
+    // l(`[Orderer Cred]: CA container stopped --> ${isCaStopped}!!!`);
   }
 
   /**
@@ -707,16 +707,21 @@ export class Orchestrator {
     l(`[Channel] - Exit create channel request (${created}) !!!`);
   }
 
-   public async joinChannel(channelName: string, orgName: string, peers,deploymentConfigPath: string ): Promise<void> {
+  /**
+   * Join peers to the selected channel
+   * @param channelName
+   * @param peers
+   * @param deploymentConfigPath
+   */
+   public async joinChannel(channelName: string, peers, deploymentConfigPath: string ): Promise<void> {
      l(`[Channel] - Request to join a new channel (${channelName})`);
      const network: Network = await Orchestrator._parse(deploymentConfigPath);
      const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
      const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
-     const joined = await channelGenerator.joinChannel(channelName, orgName,peers);
+     const joined = await channelGenerator.joinChannel(channelName, peers);
 
      l(`[Channel] - Exit create channel request (${joined}) !!!`);
-     //await channel.joinChannel(nameChannel, peers, nameOrg);
    }
 
   /**

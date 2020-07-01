@@ -147,7 +147,7 @@ export class CLI {
 
    static async joinChannel(nameChannel, nameOrg, peers, deployConfigPath) {
      const channelEngine = new Orchestrator();
-     await channelEngine.joinChannel(nameChannel, nameOrg, peers, deployConfigPath);
+     await channelEngine.joinChannel(nameChannel, peers, deployConfigPath);
      return channelEngine;
    }
   //

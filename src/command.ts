@@ -153,7 +153,7 @@ const tasks = {
   },
 
    async joinChannel(nameChannel, nameOrg, listPeers, deploymentConfigFilePath) {
-     let arrPeers = listPeers.split(",").map(String)
+     let arrPeers = listPeers.split(',').map(String);
      return await CLI.joinChannel(nameChannel, nameOrg, arrPeers, deploymentConfigFilePath);
    },
   // async updateChannel(anchortx, namech, nameorg) {
@@ -223,7 +223,6 @@ channelCmd
    .description('join channel')
     .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
    .option('-p, --list <items>', 'comma separated list')
    .action(async cmd => {
      await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list, cmd.config);

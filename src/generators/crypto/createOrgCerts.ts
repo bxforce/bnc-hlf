@@ -164,6 +164,8 @@ certificateAuthorities:
 
         // Generate TLS if it'w enabled
         if(this.options.org.isSecure) {
+          await copyFile(fromTlsCaCerts, `${peerMspPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
+
           const peerTlsEnrollment = await this._generatePeerTlsFiles(peer, membership, peerEnrollment.secret);
           const {
             key: peerTlsKey,
