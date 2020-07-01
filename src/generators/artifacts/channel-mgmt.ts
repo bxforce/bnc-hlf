@@ -45,6 +45,15 @@ client:
     cryptoStore:
       path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
 
+peers:
+${this.network.organizations[0].peers.map((peer, index) => `
+  ${peer.name}.${this.network.organizations[0].fullName}:
+    url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].engineHost(peer.options.engineName)}:${peer.options.ports[0]}
+    grpcOptions:
+      ssl-target-name-override: ${peer.name}.${this.network.organizations[0].fullName}
+      request-timeout: 120001
+`).join('')}
+
 orderers:
     ${this.network.ordererOrganization.orderers[0].name}.${this.network.ordererOrganization.domainName}:
       url: grpcs://localhost:${this.network.ordererOrganization.orderers[0].options.ports[0]}
