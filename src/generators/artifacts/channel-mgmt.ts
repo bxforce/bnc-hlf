@@ -27,6 +27,7 @@ import { Utils } from '../../utils/utils';
 import getPropertiesPath = Utils.getPropertiesPath;
 import { X509Identity } from 'fabric-network';
 import { User } from '../../models/user';
+import { DEFAULT_CA_ADMIN } from '../../utils/constants';
 
 /**
  * Class responsible to create the hyperledger fabric channel instance
@@ -65,7 +66,7 @@ orderers:
   constructor(filename: string,
               path: string,
               private network: Network,
-              private admin: AdminCAAccount = { name: Orchestrator.defaultCAAdmin.name , password: Orchestrator.defaultCAAdmin.password }) {
+              private admin: AdminCAAccount = { name: DEFAULT_CA_ADMIN.name , password: DEFAULT_CA_ADMIN.password }) {
     super(filename, getPropertiesPath(path));
   }
 
@@ -104,6 +105,38 @@ orderers:
       // create the provided channel
       const isCreated = await channelClient.createChannel(channelName, channelConfigPath);
       if(!isCreated) {
+        e(`Error channel (${channelName}) creation !!!`);
+        return false;
+      }
+
+      l(`Channel (${channelName}) creation successfully !!!`);
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
+  async joinChannel(channelName: string,orgName: string, peers): Promise<boolean> {
+    try {
+      l(`Start channel (${channelName}) join...`);
+
+      // Initiate the channel entity
+      const clientConfig: ClientConfig = { networkProfile: this.filePath };
+      const channelClient = new Channels(clientConfig);
+      await channelClient.init();
+
+      // load the admin user into the client
+      const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+      // const adminLoaded = await this._loadAdminAccount(channelClient);
+      if(!adminLoaded) {
+        e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+        return false;
+      }
+
+      // create the provided channel
+      const isJoined = await channelClient.joinChannel(channelName, orgName, peers);
+      if(!isJoined) {
         e(`Error channel (${channelName}) creation !!!`);
         return false;
       }

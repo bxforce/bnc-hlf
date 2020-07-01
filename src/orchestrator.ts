@@ -707,6 +707,18 @@ export class Orchestrator {
     l(`[Channel] - Exit create channel request (${created}) !!!`);
   }
 
+   public async joinChannel(channelName: string, orgName: string, peers,deploymentConfigPath: string ): Promise<void> {
+     l(`[Channel] - Request to join a new channel (${channelName})`);
+     const network: Network = await Orchestrator._parse(deploymentConfigPath);
+     const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+     const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+     const joined = await channelGenerator.joinChannel(channelName, orgName,peers);
+
+     l(`[Channel] - Exit create channel request (${joined}) !!!`);
+     //await channel.joinChannel(nameChannel, peers, nameOrg);
+   }
+
   /**
    * Return the default path where to store all files and materials
    * @private

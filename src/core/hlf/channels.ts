@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import { ClientConfig, ClientHelper } from './helpers';
 import { d, e } from '../../utils/logs';
 import Client = require('fabric-client');
+import {channelTimeout} from '../../utils/constants';
 
 /**
  * Class responsible to manage HLF channel entity. Support currently:
@@ -94,6 +95,85 @@ export class Channels extends ClientHelper {
       return false;
     }
   }
+
+   async joinChannel (channel_name,org_name, peers ) : Promise<Boolean> {
+    d('\n\n============ Join Channel start ============\n');
+    let error_message = null;
+    let all_eventhubs = [];
+    try {
+      d('Calling peers in organization "%s" to join the channel');
+
+      d(`Successfully got the fabric client for the organization ${org_name}`);
+      let channel = this.client.getChannel(channel_name);
+      if(!channel) {
+        d('Channel NOT  found ')
+        d(`Channel %s was not defined in the connection profile ${channel_name}`);
+
+        return;
+      }
+      // next step is to get the genesis_block from the orderer,
+      // the starting point for the channel that we want to join
+      let request = {
+        txId : 	this.client.newTransactionID(true) //get an admin based transactionID
+      };
+
+      let genesis_block = await channel.getGenesisBlock(request);
+
+      // tell each peer to join and wait 10 seconds
+      // for the channel to be created on each peer
+      let promises = [];
+      promises.push(new Promise(resolve => setTimeout(resolve, channelTimeout)));
+
+      let join_request = {
+        targets: peers, //using the peer names which only is allowed when a connection profile is loaded
+        txId: this.client.newTransactionID(true), //get an admin based transactionID
+        block: genesis_block
+      };
+      let join_promise = channel.joinChannel(join_request);
+      promises.push(join_promise);
+      let results = await Promise.all(promises);
+      d(`'Join Channel R E S P O N S E : %j' ${results}`);
+
+      // lets check the results of sending to the peers which is
+      // last in the results array
+      let peers_results = results.pop();
+      // then each peer results
+      for(let i in peers_results) {
+        let peer_result = peers_results[i];
+        if (peer_result instanceof Error) {
+          e(`Failed to join peer to the channel with error  ${peer_result.toString()}`);
+
+        } else if(peer_result.response && peer_result.response.status == 200) {
+          d(`Successfully joined peer to the channel ${channel_name}`);
+        } else {
+          e(`Failed to join peer to the channel , ${channel_name}`);
+
+        }
+      }
+    } catch(error) {
+      e(`Failed to join channel due to error:  ${error}`);
+      error_message = error.toString();
+    }
+
+    // need to shutdown open event streams
+    all_eventhubs.forEach((eh) => {
+      eh.disconnect();
+    });
+
+    if (!error_message) {
+      d(`Successfully joined peers in organization %s to the channel 
+          ${org_name}  ${channel_name}`);
+
+      // build a response to send back to the REST caller
+      return true;
+    } else {
+      e(`Failed to join all peers to channel. cause:%s ${error_message}`);
+
+      // build a response to send back to the REST caller
+      return false;
+    }
+  };
+
 
   /**
    * Load the list of orderer from the config file

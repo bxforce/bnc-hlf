@@ -145,11 +145,11 @@ export class CLI {
     return channelEngine;
   }
 
-  // static async joinChannel(nameChannel, nameOrg, peers) {
-  //   const channelEngine = new Orchestrator();
-  //   await channelEngine.joinChannel(nameChannel, nameOrg, peers);
-  //   return channelEngine;
-  // }
+   static async joinChannel(nameChannel, nameOrg, peers, deployConfigPath) {
+     const channelEngine = new Orchestrator();
+     await channelEngine.joinChannel(nameChannel, nameOrg, peers, deployConfigPath);
+     return channelEngine;
+   }
   //
   // static async updateChannel(anchortx, namech, nameorg) {
   //   const channelEngine = new Orchestrator();
