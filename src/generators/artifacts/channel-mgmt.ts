@@ -99,7 +99,7 @@ orderers:
       }
 
       // store the connection profile
-      // await this.save();
+      await this.save();
 
       // Initiate the channel entity
       const clientConfig: ClientConfig = { networkProfile: this.filePath };
