@@ -165,7 +165,7 @@ export class ClientHelper {
    * Read the single file within the folder
    * @param dirPath
    */
-  async readSingleFileInDir(dirPath: string) {
+  static async readSingleFileInDir(dirPath: string) {
     try {
       await ensureDir(dirPath);
     } catch (e) {

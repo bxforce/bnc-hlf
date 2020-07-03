@@ -21,7 +21,7 @@ import { d, e } from '../../utils/logs';
 import { ensureDir } from 'fs-extra';
 import { SysWrapper } from '../../utils/sysWrapper';
 import { Orderer } from '../../models/orderer';
-import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
+import { Membership, UserParams } from '../../core/hlf/membership';
 import { ConsensusType, HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import { ClientConfig } from '../../core/hlf/helpers';
@@ -32,6 +32,7 @@ import getOrdererMspPath = Utils.getOrdererMspPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getPropertiesPath = Utils.getPropertiesPath;
 import copyFile = SysWrapper.copyFile;
+import { IEnrollSecretResponse } from '../../utils/data-type';
 
 /**
  * Class responsible to generate Ordering crypto & certificates credentials
@@ -261,7 +262,7 @@ certificateAuthorities:
    * @param mspId
    * @private
    */
-  private async _generateOrdererMspFiles(orderer: Orderer, membership: Membership, mspId: string): Promise<EnrollmentResponse> {
+  private async _generateOrdererMspFiles(orderer: Orderer, membership: Membership, mspId: string): Promise<IEnrollSecretResponse> {
     try {
       // enroll & store orderer crypto credentials
       const params: UserParams = {
@@ -314,7 +315,7 @@ certificateAuthorities:
    * @param mspId
    * @private
    */
-  private async _generateOrdererAdminFiles(membership: Membership, mspId: string): Promise<EnrollmentResponse> {
+  private async _generateOrdererAdminFiles(membership: Membership, mspId: string): Promise<IEnrollSecretResponse> {
     try {
       // enroll & store orderer admin user crypto credentials
       const params: UserParams = {

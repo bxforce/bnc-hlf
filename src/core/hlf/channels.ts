@@ -123,7 +123,7 @@ export class Channels extends ClientHelper {
       // next step is to get the genesis_block from the orderer,
       // the starting point for the channel that we want to join
       let request = {
-        txId: this.client.newTransactionID(true) //get an admin based transactionID
+        txId: this.client.newTransactionID()
       };
 
       const genesisBlock = await channel.getGenesisBlock(request);

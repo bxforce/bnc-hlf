@@ -16,6 +16,7 @@ limitations under the License.
 
 import { Organization } from '../models/organization';
 import { Network } from '../models/network';
+import { IEnrollResponse } from 'fabric-ca-client';
 
 /**
  *
@@ -30,4 +31,18 @@ export class DockerComposeYamlOptions {
     FABRIC_CA_VERSION?: string;
     THIRDPARTY_VERSION?: string;
   };
+}
+
+export class CSR {
+  csr: string;
+  key: string;
+}
+
+export interface IEnrollmentResponse extends IEnrollResponse {
+  keyPem?: string;
+}
+
+export interface IEnrollSecretResponse {
+  enrollment: IEnrollmentResponse;
+  secret?: string;
 }

@@ -301,7 +301,7 @@ export class Orchestrator {
     l('[Start] Creating certificates');
     //const createCaShGenerator = new CreateOrgCertsShGenerator('createCerts.sh', path, options);
     //await createCaShGenerator.buildCertificate();
-    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, options);
+    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, network, options);
     await orgCertsGenerator.buildCertificate();
     l('[End] Certificates created');
 
@@ -376,7 +376,7 @@ export class Orchestrator {
     l(`[Peer Cred]: CA container started (${caStarted}) !!!`);
 
     l(`[Peer Cred]: start create peer crypto & certs credentials...`);
-    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, options);
+    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, network, options);
     const isGenerated = await orgCertsGenerator.buildCertificate();
     l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
 
