@@ -343,6 +343,20 @@ export class Orchestrator {
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
     await createFolder(path);
 
+    // Check if HLF binaries exists
+    const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
+    const binariesFolderExists = await existsFolder(binariesFolderPath);
+    if (!binariesFolderExists) {
+      l('[channel config]: start downloading HLF binaries...');
+      const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
+      if (!isDownloaded) {
+        e('[channel config]: Error while downloading HLF binaries files');
+        return;
+      }
+      l('[channel config]: HLF binaries downloaded !!!');
+    }
+
+
     const isNetworkValid = network.validate();
     if (!isNetworkValid) {
       e('[Peer Cred]: Deployment config file is not valid');
