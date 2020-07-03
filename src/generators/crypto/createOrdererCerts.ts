@@ -32,7 +32,8 @@ import getOrdererMspPath = Utils.getOrdererMspPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getPropertiesPath = Utils.getPropertiesPath;
 import copyFile = SysWrapper.copyFile;
-import { IEnrollSecretResponse } from '../../utils/data-type';
+import { CSR, IEnrollSecretResponse } from '../../utils/data-type';
+import { CertificateCsr } from '../utils/certificateCsr';
 
 /**
  * Class responsible to generate Ordering crypto & certificates credentials
@@ -141,14 +142,15 @@ certificateAuthorities:
       await createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
       await createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, ordAdminRootCert);
 
-      d('Register & Enroll orderers');
+      d('Start register & enroll Orderers...');
       for (const orderer of this.network.ordererOrganization.orderers) {
-        const ordererEnrollment = await this._generateOrdererMspFiles(orderer, membership, ordererMspId);
-        const {
-          key: ordererKey,
-          certificate: ordererCert,
-          rootCertificate: ordererRootCert
-        } = ordererEnrollment.enrollment;
+        // get peer csr
+        const certificateCsr = new CertificateCsr(this.network);
+        const csr = await certificateCsr.generateCsrHost(orderer);
+
+        const ordererEnrollment = await this._generateOrdererMspFiles(orderer, membership, ordererMspId, csr);
+        const ordererCert = ordererEnrollment.enrollment.certificate;
+        const ordererKey = csr ? csr.key : ordererEnrollment.enrollment.key.toBytes();
 
         const baseOrdererPath = `${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${domain}/orderers`;
         const ordererMspPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/msp`;
@@ -156,25 +158,21 @@ certificateAuthorities:
 
         await createFile(`${ordererMspPath}/admincerts/${this.network.ordererOrganization.adminUserFull}-cert.pem`, ordAdminCert);
         await createFile(`${ordererMspPath}/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
-        await createFile(`${ordererMspPath}/keystore/priv_sk`, ordererKey.toBytes());
+        await createFile(`${ordererMspPath}/keystore/priv_sk`, ordererKey);
         await createFile(`${ordererMspPath}/signcerts/${ordererFullName}-cert.pem`, ordererCert);
 
         // Generate TLS file if it's enabled
         if (this.network.ordererOrganization.isSecure || this.network.options.consensus === ConsensusType.RAFT) {
           await copyFile(tlsCaCerts, `${ordererMspPath}/tlscacerts/tlsca.${this.network.ordererOrganization.domainName}-cert.pem`);
 
-          const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret);
-          const {
-            key: ordererTlsKey,
-            certificate: ordererTlsCertificate,
-            rootCertificate: ordererTlsRootCertificate
-          } = ordererTlsEnrollment;
+          const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret, csr);
+          const ordererTlsCertificate = ordererTlsEnrollment.certificate;
+          const ordererTlsKey = csr ? csr.key : ordererTlsEnrollment.key.toBytes();
 
           const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
           await copyFile(tlsCaCerts, `${ordererTlsPath}/ca.crt`);
-          // await createFile(`${ordererTlsPath}/ca.crt`, ordererTlsRootCertificate);
           await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
-          await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey.toBytes());
+          await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey);
         }
       }
       d('Register & Enroll Organization orderers done !!!');
@@ -260,9 +258,10 @@ certificateAuthorities:
    * @param orderer
    * @param membership
    * @param mspId
+   * @param csr
    * @private
    */
-  private async _generateOrdererMspFiles(orderer: Orderer, membership: Membership, mspId: string): Promise<IEnrollSecretResponse> {
+  private async _generateOrdererMspFiles(orderer: Orderer, membership: Membership, mspId: string, csr?: CSR): Promise<IEnrollSecretResponse> {
     try {
       // enroll & store orderer crypto credentials
       const params: UserParams = {
@@ -272,7 +271,7 @@ certificateAuthorities:
         maxEnrollments: MAX_ENROLLMENT_COUNT,
         affiliation: ''
       };
-      const ordererEnrollmentResponse = await membership.addUser(params, mspId);
+      const ordererEnrollmentResponse = await membership.addUser(params, mspId, csr);
       d(`Orderer ${orderer.name} is enrolled successfully`);
 
       return ordererEnrollmentResponse;
@@ -288,9 +287,10 @@ certificateAuthorities:
    * @param orderer
    * @param membership
    * @param secret
+   * @param csr
    * @private
    */
-  private async _generateOrdererTlsFiles(orderer: Orderer, membership: Membership, secret: string): Promise<IEnrollResponse> {
+  private async _generateOrdererTlsFiles(orderer: Orderer, membership: Membership, secret: string, csr?: CSR): Promise<IEnrollResponse> {
     try {
       // enroll & store peer crypto credentials
       const request: IEnrollmentRequest = {
@@ -298,7 +298,7 @@ certificateAuthorities:
         enrollmentSecret: secret,
         profile: 'tls'
       };
-      const ordererTlsEnrollment = await membership.enrollTls(request);
+      const ordererTlsEnrollment = await membership.enrollTls(request, csr);
       d(`Orderer TLS ${orderer.name} is enrolled successfully`);
 
       return ordererTlsEnrollment;
