@@ -43,7 +43,7 @@ services:
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${this.options.composeNetwork}
       - FABRIC_LOGGING_SPEC=INFO
       #- FABRIC_LOGGING_SPEC=DEBUG
-      - CORE_PEER_TLS_ENABLED= ${this.options.org.isSecure}
+      - CORE_PEER_TLS_ENABLED=${this.options.org.isSecure}
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_PROFILE_ENABLED=true

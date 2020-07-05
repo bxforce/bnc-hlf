@@ -18,13 +18,10 @@ import * as FabricCAServices from 'fabric-ca-client';
 import { IEnrollmentRequest, IEnrollResponse, IRegisterRequest, TLSOptions } from 'fabric-ca-client';
 import { ClientConfig, ClientHelper } from './helpers';
 import { d, e } from '../../utils/logs';
+import { CSR, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/data-type';
 
 export type UserParams = IRegisterRequest;
 export type AdminParams = IEnrollmentRequest;
-export interface EnrollmentResponse {
-  enrollment: IEnrollResponse;
-  secret?: string;
-}
 
 /**
  * Class responsible to create user & admin accounts
@@ -35,9 +32,6 @@ export interface EnrollmentResponse {
 export class Membership extends ClientHelper {
   /* instance of the CA service*/
   public ca: FabricCAServices;
-
-  // TODO should we create a singleton or not ??
-  // No need if case of CLI (no meaning)
 
   /**
    * Constructor
@@ -63,7 +57,7 @@ export class Membership extends ClientHelper {
 
     // read the ca pem certificate
     const caTlsCertPath = caInfo.tlsCACerts.path;
-    const options = isSecure ? await this._getCATlsOptions(caTlsCertPath) : null;
+    const options = isSecure ? await Membership._getCATlsOptions(caTlsCertPath) : null;
 
     this.ca = new FabricCAServices(caUrl, options, caname);
   }
@@ -71,7 +65,7 @@ export class Membership extends ClientHelper {
   /**
    * Enroll the admin account
    */
-  async enrollCaAdmin(orgMspId?: string): Promise<IEnrollResponse> {
+  async enrollCaAdmin(orgMspId?: string): Promise<IEnrollmentResponse> {
     try {
       // check if the admin exists & enrolled in the Wallet
       const adminIdentity = await this.wallet.getIdentity(this.clientConfig.admin.name);
@@ -105,9 +99,10 @@ export class Membership extends ClientHelper {
   /**
    *
    * @param request
+   * @param csrObj
    * @param adminId
    */
-  async enrollTls(request: IEnrollmentRequest, adminId: string = this.clientConfig.admin.name): Promise<IEnrollResponse | undefined> {
+  async enrollTls(request: IEnrollmentRequest, csrObj?: CSR, adminId: string = this.clientConfig.admin.name): Promise<IEnrollmentResponse | undefined> {
     try {
       const identity = await this.wallet.getIdentity(request.enrollmentID);
       if(!identity) {
@@ -123,7 +118,16 @@ export class Membership extends ClientHelper {
         return null;
       }
 
-      const enrollment = await this.ca.enroll(request);
+      // update request if csr provided
+      if(csrObj && csrObj.csr) {
+        request.csr = csrObj.csr;
+      }
+
+      const enrollment = await this.ca.enroll(request) as IEnrollmentResponse;
+      if(csrObj && csrObj.csr) {
+        enrollment.keyPem = csrObj.key;
+      }
+
       d(`TLS enrolled for user ${request.enrollmentID}`);
 
       return enrollment;
@@ -137,8 +141,9 @@ export class Membership extends ClientHelper {
    * Add a new user account
    * @param params
    * @param mspId
+   * @param csrObj
    */
-  async addUser(params: UserParams, mspId: string): Promise<EnrollmentResponse | undefined> {
+  async addUser(params: UserParams, mspId: string, csrObj?: CSR): Promise<IEnrollSecretResponse | undefined> {
     try {
       // check if the user exists
       const userIdentity = await this.wallet.getIdentity(params.enrollmentID);
@@ -162,12 +167,18 @@ export class Membership extends ClientHelper {
       // register the user, enroll the user and import into the wallet
       // @ts-ignore
       const secret = await this.ca.register(params, adminUser);
-      const enrollment = await this.ca.enroll({ enrollmentSecret: secret, enrollmentID: params.enrollmentID });
+      const enrollment = await this.ca.enroll({
+        enrollmentSecret: secret,
+        enrollmentID: params.enrollmentID,
+        csr: csrObj?.csr
+      }) as IEnrollmentResponse;
 
-      const { key, certificate } = enrollment;
+      if(csrObj && csrObj.key) {
+        enrollment.keyPem = csrObj.key;
+      }
 
       // store the new identity in the wallet
-      await this.wallet.addIdentity(params.enrollmentID, this.client.getMspid(), key, certificate);
+      await this.wallet.addIdentity(params.enrollmentID, this.client.getMspid(), csrObj?.key ?? enrollment.key, enrollment.certificate);
       d(`Successfully add user "${params.enrollmentID} and imported it into the wallet`);
 
       return { enrollment, secret };
@@ -182,8 +193,8 @@ export class Membership extends ClientHelper {
    * @param caTlsCertPath
    * @private
    */
-  private async _getCATlsOptions(caTlsCertPath: string): Promise<TLSOptions> {
-    const caTlsCertData = await this.readSingleFileInDir(caTlsCertPath);
+  private static async _getCATlsOptions(caTlsCertPath: string): Promise<TLSOptions> {
+    const caTlsCertData = await ClientHelper.readSingleFileInDir(caTlsCertPath);
     const caRoots = Buffer.from(caTlsCertData);
 
     return {

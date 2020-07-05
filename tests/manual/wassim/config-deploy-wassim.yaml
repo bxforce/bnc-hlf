@@ -1,7 +1,7 @@
 chains:
   template_folder: "/home/wassim/hyperledger-fabric-network"
   fabric: "2.0.0"
-  tls: false
+  tls: true
   consensus: "raft"
   db: "couchdb"
   organisations:

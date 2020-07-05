@@ -55,7 +55,7 @@ ${this.options.org.peers
       - CORE_PEER_ID=${peer.name}.${this.options.org.fullName}
       - CORE_PEER_ADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[0]}
       - CORE_PEER_LISTENADDRESS=0.0.0.0:${peer.options.ports[0]}
-      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.example.com:${peer.options.ports[1]}
+      - CORE_PEER_CHAINCODEADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[1]}
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:${peer.options.ports[1]}
       - CORE_PEER_GOSSIP_BOOTSTRAP=${this.options.org.gossipPeer(index)}
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peer.name}.${this.options.org.fullName}:${peer.options.ports[0]}

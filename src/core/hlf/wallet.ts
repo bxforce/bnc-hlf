@@ -57,10 +57,11 @@ export class WalletStore {
      * @param certificate
      */
     async addIdentity(id, mspId, key, certificate): Promise<void> {
+        const privateKey = typeof key === 'string' ? key : key.toBytes();
         const x509Identity: X509Identity = {
             credentials: {
                 certificate,
-                privateKey: key.toBytes()
+                privateKey
             },
             mspId,
             type: 'X.509'

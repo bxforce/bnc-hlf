@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { ChannelRequest, Orderer } from 'fabric-client';
+import * as util from 'util';
+import { ChannelRequest, Orderer, Peer } from 'fabric-client';
 import { ensureFile } from 'fs-extra';
 import * as fs from 'fs';
 import { ClientConfig, ClientHelper } from './helpers';
-import { d, e } from '../../utils/logs';
-import Client = require('fabric-client');
+import { d, e, l } from '../../utils/logs';
 
 /**
  * Class responsible to manage HLF channel entity. Support currently:
@@ -31,6 +31,7 @@ import Client = require('fabric-client');
  */
 export class Channels extends ClientHelper {
   public orderers: Orderer[] = [];
+  public peers: Peer[] = [];
 
   /**
    * Constructor
@@ -49,6 +50,8 @@ export class Channels extends ClientHelper {
 
     // build the list of configured orderers
     await this._loadOrderersFromConfig();
+    //build list of peers
+    await this._loadPeersFromConfig();
   }
 
   /**
@@ -96,13 +99,64 @@ export class Channels extends ClientHelper {
   }
 
   /**
+   *
+   * @param channelName
+   * @param orgMspId
+   * @param peers
+   */
+  async joinChannel(channelName: string, orgMspId: string, peers: string[]): Promise<boolean> {
+    try {
+      d('Calling peers in organization "%s" to join the channel');
+      d(`Successfully got the fabric client for the organization ${orgMspId}`);
+
+      let channel = this.client.newChannel(channelName);
+      channel.addOrderer(this.orderers[0]);
+      for(const peer of this.peers) {
+        channel.addPeer(peer, orgMspId);
+      }
+
+      if (!channel) {
+        e('Error retrieving the channel instance');
+        return false;
+      }
+
+      // next step is to get the genesis_block from the orderer,
+      // the starting point for the channel that we want to join
+      let request = {
+        txId: this.client.newTransactionID()
+      };
+
+      const genesisBlock = await channel.getGenesisBlock(request);
+
+      let joinRequest = {
+        targets: this.peers,
+        txId: this.client.newTransactionID(),
+        block: genesisBlock
+      };
+      const results = await channel.joinChannel(joinRequest);
+
+      d(util.format('Join Channel R E S P O N S E : %j', results));
+      if (results[0] && results[0].response && results[0].response.status === 200) {
+        l(util.format('Successfully joined peers in organization %s to the channel \'%s\'', orgMspId, channelName));
+        return true;
+      } else {
+        e(' Failed to join channel');
+        return false;
+      }
+    } catch (error) {
+      e(`Failed to join channel due to error:  ${error}`);
+      return false;
+    }
+  }
+
+  /**
    * Load the list of orderer from the config file
    */
   private async _loadOrderersFromConfig(): Promise<void> {
     // @ts-ignore
     const { orderers } = this.config.networkProfile;
-    for(const key in orderers) {
-      if(key) {
+    for (const key in orderers) {
+      if (key) {
         // const url = orderers[key].url;
         // const sslTargetOverride = orderers[key].grpcOptions[' ssl-target-name-override'];
         //
@@ -123,6 +177,37 @@ export class Channels extends ClientHelper {
         this.orderers.push(orderer);
       }
     }
+  }
+
+  /**
+   * Load the list of peers from connection profile
+   * @private
+   */
+  private async _loadPeersFromConfig(): Promise<void> {
+    // @ts-ignore
+    const { peers } = this.config.networkProfile;
+    for (const key in peers) {
+      if (key) {
+        const peer = this.client.getPeer(key);
+
+        // store the orderer instance in the class field
+        this.peers.push(peer);
+      }
+    }
+  }
+
+  /**
+   *
+   * @private
+   * @param peersName
+   */
+  private async _getPeers(peersName: string[]): Promise<Peer[]> {
+    const targets: Peer[] = [];
+    for (const name of peersName) {
+      targets.push(this.client.getPeer(name));
+    }
+
+    return targets;
   }
 
 }

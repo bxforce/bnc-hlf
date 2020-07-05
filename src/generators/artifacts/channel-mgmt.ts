@@ -25,7 +25,9 @@ import existsPath = SysWrapper.existsPath;
 import { Utils } from '../../utils/utils';
 import getPropertiesPath = Utils.getPropertiesPath;
 import { X509Identity } from 'fabric-network';
+import { User } from '../../models/user';
 import { DEFAULT_CA_ADMIN } from '../../utils/constants';
+import getPeerMspPath = Utils.getPeerMspPath;
 
 /**
  * Class responsible to create the hyperledger fabric channel instance
@@ -43,6 +45,18 @@ client:
     path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
     cryptoStore:
       path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
+
+peers:
+${this.network.organizations[0].peers.map((peer, index) => `
+  ${peer.name}.${this.network.organizations[0].fullName}:
+    url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].engineHost(peer.options.engineName)}:${peer.options.ports[0]}
+    grpcOptions:
+      ssl-target-name-override: ${peer.name}.${this.network.organizations[0].fullName}
+      request-timeout: 120001
+      grpc.keepalive_time_ms: 600000
+    tlsCACerts:
+      path: ${getPeerMspPath(this.network.options.networkConfigPath, this.network.organizations[0], peer)}/tlscacerts/tlsca.${this.network.organizations[0].fullName}-cert.pem
+`).join('')}
 
 orderers:
     ${this.network.ordererOrganization.orderers[0].name}.${this.network.ordererOrganization.domainName}:
@@ -94,7 +108,6 @@ orderers:
 
       // load the admin user into the client
       const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
-      // const adminLoaded = await this._loadAdminAccount(channelClient);
       if(!adminLoaded) {
         e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
         return false;
@@ -115,38 +128,48 @@ orderers:
     }
   }
 
-  private async _loadAdminAccount(channel: Channels): Promise<boolean> {
+  /**
+   *
+   * @param channelName
+   * @param peers
+   */
+  async joinChannel(channelName: string, peers: string[]): Promise<boolean> {
     try {
-      // check if admin account exist on wallet
-      const identity = await channel.wallet.getIdentity(this.admin.name);
-      if(identity.type !== 'X.509') {
-        e(`Identity type in the current wallet not supported (type ${identity.type})`);
+      l(`Start channel (${channelName}) join...`);
+
+      // Initiate the channel entity
+      const clientConfig: ClientConfig = { networkProfile: this.filePath };
+      const channelClient = new Channels(clientConfig);
+      await channelClient.init();
+
+      // load the admin user into the client
+      const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+      if(!adminLoaded) {
+        e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
         return false;
       }
 
-      // cast the identity as X509 identity
-      const adminIdentity: X509Identity = identity as X509Identity;
-      const adminKey = adminIdentity.credentials.privateKey;
-      const adminCert = adminIdentity.credentials.certificate;
+      // create the provided channel
+      const isJoined = await channelClient.joinChannel(channelName, this.network.organizations[0].mspName, peers);
+      if(!isJoined) {
+        e(`Error channel (${channelName}) creation !!!`);
+        return false;
+      }
 
-      // Create user context
-      const user = await channel.client.createUser({
-        username: 'peer' + this.network.organizations[0].name + 'Admin',
-        mspid: this.network.organizations[0].mspName,
-        cryptoContent: {
-          privateKeyPEM: adminKey,
-          signedCertPEM: adminCert
-        },
-        skipPersistence: false
-      });
-
+      l(`Channel (${channelName}) creation successfully !!!`);
       return true;
-    } catch(err) {
+    } catch (err) {
       e(err);
       return false;
     }
   }
 
+  /**
+   * load the organization admin user into client context to operate channel task
+   * @param channel
+   * @param organizationName
+   * @private
+   */
   private async _loadOrgAdminAccount(channel: Channels, organizationName: string): Promise<boolean> {
     try {
       // check if org admin account exist on wallet

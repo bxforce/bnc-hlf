@@ -90,6 +90,11 @@ export class Organization {
     return `${this.ca.name}.${this.name}`;
   }
 
+  get caCn(): string {
+    return `${this.caName}.${this.fullName}`;
+    // return `${this.caName}.tls`;
+  }
+
   /**
    * return the peer full name
    * @param pIndex

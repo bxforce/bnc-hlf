@@ -15,12 +15,12 @@ limitations under the License.
 */
 
 import { ensureDir } from 'fs-extra';
-import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { CSR, DockerComposeYamlOptions, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/data-type';
 import { d, e } from '../../utils/logs';
 import { SysWrapper } from '../../utils/sysWrapper';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
-import { EnrollmentResponse, Membership, UserParams } from '../../core/hlf/membership';
+import { Membership, UserParams } from '../../core/hlf/membership';
 import { HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
 import { Peer } from '../../models/peer';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
@@ -33,6 +33,8 @@ import getPropertiesPath = Utils.getPropertiesPath;
 import copyFile = SysWrapper.copyFile;
 import getOrganizationUsersPath = Utils.getOrganizationUsersPath;
 import { Organization } from '../../models/organization';
+import { CertificateCsr } from '../utils/certificateCsr';
+import { Network } from '../../models/network';
 
 export interface AdminCAAccount {
   name: string;
@@ -74,6 +76,7 @@ certificateAuthorities:
 
   constructor(filename: string,
               path: string,
+              private network: Network,
               private options?: DockerComposeYamlOptions,
               private admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }) {
     super(filename, getPropertiesPath(path));
@@ -104,12 +107,7 @@ certificateAuthorities:
 
       // Generate & store admin certificate
       d('Enroll CA Registrar');
-      const caAdminEnrollment = await this._generateCAAdminOrgMspFiles(membership, orgMspId);
-      // const {
-      //   key: caAdminKey,
-      //   certificate: caAdminCertificate,
-      //   rootCertificate: caAdminRootCertificate
-      // } = caAdminEnrollment;
+      await this._generateCAAdminOrgMspFiles(membership, orgMspId);
       d('Enroll CA Registrar done !!!');
 
       // copy ca tls certs if secure enabled
@@ -149,32 +147,36 @@ certificateAuthorities:
       d('Start register & enroll Organization peers...');
       for (const peer of this.options.org.peers) {
         const peerMspPath = getPeerMspPath(this.options.networkRootPath, this.options.org, peer);
-        const peerEnrollment = await this._generatePeerMspFiles(peer, membership, orgMspId);
-        const {
-          key: peerKey,
-          certificate: peerCertificate,
-          rootCertificate: peerRootCertificate
-        } = peerEnrollment.enrollment;
+
+        // get peer csr
+        const certificateCsr = new CertificateCsr(this.network);
+        const csr = await certificateCsr.generateCsrHost(peer);
+
+        const peerEnrollment = await this._generatePeerMspFiles(peer, membership, orgMspId, csr);
+        const peerCertificate = peerEnrollment.enrollment.certificate;
+        const peerKeyPem =  csr ? csr.key : peerEnrollment.enrollment.key.toBytes();
 
         // Store all generated files
         await createFile(`${peerMspPath}/admincerts/Admin@${this.options.org.fullName}-cert.pem`, orgAdminCertificate);
         await createFile(`${peerMspPath}/cacerts/ca.${this.options.org.fullName}-cert.pem`, orgAdminRootCertificate);
-        await createFile(`${peerMspPath}/keystore/priv_sk`, peerKey.toBytes());
+        await createFile(`${peerMspPath}/keystore/priv_sk`, peerKeyPem);
         await createFile(`${peerMspPath}/signcerts/${peer.name}.${this.options.org.fullName}-cert.pem`, peerCertificate);
 
         // Generate TLS if it'w enabled
         if(this.options.org.isSecure) {
-          const peerTlsEnrollment = await this._generatePeerTlsFiles(peer, membership, peerEnrollment.secret);
+          await copyFile(fromTlsCaCerts, `${peerMspPath}/tlscacerts/tlsca.${this.options.org.fullName}-cert.pem`);
+
+          const peerTlsEnrollment = await this._generatePeerTlsFiles(peer, membership, peerEnrollment.secret, csr);
           const {
-            key: peerTlsKey,
             certificate: peerTlsCertificate,
             rootCertificate: peerTlsRootCertificate
           } = peerTlsEnrollment;
+          const peerTlsKey = csr ? csr.key : peerTlsEnrollment.key.toBytes();
 
           const peerTlsPath = getPeerTlsPath(this.options.networkRootPath, this.options.org, peer);
           await createFile(`${peerTlsPath}/ca.crt`, peerTlsRootCertificate);
           await createFile(`${peerTlsPath}/server.crt`, peerTlsCertificate);
-          await createFile(`${peerTlsPath}/server.key`, peerTlsKey.toBytes());
+          await createFile(`${peerTlsPath}/server.key`, peerTlsKey);
         }
       }
       d('Register & Enroll Organization peers done !!!');
@@ -295,9 +297,10 @@ NodeOUs:
    * @param peer
    * @param membership
    * @param mspId
+   * @param csr
    * @private
    */
-  private async _generatePeerMspFiles(peer: Peer, membership: Membership, mspId: string): Promise<EnrollmentResponse> {
+  private async _generatePeerMspFiles(peer: Peer, membership: Membership, mspId: string, csr?: CSR): Promise<IEnrollSecretResponse> {
     try {
       // add config.yaml file
       await this.generateConfigOUFile(`${getPeerMspPath(this.options.networkRootPath, this.options.org, peer)}/config.yaml`);
@@ -310,7 +313,7 @@ NodeOUs:
         maxEnrollments: MAX_ENROLLMENT_COUNT,
         affiliation: ''
       };
-      const peerEnrollmentResponse = await membership.addUser(params, mspId);
+      const peerEnrollmentResponse = await membership.addUser(params, mspId, csr);
       d(`Peer ${peer.name} is enrolled successfully`);
       return peerEnrollmentResponse;
     } catch (err) {
@@ -326,17 +329,18 @@ NodeOUs:
    * @param peer
    * @param membership
    * @param secret
+   * @param csr
    * @private
    */
-  private async _generatePeerTlsFiles(peer: Peer, membership: Membership, secret: string): Promise<IEnrollResponse> {
+  private async _generatePeerTlsFiles(peer: Peer, membership: Membership, secret: string, csr?: CSR): Promise<IEnrollmentResponse> {
     try {
       // enroll & store peer crypto credentials
       const request: IEnrollmentRequest = {
         enrollmentID: `${peer.name}.${this.options.org.fullName}`,
         enrollmentSecret: secret,
-        profile: 'tls'
+        profile: 'tls',
       };
-      const peerTlsEnrollment = await membership.enrollTls(request);
+      const peerTlsEnrollment = await membership.enrollTls(request, csr);
       d(`Peer TLS ${peer.name} is enrolled successfully`);
 
       return peerTlsEnrollment;
@@ -354,7 +358,7 @@ NodeOUs:
    * @param mspId
    * @private
    */
-  private async _generateAdminOrgFiles(organization: Organization, membership: Membership, mspId: string): Promise<EnrollmentResponse> {
+  private async _generateAdminOrgFiles(organization: Organization, membership: Membership, mspId: string): Promise<IEnrollSecretResponse> {
     try {
       const organizationUserPath = getOrganizationUsersPath(this.options.networkRootPath, this.options.org);
       const mspAdminPath = `${organizationUserPath}/${this.options.org.adminUserFull}/msp`;
