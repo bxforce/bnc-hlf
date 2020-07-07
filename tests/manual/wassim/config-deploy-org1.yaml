@@ -6,23 +6,33 @@ chains:
   db: "couchdb"
   organisations:
     - organisation: "org1"
+      orgIndex: 0
       engineOrg: "engineOrg1"
       domain_name: "bnc.com"
       ca:
         name: "ca1"
+        port: 7054
         engine_name: "host2"
       orderers:
         - orderer: "orderer0"
+          port: 7050
           engine_name: "host1"
         - orderer: "orderer1"
+          port: 8050
           engine_name: "host1"
         - orderer: "orderer2"
+          port: 9050
           engine_name: "host1"
       peers:
         - peer: "peer0"
+          port: 7051
           engine_name: "host1"
         - peer: "peer1"
+          port: 8051
           engine_name: "host2"
+        - peer: "peer2"
+          port: 9051
+          engine_name: "host1"
 engines:
   - engine: "engineOrg1"
     hosts:
@@ -36,10 +46,3 @@ engines:
         url: "127.0.0.1"
         port: 2375
         settings: [ "default" ]
-#  - engine: "engineOrg2"
-#    hosts:
-#      - host: "host1"
-#        type: "docker"
-#        url: "127.0.0.1"
-#        port: 2375
-#        settings: [ "default" ]

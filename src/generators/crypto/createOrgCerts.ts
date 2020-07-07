@@ -63,7 +63,7 @@ client:
 
 certificateAuthorities:
   ${this.options.org.caName}:
-    url: http${this.options.org.isSecure ? 's' : ''}://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.ports}
+    url: http${this.options.org.isSecure ? 's' : ''}://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.port}
     httpOptions:
       verify: false
     tlsCACerts:

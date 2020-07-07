@@ -45,7 +45,7 @@ services:
   ${this.network.ordererOrganization.caName}:
     container_name: ${this.network.ordererOrganization.caName}
     image: hyperledger/fabric-ca:${this.network.options.hyperledgerCAVersion}
-    command: sh -c 'fabric-ca-server start -d -b ${this.network.ordererOrganization.ca.options.user}:${this.network.ordererOrganization.ca.options.password} --port ${this.network.ordererOrganization.ca.options?.ports} --cfg.identities.allowremove'
+    command: sh -c 'fabric-ca-server start -d -b ${this.network.ordererOrganization.ca.options.user}:${this.network.ordererOrganization.ca.options.password} --port ${this.network.ordererOrganization.ca.options?.port} --cfg.identities.allowremove'
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
       - FABRIC_CA_SERVER_CA_NAME=${this.network.ordererOrganization.caName}
@@ -54,7 +54,7 @@ services:
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
     ports:
-      - "${this.network.ordererOrganization.ca.options.ports}:${this.network.ordererOrganization.ca.options.ports}"
+      - "${this.network.ordererOrganization.ca.options.port}:${this.network.ordererOrganization.ca.options.port}"
     volumes:
       - ${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}:/tmp/hyperledger/fabric-ca
     networks:

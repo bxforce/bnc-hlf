@@ -1,0 +1,35 @@
+genesis:
+  template_folder: "/home/wassim/hyperledger-fabric-network"
+  consensus: "raft"
+  ordererDomain: "bnc.com"
+  ca:
+    url: "127.0.0.1"
+    port: 9054
+  organisations:
+    - organisation: "org1"
+      domain_name: "bnc.com"
+      orderers:
+        - orderer: "orderer0"
+          host_name: "orderer0.bnc.com"
+          port: 7050
+        - orderer: "orderer1"
+          host_name: "orderer1.bnc.com"
+          port: 8050
+        - orderer: "orderer2"
+          host_name: "orderer2.bnc.com"
+          port: 9050
+      anchorPeer:
+        host_name: "peer0.org1.bnc.com"
+        port: 7051
+    - organisation: "org2"
+      domain_name: "bnc.com"
+      orderers:
+        - orderer: "orderer3"
+          host_name: "orderer3.bnc.com"
+          port: 10050
+        - orderer: "orderer4"
+          host_name: "orderer4.bnc.com"
+          port: 11050
+      anchorPeer:
+        host_name: "peer0.org2.bnc.com"
+        port: 10051

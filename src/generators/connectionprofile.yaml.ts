@@ -81,7 +81,7 @@ ${this.options.org.peers
       
 certificateAuthorities:
   ${this.options.org.caName}:
-     url: http://localhost:${this.options.org.ca.options.ports}
+     url: http://localhost:${this.options.org.ca.options.port}
      httpOptions:
        verify: false
      registrar:

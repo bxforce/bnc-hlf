@@ -356,7 +356,6 @@ export class Orchestrator {
       l('[channel config]: HLF binaries downloaded !!!');
     }
 
-
     const isNetworkValid = network.validate();
     if (!isNetworkValid) {
       e('[Peer Cred]: Deployment config file is not valid');
@@ -380,7 +379,7 @@ export class Orchestrator {
     l('[Peer Cred]: docker engine configured !!!');
 
     l('[Peer Cred]: start CA container...');
-    const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, network, options, engine);
+    const ca = new DockerComposeCaGenerator(`docker-compose-ca-${network.organizations[0].name}.yaml`, path, network, options, engine);
     await ca.save();
     const caStarted = await ca.startOrgCa();
     if (!caStarted) {
@@ -390,7 +389,7 @@ export class Orchestrator {
     l(`[Peer Cred]: CA container started (${caStarted}) !!!`);
 
     l(`[Peer Cred]: start create peer crypto & certs credentials...`);
-    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, network, options);
+    const orgCertsGenerator = new OrgCertsGenerator(`connection-profile-ca-${network.organizations[0].name}-client.yaml`, path, network, options);
     const isGenerated = await orgCertsGenerator.buildCertificate();
     l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
 
@@ -715,7 +714,7 @@ export class Orchestrator {
     const network: Network = await Orchestrator._parse(deploymentConfigPath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
-    const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+    const channelGenerator = new ChannelGenerator(`connection-profile-create-channel-${network.organizations[0].name}.yaml`, path, network);
     const created = await channelGenerator.setupChannel(channelName, `${getArtifactsPath(path)}/${channelName}.tx`);
 
     l(`[Channel] - Exit create channel request (${created}) !!!`);
@@ -732,7 +731,7 @@ export class Orchestrator {
      const network: Network = await Orchestrator._parse(deploymentConfigPath);
      const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
-     const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+     const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
      const joined = await channelGenerator.joinChannel(channelName, peers);
 
      l(`[Channel] - Exit create channel request (${joined}) !!!`);

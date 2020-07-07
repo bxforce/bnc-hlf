@@ -137,6 +137,9 @@ orderers:
     try {
       l(`Start channel (${channelName}) join...`);
 
+      // store the connection profile
+      await this.save();
+
       // Initiate the channel entity
       const clientConfig: ClientConfig = { networkProfile: this.filePath };
       const channelClient = new Channels(clientConfig);
