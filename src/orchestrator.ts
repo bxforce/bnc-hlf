@@ -515,8 +515,9 @@ export class Orchestrator {
    * @param deployConfigPath the deployment configuration file
    * @param deleteNetwork
    * @param deleteVolume
+   * @param forceRemove
    */
-  async stopBlockchainContainer(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean): Promise<boolean> {
+  async stopBlockchainContainer(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean, forceRemove: boolean): Promise<boolean> {
     try {
       const network: Network = await Orchestrator._parse(deployConfigPath);
 
@@ -539,7 +540,7 @@ export class Orchestrator {
         for(const engine of org.engines) {
           const docker = new DockerEngine({ socketPath: '/var/run/docker.sock' }); // TODO configure local docker remote engine
           // const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-          const containerDeleted = await docker.stopContainerList(services, false);
+          const containerDeleted = await docker.stopContainerList(services, forceRemove);
           if(!containerDeleted) {
             e('Error while deleting the docker container for peer & orderer');
             return false;

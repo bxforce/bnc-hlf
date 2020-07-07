@@ -140,10 +140,10 @@ const tasks = {
     //l('config file: ' + config;
   },
 
-  async stop(deployConfigFilePath: string) {
+  async stop(deployConfigFilePath: string, forceRemove: boolean) {
     l('Request stop command ...');
 
-    await CLI.stopBlockchain(deployConfigFilePath, false, false);
+    await CLI.stopBlockchain(deployConfigFilePath, false, false, forceRemove);
 
     l('Blockchain stopped !!!');
   },
@@ -203,8 +203,9 @@ program
   .command('stop')
   .description('stop the blockchain')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('-r, --rmi', 'remove docker containers')
   .action(async (cmd: any) => {
-    await tasks.stop(cmd.config);
+    await tasks.stop(cmd.config, cmd.rmi);
   });
 
 const channelCmd = program.command('channel');

@@ -61,10 +61,11 @@ export class CLI {
    * @param deployConfigPath
    * @param deleteNetwork
    * @param deleteVolume
+   * @param forceRemove
    */
-  static async stopBlockchain(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean) {
+  static async stopBlockchain(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean, forceRemove: boolean) {
     const orchEngine = new Orchestrator();
-    await orchEngine.stopBlockchainContainer(deployConfigPath, deleteNetwork, deleteVolume);
+    await orchEngine.stopBlockchainContainer(deployConfigPath, deleteNetwork, deleteVolume, forceRemove);
     return orchEngine;
   }
 
