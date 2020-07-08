@@ -54,7 +54,10 @@ Organizations:
             Type: Signature
             Rule: "OR('${this.network.ordererOrganization.mspName}.admin')"
     OrdererEndpoints:
-        - ${this.network.ordererOrganization.orderers[0].options.host}:${this.network.ordererOrganization.orderers[0].options.ports[0]}
+${this.network.organizations.map(org => `    
+        - ${org.orderers[0].options.host}:${org.orderers[0].options.ports[0]}
+`).join('')}
+        
   
 ${this.network.organizations.map(org => `
   - &${org.name}
