@@ -22,7 +22,7 @@ import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
 import { Ca } from '../models/ca';
 import { Network } from '../models/network';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
+import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
 import { OrdererOrganization } from '../models/ordererOrganization';
 
 /**
@@ -58,8 +58,8 @@ export class DeploymentParser extends BaseParser {
     // Set engine for every organization
     organizations.map(organization => {
       organization.engines = engines.filter(eng => eng.orgName === organization.engineOrgName);
+      organization.expandEngine(true, true);
     });
-
     l('Finish Parsing configuration file');
 
     // build the network instance
@@ -115,29 +115,30 @@ export class DeploymentParser extends BaseParser {
     const { template_folder, fabric, tls, consensus, db, organisations } = yamlOrganisations;
 
     organisations.forEach(org => {
-      const { organisation, engineOrg, domain_name, ca, orderers, peers } = org;
+      const { organisation, orgIndex = 0, engineOrg, domain_name, ca, orderers, peers } = org;
 
       // parse CA
-      const { name: caName, engine_name: caEngineName } = ca;
+      const { name: caName, engine_name: caEngineName, port: caPort } = ca;
       const caEntity = new Ca(caName, {
         engineName: caEngineName,
-        ports: '7054',
+        port: caPort ?? CA_DEFAULT_PORT,
         number: 0,
-        user: 'admin',
-        password: 'adminpw'
+        user: DEFAULT_CA_ADMIN.name,
+        password: DEFAULT_CA_ADMIN.password
       });
 
       // parse & store orderers
       const ords = [];
       orderers.forEach((ord, index) => {
-        const { orderer, engine_name: ordererEngineName } = ord;
+        const { orderer, engine_name: ordererEngineName, port: ordererPort } = ord;
         ords.push(
           new Orderer(orderer, {
             engineName: ordererEngineName,
             consensus,
-            ports: [`${index*1000+ORDERER_DEFAULT_PORT}`],
+            ports: [
+              ordererPort ?? `${index*1000+ORDERER_DEFAULT_PORT}`
+            ],
             number: index
-            // TODO set the host based on engine name
           })
         );
       });
@@ -145,7 +146,7 @@ export class DeploymentParser extends BaseParser {
       // peer parsing
       const parsedPeers: Peer[] = [];
       peers.forEach((pe, index) => {
-        const { peer: peerName, engine_name: peerEngineName } = pe;
+        const { peer: peerName, engine_name: peerEngineName, port: peerPort } = pe;
 
         // TODO check if db leveldb or couchdb
 
@@ -153,8 +154,12 @@ export class DeploymentParser extends BaseParser {
           new Peer(peerName, {
             engineName: peerEngineName,
             number: index,
-            ports: [`${index*1000+PEER_DEFAULT_PORT.event}`, `${index*1000+PEER_DEFAULT_PORT.event_chaincode}`, `${index*1000+PEER_DEFAULT_PORT.event_hub}`],
-            couchDbPort: `5${index}84`,
+            ports: [
+              peerPort ?? `${index*1000+PEER_DEFAULT_PORT.event}`,
+              peerPort+1 ?? `${index*1000+PEER_DEFAULT_PORT.event_chaincode}`,
+              peerPort+2 ?? `${index*1000+PEER_DEFAULT_PORT.event_hub}`
+            ],
+            couchDbPort: `${5+orgIndex}${index}84`,
             couchDB: db
           })
         );

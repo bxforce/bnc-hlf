@@ -199,8 +199,6 @@ export class DockerEngine {
     l(`Docker network (${options.Name}) already exists`);
   }
 
-  // TODO stop one container running
-
   getNetwork(id: string): DockerNetwork {
     let network = new DockerNetwork(this);
     network.setNetwork(this.engine.getNetwork(id));

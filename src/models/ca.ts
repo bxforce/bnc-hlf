@@ -17,10 +17,10 @@ limitations under the License.
 export class CaOptions {
   engineName?: string;
   number?: number;
-  ports?: '7054';
+  port?: number;
   host?: string;
-  user?: 'admin';
-  password?: 'adminpw';
+  user?: string;
+  password?: string;
   isSecure?: false;
 }
 

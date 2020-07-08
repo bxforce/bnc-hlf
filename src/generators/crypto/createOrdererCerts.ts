@@ -56,7 +56,7 @@ client:
 
 certificateAuthorities:
   ${this.network.ordererOrganization.caName}:
-    url: http${this.network.ordererOrganization.isSecure ? 's' : ''}://${this.network.ordererOrganization.ca.options.host}:${this.network.ordererOrganization.ca.options.ports}
+    url: http${this.network.ordererOrganization.isSecure ? 's' : ''}://${this.network.ordererOrganization.ca.options.host}:${this.network.ordererOrganization.ca.options.port}
     httpOptions:
       verify: false
     tlsCACerts:

@@ -356,7 +356,6 @@ export class Orchestrator {
       l('[channel config]: HLF binaries downloaded !!!');
     }
 
-
     const isNetworkValid = network.validate();
     if (!isNetworkValid) {
       e('[Peer Cred]: Deployment config file is not valid');
@@ -380,7 +379,7 @@ export class Orchestrator {
     l('[Peer Cred]: docker engine configured !!!');
 
     l('[Peer Cred]: start CA container...');
-    const ca = new DockerComposeCaGenerator('docker-compose-ca-org.yaml', path, network, options, engine);
+    const ca = new DockerComposeCaGenerator(`docker-compose-ca-${network.organizations[0].name}.yaml`, path, network, options, engine);
     await ca.save();
     const caStarted = await ca.startOrgCa();
     if (!caStarted) {
@@ -390,7 +389,7 @@ export class Orchestrator {
     l(`[Peer Cred]: CA container started (${caStarted}) !!!`);
 
     l(`[Peer Cred]: start create peer crypto & certs credentials...`);
-    const orgCertsGenerator = new OrgCertsGenerator('connection-profile-ca-client.yaml', path, network, options);
+    const orgCertsGenerator = new OrgCertsGenerator(`connection-profile-ca-${network.organizations[0].name}-client.yaml`, path, network, options);
     const isGenerated = await orgCertsGenerator.buildCertificate();
     l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
 
@@ -516,8 +515,9 @@ export class Orchestrator {
    * @param deployConfigPath the deployment configuration file
    * @param deleteNetwork
    * @param deleteVolume
+   * @param forceRemove
    */
-  async stopBlockchainContainer(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean): Promise<boolean> {
+  async stopBlockchainContainer(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean, forceRemove: boolean): Promise<boolean> {
     try {
       const network: Network = await Orchestrator._parse(deployConfigPath);
 
@@ -540,7 +540,7 @@ export class Orchestrator {
         for(const engine of org.engines) {
           const docker = new DockerEngine({ socketPath: '/var/run/docker.sock' }); // TODO configure local docker remote engine
           // const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-          const containerDeleted = await docker.stopContainerList(services, false);
+          const containerDeleted = await docker.stopContainerList(services, forceRemove);
           if(!containerDeleted) {
             e('Error while deleting the docker container for peer & orderer');
             return false;
@@ -715,7 +715,7 @@ export class Orchestrator {
     const network: Network = await Orchestrator._parse(deploymentConfigPath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
-    const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+    const channelGenerator = new ChannelGenerator(`connection-profile-create-channel-${network.organizations[0].name}.yaml`, path, network);
     const created = await channelGenerator.setupChannel(channelName, `${getArtifactsPath(path)}/${channelName}.tx`);
 
     l(`[Channel] - Exit create channel request (${created}) !!!`);
@@ -732,11 +732,29 @@ export class Orchestrator {
      const network: Network = await Orchestrator._parse(deploymentConfigPath);
      const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
-     const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+     const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
      const joined = await channelGenerator.joinChannel(channelName, peers);
 
      l(`[Channel] - Exit create channel request (${joined}) !!!`);
    }
+
+  /**
+   * update channel
+   * @param anchorTxPath
+   * @param channelName
+   * @param deploymentConfigPath
+   */
+
+  public async updateChannel(anchorTxPath: string, channelName: string, deploymentConfigPath: string ): Promise<void> {
+    l(`[Channel] - Request to update  a channel (${channelName})`);
+    const network: Network = await Orchestrator._parse(deploymentConfigPath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+    const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+    const updated = await channelGenerator.updateChannel(channelName, anchorTxPath);
+
+    l(`[Channel] - Exit update channel request (${updated}) !!!`);
+  }
 
   /**
    * Return the default path where to store all files and materials

@@ -66,7 +66,10 @@ export const enum HLF_WALLET_TYPE {
   Memory = 'memory'
 }
 
+export const CA_DEFAULT_PORT = 7054;
+
 export const ORDERER_DEFAULT_PORT = 7050;
+
 export const PEER_DEFAULT_PORT = {
   event: 7051,
   event_chaincode: 7052,
@@ -77,6 +80,8 @@ export const DEFAULT_CA_ADMIN = {
   name: 'admin',
   password: 'adminpw'
 };
+
+export const UNIX_DOCKER_SOCKET = '/var/run/docker.sock';
 
 /* default folder to store all generated tools files and data */
 export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';

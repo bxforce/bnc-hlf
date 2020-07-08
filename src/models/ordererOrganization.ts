@@ -53,7 +53,6 @@ export class OrdererOrganization {
 
   get caCn(): string {
     return `orderer.${this.domainName}`;
-    // return `${this.caName}.tls`;
   }
 
   get mspName(): string {

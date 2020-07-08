@@ -20,7 +20,6 @@ import { Peer } from './peer';
 import { Orderer } from './orderer';
 import { Engine } from './engine';
 import { Ca } from './ca';
-import { DockerEngine } from '../agents/docker-agent';
 
 export class OrganizationOptions {
   peers: Peer[];
@@ -37,6 +36,7 @@ export class OrganizationOptions {
 }
 
 /**
+ * Organization model
  *
  * @author wassim.znaidi@gmail.com
  */
@@ -53,6 +53,11 @@ export class Organization {
   isSecure = false;
   domainName: string;
 
+  /**
+   * Constructor
+   * @param name
+   * @param options
+   */
   constructor(public name: string, options?: OrganizationOptions) {
     if (options) {
       this.channels = options.channels;
@@ -69,30 +74,56 @@ export class Organization {
     }
   }
 
+  /**
+   * Expand engine information into entity fields
+   * Currently, we expand the host parameter
+   *
+   * @param forPeers
+   * @param forOrderer
+   */
+  expandEngine(forPeers: boolean, forOrderer: boolean) {
+    if(forPeers) {
+      for (const peer of this.peers) {
+        const engine = this.getEngine(peer.options.engineName);
+        peer.options.host = engine.options.url;
+      }
+    }
+
+    if(forOrderer) {
+      for (const orderer of this.orderers) {
+        const engine = this.getEngine(orderer.options.engineName);
+        orderer.options.host = engine.options.url;
+      }
+    }
+  }
+
+  /**
+   * return the organization full name
+   * Equal to name + domain name
+   */
   get fullName(): string {
     return `${this.name}.${this.domainName}`;
   }
 
-  get firstPeerFullName(): string {
-    if (this.peers.length === 0) {
-      return 'dummy';
-    }
-
-    const peer0 = this.peers.filter(peer => peer.options.number === 0)[0];
-    return `${peer0.name}.${this.fullName}`;
-  }
-
+  /**
+   * return the organization MSP ID (or MSP name)
+   */
   get mspName(): string {
     return `${this.name}MSP`;
   }
 
+  /**
+   * return the CA name
+   */
   get caName(): string {
     return `${this.ca.name}.${this.name}`;
   }
 
+  /**
+   * Return the CA common name (CN)
+   */
   get caCn(): string {
-    return `${this.caName}.${this.fullName}`;
-    // return `${this.caName}.tls`;
+    return `${this.caName}.${this.domainName}`;
   }
 
   /**
@@ -121,12 +152,16 @@ export class Organization {
       return `${this.peers[0].name}.${this.fullName}:${this.peers[0].options.ports[0]}`;
     }
 
-    const index = pIndex === 0 ? 1 : 0;
-    const indexTest = pIndex + 1 % this.peers.length;
+    const index = (pIndex+1)%this.peers.length;
     const peer = this.peers.find(p => p.options.number === index);
     return `${peer.name}.${this.fullName}:${peer.options.ports[0]}`;
   }
 
+  /**
+   * Return the orderer name
+   * Equal to ordererName + domain name
+   * @param orderer
+   */
   ordererName(orderer: Orderer ): string {
     return `${orderer.name}.${this.domainName}`;
   }

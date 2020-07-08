@@ -140,10 +140,10 @@ const tasks = {
     //l('config file: ' + config;
   },
 
-  async stop(deployConfigFilePath: string) {
+  async stop(deployConfigFilePath: string, forceRemove: boolean) {
     l('Request stop command ...');
 
-    await CLI.stopBlockchain(deployConfigFilePath, false, false);
+    await CLI.stopBlockchain(deployConfigFilePath, false, false, forceRemove);
 
     l('Blockchain stopped !!!');
   },
@@ -156,9 +156,9 @@ const tasks = {
      let arrPeers = listPeers.split(',').map(String);
      return await CLI.joinChannel(nameChannel, nameOrg, arrPeers, deploymentConfigFilePath);
    },
-  // async updateChannel(anchortx, namech, nameorg) {
-  //   return await CLI.updateChannel(anchortx, namech, nameorg);
-  // }
+  async updateChannel(anchortx, namech, deploymentConfigFilePath) {
+    return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath);
+  }
 };
 
 // --> start official commands
@@ -203,8 +203,9 @@ program
   .command('stop')
   .description('stop the blockchain')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('-r, --rmi', 'remove docker containers')
   .action(async (cmd: any) => {
-    await tasks.stop(cmd.config);
+    await tasks.stop(cmd.config, cmd.rmi);
   });
 
 const channelCmd = program.command('channel');
@@ -228,7 +229,15 @@ channelCmd
      await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list, cmd.config);
    });
 
-// --> end official commands
+channelCmd
+    .command('update')
+    .description('update channel')
+    .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+    .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
+    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+    .action(async (cmd) => {
+      await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+    });
 
 program
   .command('new')

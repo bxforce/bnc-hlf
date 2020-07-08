@@ -43,7 +43,7 @@ export class GenesisParser extends BaseParser {
     const { type, url, port, settings } = ca;
     const caEntity = new Ca('caOrderer', {
       number: 0,
-      ports: port,
+      port: port,
       host: url,
       user: 'admin',
       password: 'adminpw',
