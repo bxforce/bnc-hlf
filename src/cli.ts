@@ -152,9 +152,9 @@ export class CLI {
      return channelEngine;
    }
   //
-  // static async updateChannel(anchortx, namech, nameorg) {
-  //   const channelEngine = new Orchestrator();
-  //   await channelEngine.updateChannel(anchortx, namech, nameorg);
-  //   return channelEngine;
-  // }
+  static async updateChannel(anchortx, namech, deployConfigPath) {
+    const channelEngine = new Orchestrator();
+    await channelEngine.updateChannel(anchortx, namech, deployConfigPath);
+    return channelEngine;
+  }
 }

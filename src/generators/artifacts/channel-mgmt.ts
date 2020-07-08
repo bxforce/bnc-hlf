@@ -167,6 +167,47 @@ orderers:
     }
   }
 
+  async updateChannel(channelName: string, anchorConfigPath: string): Promise<boolean> {
+    try {
+      l(`Start channel (${channelName}) update...`);
+
+      // check if channel configuration file exists
+      const configExists = await existsPath(anchorConfigPath);
+      if(!configExists) {
+        e(`Channel configuration file (${anchorConfigPath}) does not exists`);
+        return false;
+      }
+
+      // store the connection profile
+      await this.save();
+
+      // Initiate the channel entity
+      const clientConfig: ClientConfig = { networkProfile: this.filePath };
+      const channelClient = new Channels(clientConfig);
+      await channelClient.init();
+
+      // load the admin user into the client
+      const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+      if(!adminLoaded) {
+        e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+        return false;
+      }
+
+      // update the provided channel
+      const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath);
+      if(!isUpdated) {
+        e(`Error channel (${channelName}) update !!!`);
+        return false;
+      }
+
+      l(`Channel (${channelName}) updated successfully !!!`);
+      return true;
+    } catch (err) {
+      e(err);
+      return false;
+    }
+  }
+
   /**
    * load the organization admin user into client context to operate channel task
    * @param channel

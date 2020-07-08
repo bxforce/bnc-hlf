@@ -156,9 +156,9 @@ const tasks = {
      let arrPeers = listPeers.split(',').map(String);
      return await CLI.joinChannel(nameChannel, nameOrg, arrPeers, deploymentConfigFilePath);
    },
-  // async updateChannel(anchortx, namech, nameorg) {
-  //   return await CLI.updateChannel(anchortx, namech, nameorg);
-  // }
+  async updateChannel(anchortx, namech, deploymentConfigFilePath) {
+    return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath);
+  }
 };
 
 // --> start official commands
@@ -229,7 +229,15 @@ channelCmd
      await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list, cmd.config);
    });
 
-// --> end official commands
+channelCmd
+    .command('update')
+    .description('update channel')
+    .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+    .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
+    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+    .action(async (cmd) => {
+      await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+    });
 
 program
   .command('new')

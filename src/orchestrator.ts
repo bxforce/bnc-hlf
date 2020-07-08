@@ -739,6 +739,24 @@ export class Orchestrator {
    }
 
   /**
+   * update channel
+   * @param anchorTxPath
+   * @param channelName
+   * @param deploymentConfigPath
+   */
+
+  public async updateChannel(anchorTxPath: string, channelName: string, deploymentConfigPath: string ): Promise<void> {
+    l(`[Channel] - Request to update  a channel (${channelName})`);
+    const network: Network = await Orchestrator._parse(deploymentConfigPath);
+    const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+    const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
+    const updated = await channelGenerator.updateChannel(channelName, anchorTxPath);
+
+    l(`[Channel] - Exit update channel request (${updated}) !!!`);
+  }
+
+  /**
    * Return the default path where to store all files and materials
    * @private
    */
