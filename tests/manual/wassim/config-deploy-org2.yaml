@@ -32,6 +32,6 @@ engines:
     hosts:
       - host: "host1"
         type: "docker"
-        url: "127.0.0.1"
+        url: "192.168.208.65"
         port: 2375
         settings: [ "default" ]

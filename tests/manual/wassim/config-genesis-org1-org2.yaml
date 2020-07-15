@@ -3,7 +3,7 @@ genesis:
   consensus: "raft"
   ordererDomain: "bnc.com"
   ca:
-    url: "127.0.0.1"
+    url: "192.168.208.68"
     port: 9054
   organisations:
     - organisation: "org1"
