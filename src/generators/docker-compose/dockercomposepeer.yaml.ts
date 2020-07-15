@@ -75,15 +75,16 @@ ${this.options.org.peers
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
     extra_hosts:
-      - "bnc_test: 127.0.0.1"
-${this.options.org.getPeerExtraHost()
-      .map(peerHost => `
-      - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"
-`).join('')}
-${this.options.org.getOrdererExtraHost()
-      .map(ordererHost => `
-      - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
-`).join('')}
+      - "peer0.org1.bnc.com:192.168.208.68"
+      - "peer1.org1.bnc.com:192.168.208.68"
+      - "peer2.org1.bnc.com:192.168.208.68"
+      - "orderer0.bnc.com:192.168.208.68"
+      - "orderer1.bnc.com:192.168.208.68"
+      - "orderer2.bnc.com:192.168.208.68"
+      - "peer0.org2.bnc.com:192.168.208.65"
+      - "peer1.org2.bnc.com:192.168.208.65"
+      - "orderer3.bnc.com:192.168.208.65"
+      - "orderer4.bnc.com:192.168.208.65"
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
     networks:
