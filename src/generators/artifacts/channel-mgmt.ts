@@ -60,7 +60,7 @@ ${this.network.organizations[0].peers.map((peer, index) => `
 
 orderers:
     ${this.network.organizations[0].orderers[0].name}.${this.network.ordererOrganization.domainName}:
-      url: grpc${this.network.ordererOrganization.isSecure ? 's' : ''}://${this.network.organizations[0].orderers[0].options.host}:${this.network.ordererOrganization.orderers[0].options.ports[0]}
+      url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].orderers[0].options.host}:${this.network.ordererOrganization.orderers[0].options.ports[0]}
       grpcOptions:
         ssl-target-name-override: ${this.network.ordererOrganization.orderers[0].name}.${this.network.ordererOrganization.domainName}
         grpc-max-send-message-length: 40000
