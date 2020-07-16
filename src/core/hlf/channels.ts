@@ -129,7 +129,7 @@ export class Channels extends ClientHelper {
       const genesisBlock = await channel.getGenesisBlock(request);
 
       let joinRequest = {
-        targets: this.peers,
+        targets: peers,
         txId: this.client.newTransactionID(),
         block: genesisBlock
       };
