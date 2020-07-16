@@ -25,6 +25,12 @@ import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constan
 import { Orderer } from '../../models/orderer';
 import { Network } from '../../models/network';
 
+const fs = require('fs');
+const yaml = require('js-yaml')
+
+let fileContents = fs.readFileSync(__dirname + '/../../../tests/manual/templates/config-ip.yaml', 'utf8');
+let data = yaml.safeLoad(fileContents);
+
 /**
  * Class responsible to generate Orderer compose file
  *
@@ -55,16 +61,10 @@ ${this.options.org.orderers.map(orderer => `
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${this.options.org.ordererName(orderer)}
     extra_hosts:
-      - "peer0.org1.bnc.com:192.168.208.68"
-      - "peer1.org1.bnc.com:192.168.208.68"
-      - "peer2.org1.bnc.com:192.168.208.68"
-      - "orderer0.bnc.com:192.168.208.68"
-      - "orderer1.bnc.com:192.168.208.68"
-      - "orderer2.bnc.com:192.168.208.68"
-      - "peer0.org2.bnc.com:192.168.208.65"
-      - "peer1.org2.bnc.com:192.168.208.65"
-      - "orderer3.bnc.com:192.168.208.65"
-      - "orderer4.bnc.com:192.168.208.65"
+${data
+      .map(peerHost => `
+      - "${peerHost}"
+`).join('')}
     networks:
       - ${this.options.composeNetwork}   
     volumes:
