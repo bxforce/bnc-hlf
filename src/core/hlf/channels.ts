@@ -128,8 +128,15 @@ export class Channels extends ClientHelper {
 
       const genesisBlock = await channel.getGenesisBlock(request);
 
+      let array_to_join=[];
+      peers.map(peerName =>{
+        console.log(peerName)
+        array_to_join.push(peerName)
+      })
+      let finalPeers =  await this._getPeers(array_to_join);
+
       let joinRequest = {
-        targets: peers,
+        targets: finalPeers,
         txId: this.client.newTransactionID(),
         block: genesisBlock
       };
