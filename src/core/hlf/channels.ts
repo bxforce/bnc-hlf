@@ -134,8 +134,7 @@ export class Channels extends ClientHelper {
         array_to_join.push(peerName)
       })
       let finalPeers =  await this._getPeers(array_to_join);
-console.log("final peers", finalPeers)
-      console.log("this.peers", this.peers)
+
       let joinRequest = {
         targets: finalPeers,
         txId: this.client.newTransactionID(),
@@ -193,9 +192,19 @@ console.log("final peers", finalPeers)
       var promises = [];
       let event_hubs = channel.getChannelEventHubsForOrg();
       d(`found %s eventhubs for this organization : ${event_hubs.length}`);
+      //we need to contruct array correspondant of the array of peer names
+      let array_urls=[];
+
+      for(let item of peers){
+       let url =  this.client.getPeer(item).getUrl();
+       //get just the url and push to array
+        array_urls.push(url.substr(8))
+
+      }
+      console.log(array_urls)
       event_hubs.forEach((eh) => {
-        if(peers.includes(eh.getPeerAddr()) ){
-          console.log('yessssssssssss')
+        if(array_urls.includes(eh.getPeerAddr()) ){
+          console.log('FOUND ')
           let anchorUpdateEventPromise = new Promise((resolve, reject) => {
             d('anchorUpdateEventPromise - setting up event');
             const event_timeout = setTimeout(() => {
@@ -223,30 +232,35 @@ console.log("final peers", finalPeers)
 
       });
 
-      var sendPromise = this.client.updateChannel(request);
-      // put the send to the orderer last so that the events get registered and
-      // are ready for the orderering and committing
-      promises.push(sendPromise);
-      let results = await Promise.all(promises);
-      d(util.format('Update Channel R E S P O N S E : %j', results));
-      let response = results.pop(); //  orderer results are last in the results
 
-      if (response) {
-        if (response.status === 'SUCCESS') {
-          l(`Successfully update anchor peers to the channel', ${channelName}`);
-        } else {
-          error_message = util.format('Failed to update anchor peers to the channel %s with status: %s reason: %s', channelName, response.status, response.info);
-          e(error_message);
-        }
-      } else {
-        error_message = util.format('Failed to update anchor peers to the channel %s', channelName);
-        e(error_message);
-      }
+      /*
+            var sendPromise = this.client.updateChannel(request);
+            // put the send to the orderer last so that the events get registered and
+            // are ready for the orderering and committing
+            promises.push(sendPromise);
+            let results = await Promise.all(promises);
+            d(util.format('Update Channel R E S P O N S E : %j', results));
+            let response = results.pop(); //  orderer results are last in the results
+
+            if (response) {
+              if (response.status === 'SUCCESS') {
+                l(`Successfully update anchor peers to the channel', ${channelName}`);
+              } else {
+                error_message = util.format('Failed to update anchor peers to the channel %s with status: %s reason: %s', channelName, response.status, response.info);
+                e(error_message);
+              }
+            } else {
+              error_message = util.format('Failed to update anchor peers to the channel %s', channelName);
+              e(error_message);
+            }
+
+             */
     } catch (error) {
       e(`Failed to update anchor peers due to error:   ${error}`);
       error_message = error.toString();
     }
 
+    /*
     if (!error_message) {
       l(util.format(
           'Successfully update anchor peers in organization %s to the channel \'%s\'',
@@ -257,6 +271,10 @@ console.log("final peers", finalPeers)
       e(message);
       return false;
     }
+
+     */
+    return true;
+
   }
 
   /**
@@ -316,8 +334,9 @@ console.log("final peers", finalPeers)
     for (const name of peersName) {
       targets.push(this.client.getPeer(name));
     }
-
     return targets;
   }
+
+
 
 }

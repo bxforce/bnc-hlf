@@ -64,11 +64,11 @@ bnc channel join -n mychannel -p "peer0.org2.bnc.com" -f ./tests/manual/wassim/c
 
 * IN org1
 ````shell script
-bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org1.yaml -t ../hyperledger-fabric-network/artifacts/org1MSPanchors.tx
+bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org1.yaml -t ../hyperledger-fabric-network/artifacts/org1MSPanchors.tx -p "peer0.org1.bnc.com"
 ````
 * In Org2
 ````shell script
-bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org2.yaml -t ../hyperledger-fabric-network/artifacts/org2MSPanchors.tx
+bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org2.yaml -t ../hyperledger-fabric-network/artifacts/org2MSPanchors.tx -p "peer0.org2.bnc.com"
 ````
 
 
@@ -97,36 +97,31 @@ peer lifecycle chaincode queryinstalled  ( to get the ID)
 CC_PACKAGE_ID=mycc_1:0dcea8280752b53a2a534f280445e36fa4cb32f648c2d7729589821f300d74be  ( set the package ID)
 ````
 
-3d step: install package on peer0 of org2 and peer0 of org1
-````shell script
-peer lifecycle chaincode install mycc.tar.gz
-````
-
 4th step: Approve chaincode on org2 since we already have vars set giving orderer3 TLS cert
 ````shell script
-peer lifecycle chaincode approveformyorg --channelID mychannel --name mycc --version 1.0 --init-required --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer3.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
+peer lifecycle chaincode approveformyorg --channelID mychannel --name mycc --version 1.0 --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer3.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
 ````
 
 5th step: Approve chaincode definition for org1
 ````shell script
-peer lifecycle chaincode approveformyorg --channelID mychannel --name mycc --version 1.0 --init-required --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
+peer lifecycle chaincode approveformyorg --channelID mychannel --name mycc --version 1.0 --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
 
 ````
 
 6th step: check the commits to see who approved the chaincode in ORG1
 ````shell script
-peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name mycc --version 1.0 --init-required --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --output json
+peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name mycc --version 1.0 --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --output json
 ````
 
 7th step: commit chaincode definition after approval ( we will commit this as org1 and it will target peers in both org1 and org2 for endorsements)
  ````shell script
- peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --channelID mychannel --name mycc --version 1.0 --sequence 1 --init-required --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer1.org2.bnc.com/tls/ca.crt
+ peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --channelID mychannel --name mycc --version 1.0 --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer1.org2.bnc.com/tls/ca.crt
 ````
 
 
 8th step : INVOKE chaincode giving as targets peer0 of org1 and org2 as targets
  ````shell script
-peer chaincode invoke -o orderer0.bnc.com:7050 --isInit --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt -c '{"Args":["Init","a","100","b","100"]}' --waitForEvent
+peer chaincode invoke -o orderer0.bnc.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt -c '{"Args":["Init","a","100","b","100"]}' --waitForEvent
 ````
 
 9th step :query chaincode 
