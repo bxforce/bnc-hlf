@@ -104,7 +104,7 @@ export class Channels extends ClientHelper {
    * @param orgMspId
    * @param peers
    */
-  async joinChannel(channelName: string, orgMspId: string, peers: string[]): Promise<boolean> {
+  async joinChannel(channelName: string, orgMspId: string, peers: string[], allPeers: boolean): Promise<boolean> {
     try {
       d('Calling peers in organization "%s" to join the channel');
       d(`Successfully got the fabric client for the organization ${orgMspId}`);
@@ -133,9 +133,9 @@ export class Channels extends ClientHelper {
         array_to_join.push(peerName)
       })
       let finalPeers =  await this._getPeers(array_to_join);
-
+      d(`CONSTRUCT REQUEST TO JOIN all peers ?  ${allPeers}`)
       let joinRequest = {
-        targets: finalPeers,
+        targets: allPeers? this.peers : finalPeers,
         txId: this.client.newTransactionID(),
         block: genesisBlock
       };
@@ -200,6 +200,7 @@ export class Channels extends ClientHelper {
         array_urls.push(url.substr(8))
 
       }
+      /*
       event_hubs.forEach((eh) => {
         if(array_urls.includes(eh.getPeerAddr()) ){
           let anchorUpdateEventPromise = new Promise((resolve, reject) => {
@@ -224,8 +225,8 @@ export class Channels extends ClientHelper {
           });
           promises.push(anchorUpdateEventPromise);
         }
-
       });
+      */
       var sendPromise = this.client.updateChannel(request);
       // put the send to the orderer last so that the events get registered and
       // are ready for the orderering and committing
