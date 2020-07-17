@@ -155,7 +155,7 @@ export class Channels extends ClientHelper {
     }
   }
 
-  async updateChannel (channelName,orgMspId, configUpdatePath, peers): Promise<boolean> {
+  async updateChannel (channelName,orgMspId, configUpdatePath): Promise<boolean> {
     var error_message = null;
     try {
       let channel = this.client.newChannel(channelName);
@@ -193,40 +193,40 @@ export class Channels extends ClientHelper {
       d(`found %s eventhubs for this organization : ${event_hubs.length}`);
       //we need to contruct array correspondant of the array of peer names
       let array_urls=[];
-
-      for(let item of peers){
-       let url =  this.client.getPeer(item).getUrl();
-       //get just the url and push to array
-        array_urls.push(url.substr(8))
-
-      }
       /*
-      event_hubs.forEach((eh) => {
-        if(array_urls.includes(eh.getPeerAddr()) ){
-          let anchorUpdateEventPromise = new Promise((resolve, reject) => {
-            d('anchorUpdateEventPromise - setting up event');
-            const event_timeout = setTimeout(() => {
-              let message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
-              e(message);
-              eh.disconnect();
-            }, 60000);
-            eh.registerBlockEvent((block) => {
-                  l(`The config update has been committed on peer , ${eh.getPeerAddr()}`);
-                  clearTimeout(event_timeout);
-                  resolve();
-                }, (err) => {
-                  clearTimeout(event_timeout);
-                  e(err);
-                  reject(err);
-                },
-                {unregister: true, disconnect: true}
-            );
-            eh.connect();
+          for(let item of peers){
+           let url =  this.client.getPeer(item).getUrl();
+           //get just the url and push to array
+            array_urls.push(url.substr(8))
+
+          }
+
+          event_hubs.forEach((eh) => {
+            if(array_urls.includes(eh.getPeerAddr()) ){
+              let anchorUpdateEventPromise = new Promise((resolve, reject) => {
+                d('anchorUpdateEventPromise - setting up event');
+                const event_timeout = setTimeout(() => {
+                  let message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
+                  e(message);
+                  eh.disconnect();
+                }, 60000);
+                eh.registerBlockEvent((block) => {
+                      l(`The config update has been committed on peer , ${eh.getPeerAddr()}`);
+                      clearTimeout(event_timeout);
+                      resolve();
+                    }, (err) => {
+                      clearTimeout(event_timeout);
+                      e(err);
+                      reject(err);
+                    },
+                    {unregister: true, disconnect: true}
+                );
+                eh.connect();
+              });
+              promises.push(anchorUpdateEventPromise);
+            }
           });
-          promises.push(anchorUpdateEventPromise);
-        }
-      });
-      */
+          */
       var sendPromise = this.client.updateChannel(request);
       // put the send to the orderer last so that the events get registered and
       // are ready for the orderering and committing
