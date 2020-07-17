@@ -4,8 +4,9 @@
 Here a first and simple command set to deploy a hyperledger fabric network.
 
 1- Prepare BNC configuration input files:
-  * Deployment configuration: you can find a sample in ...
-  * Genesis configuration: you can find a sample in ...
+  * Deployment configuration: you can find a sample in /bnc-hlf/tests/manual/wassim/config-deploy-org1.yaml
+  * Genesis configuration: you can find a sample in bnc-hlf/tests/manual/wassim/config-genesis-org1-org2.yaml
+  * Config Ips that will serve as extra_host section for the two orgs to recognize each other, find sample /bnc-hlf/tests/manual/templates/config-ip.yaml
   
 2- Generate cryptographic and certificates credentials for both peers and orderers
   * for peers in org1:
