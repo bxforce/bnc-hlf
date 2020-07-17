@@ -167,7 +167,7 @@ orderers:
     }
   }
 
-  async updateChannel(channelName: string, anchorConfigPath: string): Promise<boolean> {
+  async updateChannel(channelName: string, anchorConfigPath: string, peers): Promise<boolean> {
     try {
       l(`Start channel (${channelName}) update...`);
 
@@ -194,7 +194,7 @@ orderers:
       }
 
       // update the provided channel
-      const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath);
+      const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath, peers);
       if(!isUpdated) {
         e(`Error channel (${channelName}) update !!!`);
         return false;

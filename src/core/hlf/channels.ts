@@ -134,7 +134,8 @@ export class Channels extends ClientHelper {
         array_to_join.push(peerName)
       })
       let finalPeers =  await this._getPeers(array_to_join);
-
+console.log("final peers", finalPeers)
+      console.log("this.peers", this.peers)
       let joinRequest = {
         targets: finalPeers,
         txId: this.client.newTransactionID(),
@@ -156,7 +157,7 @@ export class Channels extends ClientHelper {
     }
   }
 
-  async updateChannel (channelName,orgMspId, configUpdatePath): Promise<boolean> {
+  async updateChannel (channelName,orgMspId, configUpdatePath, peers): Promise<boolean> {
     var error_message = null;
     try {
       let channel = this.client.newChannel(channelName);
@@ -193,27 +194,33 @@ export class Channels extends ClientHelper {
       let event_hubs = channel.getChannelEventHubsForOrg();
       d(`found %s eventhubs for this organization : ${event_hubs.length}`);
       event_hubs.forEach((eh) => {
-        let anchorUpdateEventPromise = new Promise((resolve, reject) => {
-          d('anchorUpdateEventPromise - setting up event');
-          const event_timeout = setTimeout(() => {
-            let message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
-            e(message);
-            eh.disconnect();
-          }, 60000);
-          eh.registerBlockEvent((block) => {
-                l(`The config update has been committed on peer , ${eh.getPeerAddr()}`);
-                clearTimeout(event_timeout);
-                resolve();
-              }, (err) => {
-                clearTimeout(event_timeout);
-                e(err);
-                reject(err);
-              },
-              {unregister: true, disconnect: true}
-          );
-          eh.connect();
-        });
-        promises.push(anchorUpdateEventPromise);
+        if(peers.includes(eh.getPeerAddr()) ){
+          console.log('yessssssssssss')
+          let anchorUpdateEventPromise = new Promise((resolve, reject) => {
+            d('anchorUpdateEventPromise - setting up event');
+            const event_timeout = setTimeout(() => {
+              let message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
+              console.log("errrrrrrrrrrrrrrrrrrrr")
+              e(message);
+              eh.disconnect();
+            }, 60000);
+            eh.registerBlockEvent((block) => {
+                  l(`The config update has been committed on peer , ${eh.getPeerAddr()}`);
+                  clearTimeout(event_timeout);
+                  resolve();
+                }, (err) => {
+                  clearTimeout(event_timeout);
+                  console.log("error here")
+                  e(err);
+                  reject(err);
+                },
+                {unregister: true, disconnect: true}
+            );
+            eh.connect();
+          });
+          promises.push(anchorUpdateEventPromise);
+        }
+
       });
 
       var sendPromise = this.client.updateChannel(request);

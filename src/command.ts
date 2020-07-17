@@ -153,11 +153,12 @@ const tasks = {
   },
 
    async joinChannel(nameChannel, nameOrg, listPeers, deploymentConfigFilePath) {
-     let arrPeers = listPeers.split(',').map(String);
+     let arrPeers = listPeers.split(/(?:,| )+/).map(String);
      return await CLI.joinChannel(nameChannel, nameOrg, arrPeers, deploymentConfigFilePath);
    },
-  async updateChannel(anchortx, namech, deploymentConfigFilePath) {
-    return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath);
+  async updateChannel(anchortx, namech, deploymentConfigFilePath, listPeers) {
+    let arrPeers = listPeers.split(/(?:,| )+/).map(String);
+    return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath, arrPeers);
   }
 };
 
@@ -175,6 +176,7 @@ program
 
 program
   .command('enroll-peers')
+  .description('creates crypto material for the peers')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .action(async (cmd: any) => {
     if (cmd) {
@@ -184,6 +186,7 @@ program
 
 program
   .command('enroll-orderers')
+  .description('creates crypto material for the orderers')
   .requiredOption('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file')
   .action(async (cmd: any) => {
     if (cmd) {
@@ -221,7 +224,7 @@ channelCmd
 
 channelCmd
    .command('join')
-   .description('join channel')
+   .description('join peers to channel')
     .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
    .option('-p, --list <items>', 'comma separated list')
@@ -231,12 +234,13 @@ channelCmd
 
 channelCmd
     .command('update')
-    .description('update channel')
+    .description('commit anchor update to peers on channel')
     .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
     .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+    .requiredOption('-p, --list <items>', 'comma separated list of peers')
     .action(async (cmd) => {
-      await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+      await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config, cmd.list);
     });
 
 program

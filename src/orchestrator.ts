@@ -745,13 +745,13 @@ export class Orchestrator {
    * @param deploymentConfigPath
    */
 
-  public async updateChannel(anchorTxPath: string, channelName: string, deploymentConfigPath: string ): Promise<void> {
+  public async updateChannel(anchorTxPath: string, channelName: string, deploymentConfigPath: string, peers ): Promise<void> {
     l(`[Channel] - Request to update  a channel (${channelName})`);
     const network: Network = await Orchestrator._parse(deploymentConfigPath);
     const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
     const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
-    const updated = await channelGenerator.updateChannel(channelName, anchorTxPath);
+    const updated = await channelGenerator.updateChannel(channelName, anchorTxPath, peers);
 
     l(`[Channel] - Exit update channel request (${updated}) !!!`);
   }
