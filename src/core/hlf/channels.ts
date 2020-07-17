@@ -127,12 +127,15 @@ export class Channels extends ClientHelper {
       };
 
       const genesisBlock = await channel.getGenesisBlock(request);
+      let finalPeers;
+      if(!allPeers){
+        let array_to_join=[];
+        peers.map(peerName =>{
+          array_to_join.push(peerName)
+        })
+        finalPeers =  await this._getPeers(array_to_join);
+      }
 
-      let array_to_join=[];
-      peers.map(peerName =>{
-        array_to_join.push(peerName)
-      })
-      let finalPeers =  await this._getPeers(array_to_join);
       d(`CONSTRUCT REQUEST TO JOIN all peers ?  ${allPeers}`)
       let joinRequest = {
         targets: allPeers? this.peers : finalPeers,

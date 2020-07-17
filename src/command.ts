@@ -153,7 +153,10 @@ const tasks = {
   },
 
    async joinChannel(nameChannel, nameOrg, listPeers, deploymentConfigFilePath, allPeers) {
-     let arrPeers = listPeers.split(/(?:,| )+/).map(String);
+     let arrPeers;
+    if(!allPeers){
+      arrPeers = listPeers.split(/(?:,| )+/).map(String);
+    }
      return await CLI.joinChannel(nameChannel, nameOrg, arrPeers, deploymentConfigFilePath, allPeers);
    },
   async updateChannel(anchortx, namech, deploymentConfigFilePath) {

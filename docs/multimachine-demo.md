@@ -50,12 +50,21 @@ bnc channel create -f ./tests/manual/wassim/config-deploy-org1.yaml -t ../hyperl
 
 8- join channel 
 
-* in org1
+* TO join all peers defined in your config deploy file in org1
+````shell script
+bnc channel join -n mychannel --all -f ./tests/manual/wassim/config-deploy-org1.yaml
+````
+* TO join specific peers in org1, pass the list of peers with -p option
+
 ````shell script
 bnc channel join -n mychannel -p "peer0.org1.bnc.com" -f ./tests/manual/wassim/config-deploy-org1.yaml
 ````
 
-* in org2
+* TO join all peers defined in your config deploy file in org2
+````shell script
+bnc channel join -n mychannel --all  -f ./tests/manual/wassim/config-deploy-org2.yaml
+````
+* TO join specific peers in org2, pass the list of peers with -p option
 
 ````shell script
 bnc channel join -n mychannel -p "peer0.org2.bnc.com" -f ./tests/manual/wassim/config-deploy-org2.yaml
@@ -65,11 +74,11 @@ bnc channel join -n mychannel -p "peer0.org2.bnc.com" -f ./tests/manual/wassim/c
 
 * IN org1
 ````shell script
-bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org1.yaml -t ../hyperledger-fabric-network/artifacts/org1MSPanchors.tx -p "peer0.org1.bnc.com"
+bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org1.yaml -t ../hyperledger-fabric-network/artifacts/org1MSPanchors.tx 
 ````
 * In Org2
 ````shell script
-bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org2.yaml -t ../hyperledger-fabric-network/artifacts/org2MSPanchors.tx -p "peer0.org2.bnc.com"
+bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org2.yaml -t ../hyperledger-fabric-network/artifacts/org2MSPanchors.tx 
 ````
 
 
