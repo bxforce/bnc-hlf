@@ -231,36 +231,30 @@ export class Channels extends ClientHelper {
         }
 
       });
+      var sendPromise = this.client.updateChannel(request);
+      // put the send to the orderer last so that the events get registered and
+      // are ready for the orderering and committing
+      promises.push(sendPromise);
+      let results = await Promise.all(promises);
+      d(util.format('Update Channel R E S P O N S E : %j', results));
+      let response = results.pop(); //  orderer results are last in the results
 
-
-      /*
-            var sendPromise = this.client.updateChannel(request);
-            // put the send to the orderer last so that the events get registered and
-            // are ready for the orderering and committing
-            promises.push(sendPromise);
-            let results = await Promise.all(promises);
-            d(util.format('Update Channel R E S P O N S E : %j', results));
-            let response = results.pop(); //  orderer results are last in the results
-
-            if (response) {
-              if (response.status === 'SUCCESS') {
-                l(`Successfully update anchor peers to the channel', ${channelName}`);
-              } else {
-                error_message = util.format('Failed to update anchor peers to the channel %s with status: %s reason: %s', channelName, response.status, response.info);
-                e(error_message);
-              }
-            } else {
-              error_message = util.format('Failed to update anchor peers to the channel %s', channelName);
-              e(error_message);
-            }
-
-             */
+      if (response) {
+        if (response.status === 'SUCCESS') {
+          l(`Successfully update anchor peers to the channel', ${channelName}`);
+        } else {
+          error_message = util.format('Failed to update anchor peers to the channel %s with status: %s reason: %s', channelName, response.status, response.info);
+          e(error_message);
+        }
+      } else {
+        error_message = util.format('Failed to update anchor peers to the channel %s', channelName);
+        e(error_message);
+      }
     } catch (error) {
       e(`Failed to update anchor peers due to error:   ${error}`);
       error_message = error.toString();
     }
 
-    /*
     if (!error_message) {
       l(util.format(
           'Successfully update anchor peers in organization %s to the channel \'%s\'',
@@ -271,9 +265,6 @@ export class Channels extends ClientHelper {
       e(message);
       return false;
     }
-
-     */
-    return true;
 
   }
 
