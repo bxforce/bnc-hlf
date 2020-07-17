@@ -727,13 +727,13 @@ export class Orchestrator {
    * @param peers
    * @param deploymentConfigPath
    */
-   public async joinChannel(channelName: string, peers, deploymentConfigPath: string, allPeers: boolean ): Promise<void> {
+   public async joinChannel(channelName: string, deploymentConfigPath: string ): Promise<void> {
      l(`[Channel] - Request to join a new channel (${channelName})`);
      const network: Network = await Orchestrator._parse(deploymentConfigPath);
      const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
      const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
-     const joined = await channelGenerator.joinChannel(channelName, peers, allPeers);
+     const joined = await channelGenerator.joinChannel(channelName);
 
      l(`[Channel] - Exit create channel request (${joined}) !!!`);
    }
