@@ -130,7 +130,6 @@ export class Channels extends ClientHelper {
 
       let array_to_join=[];
       peers.map(peerName =>{
-        console.log(peerName)
         array_to_join.push(peerName)
       })
       let finalPeers =  await this._getPeers(array_to_join);
@@ -201,15 +200,12 @@ export class Channels extends ClientHelper {
         array_urls.push(url.substr(8))
 
       }
-      console.log(array_urls)
       event_hubs.forEach((eh) => {
         if(array_urls.includes(eh.getPeerAddr()) ){
-          console.log('FOUND ')
           let anchorUpdateEventPromise = new Promise((resolve, reject) => {
             d('anchorUpdateEventPromise - setting up event');
             const event_timeout = setTimeout(() => {
               let message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
-              console.log("errrrrrrrrrrrrrrrrrrrr")
               e(message);
               eh.disconnect();
             }, 60000);
@@ -219,7 +215,6 @@ export class Channels extends ClientHelper {
                   resolve();
                 }, (err) => {
                   clearTimeout(event_timeout);
-                  console.log("error here")
                   e(err);
                   reject(err);
                 },
