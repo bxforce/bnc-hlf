@@ -166,6 +166,7 @@ const tasks = {
 
 program
   .command('init')
+    .description("creates genesis.block and configtx files for channel and anchor update")
   .option('--genesis', 'generate genesis block')
   .option('--configtx', 'generate channel configuration file')
   .option('--anchortx', 'generate anchor peer update file')
@@ -242,7 +243,7 @@ channelCmd
     .action(async (cmd) => {
       await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config, cmd.list);
     });
-
+/*
 program
   .command('new')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
@@ -253,6 +254,8 @@ program
       await tasks.createNetwork(cmd.config);
     }
   });
+
+
 
 program
   .command('parse')
@@ -284,13 +287,15 @@ program
     }
   });
 
+ */
+
 program
   .command('clean')
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
   });
-
+/*
 program
   .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
@@ -322,6 +327,8 @@ program  // just for testing to be deleted
     await tasks.deleteIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
   });
 
+
+
 program
   .command('enroll')
   .option('--admin', 'enroll admin')
@@ -329,6 +336,8 @@ program
   .action(async cmd => {
     await tasks.enrollConfig(cmd.config, cmd.admin);
   });
+
+ */
 
 // channelCmd
 //   .command('join')
