@@ -34,8 +34,8 @@ RUN npm install
 RUN npm run build && npm link
 
 ## Script
-RUN echo "#!/bin/sh\nset -ex\n\nCONFIG=./tests/manual/demo/config.yaml\nARTIFACTS=/hyperledger-fabric-network/artifacts\n\nbnc enroll-peers -f \$CONFIG\nbnc enroll-orderers -f \$CONFIG\nbnc init --genesis -f \$CONFIG\nbnc init --configtx -f \$CONFIG\nbnc init --anchortx -f \$CONFIG\nbnc start -f \$CONFIG\nbnc channel create -f \$CONFIG -t $ARTIFACTS/mychannel.tx -n mychannel\nbnc channel join -n mychannel -p "peer0.org1.bnc.com" -f \$CONFIG\nbnc channel update -n mychannel -f \$CONFIG -t $ARTIFACTS/org1MSPanchors.tx\n" > run.sh && chmod a+x run.sh
-CMD ["./run.sh"]
+#RUN echo "#!/bin/sh\nset -ex\n\nCONFIG=./tests/manual/demo/config.yaml\nARTIFACTS=/hyperledger-fabric-network/artifacts\n\nbnc enroll-peers -f \$CONFIG\nbnc enroll-orderers -f \$CONFIG\nbnc init --genesis -f \$CONFIG\nbnc init --configtx -f \$CONFIG\nbnc init --anchortx -f \$CONFIG\nbnc start -f \$CONFIG\nbnc channel create -f \$CONFIG -t $ARTIFACTS/mychannel.tx -n mychannel\nbnc channel join -n mychannel -p "peer0.org1.bnc.com" -f \$CONFIG\nbnc channel update -n mychannel -f \$CONFIG -t $ARTIFACTS/org1MSPanchors.tx\n" > run.sh && chmod a+x run.sh
+#CMD ["./run.sh"]
 
 # Usage:
 # docker build -t bnc-hlf -f Dockerfile .
