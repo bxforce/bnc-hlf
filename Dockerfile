@@ -40,5 +40,5 @@ RUN npm run build && npm link
 # Usage:
 # docker build -t bnc-hlf -f Dockerfile .
 # docker network create --driver=bridge --subnet=172.20.0.0/16 bnc_network
-# docker run -it --rm --name bnc-hlf --network bnc_network -v /tmp:/tmp -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf
+# docker run -it --rm --name bnc-hlf --network bnc_network -v /tmp:/tmp -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf bash
 ## NOTES: volume mount /tmp must be the same on host and container to make VAR template_folder works (so you have to cp your config files in /tmp on host)
