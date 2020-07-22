@@ -25,9 +25,6 @@ import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
 const fs = require('fs');
 const yaml = require('js-yaml')
 
-let fileContents = fs.readFileSync(__dirname + '/../../../tests/manual/templates/config-ip.yaml', 'utf8');
-let data = yaml.safeLoad(fileContents);
-
 
 /**
  * Class responsible to generate Peer compose file
@@ -82,9 +79,9 @@ ${this.options.org.peers
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
     extra_hosts:
-${data
-        .map(peerHost => `
-      - "${peerHost}"
+${this.options.ips
+        .map(host => `
+      - "${host.ip}"
 `).join('')}
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb

@@ -26,6 +26,7 @@ export class DockerComposeYamlOptions {
   networkRootPath: string;
   composeNetwork: string;
   org: Organization;
+  ips;
   envVars?: {
     FABRIC_VERSION?: string;
     FABRIC_CA_VERSION?: string;

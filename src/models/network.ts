@@ -38,6 +38,8 @@ export class NetworkOptions {
 export class Network {
   organizations: Organization[] = [];
   channels: Channel[];
+  //added this for extra host ips
+  ips: [];
 
   /* This ca will be used to generate only orderer msp */
   ordererOrganization?: OrdererOrganization;

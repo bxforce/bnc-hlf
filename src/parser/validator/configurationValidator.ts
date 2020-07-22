@@ -67,6 +67,11 @@ export class ConfigurationValidator {
           }
         ]
       }
+    ],
+    ips: [
+      {
+        ip: 'string'
+      }
     ]
   };
 

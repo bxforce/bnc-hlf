@@ -28,9 +28,6 @@ import { Network } from '../../models/network';
 const fs = require('fs');
 const yaml = require('js-yaml')
 
-let fileContents = fs.readFileSync(__dirname + '/../../../tests/manual/templates/config-ip.yaml', 'utf8');
-let data = yaml.safeLoad(fileContents);
-
 /**
  * Class responsible to generate Orderer compose file
  *
@@ -61,9 +58,9 @@ ${this.options.org.orderers.map(orderer => `
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${this.options.org.ordererName(orderer)}
     extra_hosts:
-${data
-      .map(peerHost => `
-      - "${peerHost}"
+${this.options.ips
+      .map(host => `
+      - "${host.ip}"
 `).join('')}
     networks:
       - ${this.options.composeNetwork}   
