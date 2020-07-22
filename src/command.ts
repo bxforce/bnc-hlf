@@ -152,9 +152,8 @@ const tasks = {
     return await CLI.createChannel(channelName, channeltxPath, deploymentConfigFilePath);
   },
 
-   async joinChannel(nameChannel, nameOrg, listPeers, deploymentConfigFilePath) {
-     let arrPeers = listPeers.split(',').map(String);
-     return await CLI.joinChannel(nameChannel, nameOrg, arrPeers, deploymentConfigFilePath);
+   async joinChannel(nameChannel, nameOrg, deploymentConfigFilePath) {
+     return await CLI.joinChannel(nameChannel, nameOrg, deploymentConfigFilePath);
    },
   async updateChannel(anchortx, namech, deploymentConfigFilePath) {
     return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath);
@@ -165,6 +164,7 @@ const tasks = {
 
 program
   .command('init')
+    .description("creates genesis.block and configtx files for channel and anchor update")
   .option('--genesis', 'generate genesis block')
   .option('--configtx', 'generate channel configuration file')
   .option('--anchortx', 'generate anchor peer update file')
@@ -175,6 +175,7 @@ program
 
 program
   .command('enroll-peers')
+  .description('creates crypto material for the peers')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
   .action(async (cmd: any) => {
     if (cmd) {
@@ -184,6 +185,7 @@ program
 
 program
   .command('enroll-orderers')
+  .description('creates crypto material for the orderers')
   .requiredOption('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file')
   .action(async (cmd: any) => {
     if (cmd) {
@@ -221,24 +223,23 @@ channelCmd
 
 channelCmd
    .command('join')
-   .description('join channel')
+   .description('join peers to channel')
     .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-   .option('-p, --list <items>', 'comma separated list')
    .action(async cmd => {
-     await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list, cmd.config);
+     await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.config);
    });
 
 channelCmd
     .command('update')
-    .description('update channel')
+    .description('commit anchor update to peers on channel')
     .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
     .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
     .action(async (cmd) => {
       await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
     });
-
+/*
 program
   .command('new')
   .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
@@ -249,6 +250,8 @@ program
       await tasks.createNetwork(cmd.config);
     }
   });
+
+
 
 program
   .command('parse')
@@ -280,13 +283,15 @@ program
     }
   });
 
+ */
+
 program
   .command('clean')
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
   });
-
+/*
 program
   .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
   .option('-R, --no-rmi', 'Do not remove docker images')
@@ -318,6 +323,8 @@ program  // just for testing to be deleted
     await tasks.deleteIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
   });
 
+
+
 program
   .command('enroll')
   .option('--admin', 'enroll admin')
@@ -325,6 +332,8 @@ program
   .action(async cmd => {
     await tasks.enrollConfig(cmd.config, cmd.admin);
   });
+
+ */
 
 // channelCmd
 //   .command('join')

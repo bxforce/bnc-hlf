@@ -133,7 +133,7 @@ orderers:
    * @param channelName
    * @param peers
    */
-  async joinChannel(channelName: string, peers: string[]): Promise<boolean> {
+  async joinChannel(channelName: string): Promise<boolean> {
     try {
       l(`Start channel (${channelName}) join...`);
 
@@ -153,7 +153,7 @@ orderers:
       }
 
       // create the provided channel
-      const isJoined = await channelClient.joinChannel(channelName, this.network.organizations[0].mspName, peers);
+      const isJoined = await channelClient.joinChannel(channelName, this.network.organizations[0].mspName);
       if(!isJoined) {
         e(`Error channel (${channelName}) creation !!!`);
         return false;

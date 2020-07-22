@@ -55,6 +55,11 @@ export class DeploymentParser extends BaseParser {
     // Parsing engine
     const engines: Engine[] = DeploymentParser.buildEngine(parsedYaml['engines']);
 
+    // parse IPS
+
+    const ips = parsedYaml['ips'];
+   
+
     // Set engine for every organization
     organizations.map(organization => {
       organization.engines = engines.filter(eng => eng.orgName === organization.engineOrgName);
@@ -83,6 +88,8 @@ export class DeploymentParser extends BaseParser {
       ordererOrganization.orderers.push(...org.orderers);
     }
     network.ordererOrganization = ordererOrganization;
+    //set ips
+    network.ips = ips;
 
     return network;
   }

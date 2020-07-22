@@ -260,10 +260,13 @@ export class Orchestrator {
     const path = join(homedir, NETWORK_ROOT_PATH);
     await createFolder(path);
 
+
+
     const options: DockerComposeYamlOptions = {
       networkRootPath: path,
       composeNetwork: BNC_NETWORK,
       org: network.organizations[0],
+      ips: network.ips,
       envVars: {
         FABRIC_VERSION: HLF_VERSION.HLF_2,
         FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
@@ -368,6 +371,7 @@ export class Orchestrator {
       networkRootPath: path,
       composeNetwork: BNC_NETWORK,
       org: network.organizations[0],
+      ips: network.ips,
       envVars: {
         FABRIC_VERSION: HLF_VERSION.HLF_2,
         FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
@@ -427,6 +431,7 @@ export class Orchestrator {
       networkRootPath: path,
       composeNetwork: BNC_NETWORK,
       org: network.organizations[0],
+      ips: network.ips,
       envVars: {
         FABRIC_VERSION: HLF_VERSION.HLF_2,
         FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
@@ -482,7 +487,7 @@ export class Orchestrator {
     }
 
     l('[Orderer Cred]: configure local docker engine to be used for the generation process !!!');
-    const options: DockerComposeYamlOptions = { networkRootPath: path, composeNetwork: BNC_NETWORK, org: null };
+    const options: DockerComposeYamlOptions = { networkRootPath: path, composeNetwork: BNC_NETWORK, org: null, ips: [] };
     const engine = new DockerEngine({ socketPath: '/var/run/docker.sock' }); // TODO configure local docker remote engine
     await engine.createNetwork({ Name: options.composeNetwork });
     l('[Orderer Cred]: docker engine configured !!!');
@@ -727,13 +732,13 @@ export class Orchestrator {
    * @param peers
    * @param deploymentConfigPath
    */
-   public async joinChannel(channelName: string, peers, deploymentConfigPath: string ): Promise<void> {
+   public async joinChannel(channelName: string, deploymentConfigPath: string ): Promise<void> {
      l(`[Channel] - Request to join a new channel (${channelName})`);
      const network: Network = await Orchestrator._parse(deploymentConfigPath);
      const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
      const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
-     const joined = await channelGenerator.joinChannel(channelName, peers);
+     const joined = await channelGenerator.joinChannel(channelName);
 
      l(`[Channel] - Exit create channel request (${joined}) !!!`);
    }

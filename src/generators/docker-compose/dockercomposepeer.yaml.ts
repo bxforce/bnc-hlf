@@ -22,6 +22,9 @@ import { Peer } from '../../models/peer';
 import { Utils } from '../../utils/utils';
 import getDockerComposePath = Utils.getDockerComposePath;
 import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
+const fs = require('fs');
+const yaml = require('js-yaml')
+
 
 /**
  * Class responsible to generate Peer compose file
@@ -29,6 +32,7 @@ import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
  * @author wassim.znaidi@gmail.com
  */
 export class DockerComposePeerGenerator extends BaseGenerator {
+
   /* docker compose content for peers */
   contents = `
 version: '2'
@@ -75,14 +79,9 @@ ${this.options.org.peers
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
     extra_hosts:
-      - "bnc_test: 127.0.0.1"
-${this.options.org.getPeerExtraHost()
-      .map(peerHost => `
-      - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"
-`).join('')}
-${this.options.org.getOrdererExtraHost()
-      .map(ordererHost => `
-      - "${ordererHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(ordererHost.options.engineName)}"
+${this.options.ips
+        .map(host => `
+      - "${host.ip}"
 `).join('')}
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb

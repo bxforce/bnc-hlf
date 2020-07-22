@@ -41,3 +41,14 @@ engines:
         url: "192.168.208.68"
         port: 2375
         settings: [ "default" ]
+ips:
+  - ip: "peer0.org1.bnc.com:192.168.208.68"
+  - ip: "peer1.org1.bnc.com:192.168.208.68"
+  - ip: "peer2.org1.bnc.com:192.168.208.68"
+  - ip: "orderer0.bnc.com:192.168.208.68"
+  - ip: "orderer1.bnc.com:192.168.208.68"
+  - ip: "orderer2.bnc.com:192.168.208.68"
+  - ip: "peer0.org2.bnc.com:192.168.208.65"
+  - ip: "peer1.org2.bnc.com:192.168.208.65"
+  - ip: "orderer3.bnc.com:192.168.208.65"
+  - ip: "orderer4.bnc.com:192.168.208.65"

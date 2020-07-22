@@ -25,6 +25,9 @@ import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constan
 import { Orderer } from '../../models/orderer';
 import { Network } from '../../models/network';
 
+const fs = require('fs');
+const yaml = require('js-yaml')
+
 /**
  * Class responsible to generate Orderer compose file
  *
@@ -55,14 +58,9 @@ ${this.options.org.orderers.map(orderer => `
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${this.options.org.ordererName(orderer)}
     extra_hosts:
-      - "bnc_test: 127.0.0.1"
-${this.options.org.getPeerExtraHost()
-      .map(peerHost => `
-      - "${peerHost.name}.${this.options.org.fullName}:${this.options.org.engineHost(peerHost.options.engineName)}"
-`).join('')}
-${this.options.org.getOrdererExtraHost()
-      .map(ordererHost => `
-      - "${this.options.org.ordererName(ordererHost)}:${this.options.org.engineHost(ordererHost.options.engineName)}"
+${this.options.ips
+      .map(host => `
+      - "${host.ip}"
 `).join('')}
     networks:
       - ${this.options.composeNetwork}   
