@@ -38,18 +38,23 @@ export class ChannelGenerator extends BaseGenerator {
   /* connection profile content to load the client instance */
   contents = `
 version: "1.0"
-
+name: ${this.network.organizations[0].domainName}
 client:
   organization: ${this.network.organizations[0].name}
   credentialStore:
     path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
     cryptoStore:
       path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
-
+organizations:
+    org1:
+      mspid: ${this.network.organizations[0].mspName}
+      peers:
+      ${this.network.organizations[0].peers.map((peer, index) => `
+        - ${peer.name}.${this.network.organizations[0].fullName}`).join('')}
 peers:
 ${this.network.organizations[0].peers.map((peer, index) => `
   ${peer.name}.${this.network.organizations[0].fullName}:
-    url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].engineHost(peer.options.engineName)}:${peer.options.ports[0]}
+    url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${peer.name}.${this.network.organizations[0].fullName}:${peer.options.ports[0]}
     grpcOptions:
       ssl-target-name-override: ${peer.name}.${this.network.organizations[0].fullName}
       request-timeout: 120001
