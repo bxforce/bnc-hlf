@@ -115,7 +115,7 @@ services:
       // await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
       // await this.changeOwnership(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
 
-      d('Folder OwnerShip updated successfully');
+      // d('Folder OwnerShip updated successfully');
 
       return true;
     } catch (err) {
