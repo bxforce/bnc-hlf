@@ -78,11 +78,13 @@ ${this.options.org.peers
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/msp:/etc/hyperledger/fabric/msp
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
+${this.options.ips.length > 0 ? `
     extra_hosts:
 ${this.options.ips
         .map(host => `
       - "${host.ip}"
 `).join('')}
+`: ``}
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
     networks:
