@@ -49,6 +49,7 @@ genesis:
   ca:
     url: "localhost"
     port: 8054
+  channel: mychannel
   organisations:
     - organisation: "org1"
       domain_name: "bnc.com"

@@ -37,7 +37,7 @@ export class NetworkOptions {
  */
 export class Network {
   organizations: Organization[] = [];
-  channels: Channel[];
+  channel: Channel;
   //added this for extra host ips
   ips: [];
 
