@@ -142,3 +142,8 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
+
+######################
+# BNC
+######################
+config.yaml
