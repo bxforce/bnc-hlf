@@ -46,7 +46,7 @@ client:
     cryptoStore:
       path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}
 organizations:
-    org1:
+    ${this.network.organizations[0].name}:
       mspid: ${this.network.organizations[0].mspName}
       peers:
       ${this.network.organizations[0].peers.map((peer, index) => `
