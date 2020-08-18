@@ -178,7 +178,7 @@ export class Membership extends ClientHelper {
       }
 
       // store the new identity in the wallet
-      await this.wallet.addIdentity(params.enrollmentID, this.client.getMspid(), csrObj?.key ?? enrollment.key, enrollment.certificate);
+      await this.wallet.addIdentity(params.enrollmentID, mspId, csrObj?.key ?? enrollment.key, enrollment.certificate);
       d(`Successfully add user "${params.enrollmentID} and imported it into the wallet`);
 
       return { enrollment, secret };

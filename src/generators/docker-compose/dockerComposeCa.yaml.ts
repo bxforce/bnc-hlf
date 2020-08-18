@@ -111,11 +111,11 @@ services:
       d('CA running');
 
       // check if CA crypto generated
-      await changeOwnerShipWithPassword(`${this.options.networkRootPath}`);
+      // await changeOwnerShipWithPassword(`${this.options.networkRootPath}`);
       // await this.changeOwnerShipWithPassword(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
       // await this.changeOwnership(`${this.options.networkRootPath}/organizations/fabric-ca/${this.options.org.name}`);
 
-      d('Folder OwnerShip updated successfully');
+      // d('Folder OwnerShip updated successfully');
 
       return true;
     } catch (err) {

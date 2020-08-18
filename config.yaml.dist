@@ -1,0 +1,68 @@
+chains:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  fabric: "2.0.0"
+  tls: true
+  consensus: "raft"
+  db: "couchdb"
+  organisations:
+    - organisation: "org1"
+      orgIndex: 0
+      engineOrg: "engineOrg1"
+      domain_name: "bnc.com"
+      ca:
+        name: "ca1"
+        port: 7054
+        engine_name: "host1"
+      orderers:
+        - orderer: "orderer0"
+          port: 7050
+          engine_name: "host1"
+        - orderer: "orderer1"
+          port: 8050
+          engine_name: "host1"
+        - orderer: "orderer2"
+          port: 9050
+          engine_name: "host1"
+      peers:
+        - peer: "peer0"
+          port: 7051
+          engine_name: "host1"
+        - peer: "peer1"
+          port: 8051
+          engine_name: "host1"
+        - peer: "peer2"
+          port: 9051
+          engine_name: "host1"
+engines:
+  - engine: "engineOrg1"
+    hosts:
+      - host: "host1"
+        type: "docker"
+        url: "localhost"
+        port: 2375
+        settings: [ "default" ]
+ips: []
+genesis:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  consensus: "raft"
+  ordererDomain: "bnc.com"
+  ca:
+    url: "localhost"
+    port: 8054
+  channel: mychannel
+  organisations:
+    - organisation: "org1"
+      domain_name: "bnc.com"
+      orderers:
+        - orderer: "orderer0"
+          host_name: "orderer0.bnc.com"
+          port: 7050
+        - orderer: "orderer1"
+          host_name: "orderer1.bnc.com"
+          port: 8050
+        - orderer: "orderer2"
+          host_name: "orderer2.bnc.com"
+          port: 9050
+      anchorPeer:
+        host_name: "peer0.org1.bnc.com"
+        port: 7051
