@@ -459,15 +459,19 @@ export class Orchestrator {
                 // build list of docker services/volumes to delete
                 const volumes: string[] = [];
                 const services: string[] = [];
+
                 for (const peer of org.peers) {
                     services.push(`${peer.name}.${org.fullName}`);
                     services.push(`${peer.name}.${org.fullName}.couchdb`);
                     volumes.push(`${peer.name}.${org.fullName}`);
                 }
+
                 for (const orderer of org.orderers) {
                     services.push(`${orderer.name}.${org.domainName}`);
                     volumes.push(`${orderer.name}.${org.domainName}`);
                 }
+
+                services.push(`${org.ca.name}.${org.name}`);
 
                 // Now check all container within all organization engine
                 for (const engine of org.engines) {
