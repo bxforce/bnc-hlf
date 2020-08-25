@@ -472,6 +472,7 @@ export class Orchestrator {
                 }
 
                 services.push(`${org.ca.name}.${org.name}`);
+                services.push(`caOrderer.${network.ordererOrganization.name}`);
 
                 // Now check all container within all organization engine
                 for (const engine of org.engines) {
