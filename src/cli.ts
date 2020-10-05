@@ -174,9 +174,9 @@ export class CLI {
     return chaincodeEngine;
   }
 
-  static async approveChaincode(doCommit: boolean) {
+  static async approveChaincode(doCommit: boolean, configFile) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.approveChaincodeCli(doCommit);
-    return  chaincodeEngine;
+    await chaincodeEngine.approveChaincodeCli(doCommit, configFile);
+   // return  chaincodeEngine;
   }
 }

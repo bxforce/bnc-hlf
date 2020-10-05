@@ -37,6 +37,7 @@ import {
 import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
 import {ClientConfig} from './core/hlf/helpers';
 import {Membership, UserParams} from './core/hlf/membership';
+import {Chaincode} from'./core/hlf/chaincode';
 import {Identity} from 'fabric-network';
 import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockercomposebase.yaml';
 import {DockerComposePeerGenerator} from './generators/docker-compose/dockercomposepeer.yaml';
@@ -817,20 +818,18 @@ export class Orchestrator {
     }
 
       public async installChaincodeCli(name: string, configFilePath: string , targets: Peer[] , version: string): Promise<void> {
-          const network: Network = await Orchestrator._parse(configFilePath);
-          const organization: Organization = network.organizations[0];
-
         l('[End] Blockchain configuration files parsed');
         let peerTlsRootCert;
         let corePeerAdr ;
-        // loop through the length of targetPeers array and set env + install
-        const cliSingleton = DockerComposeCliSingleton.getInstance();
+
+        const {docker, organization} = await this.loadOrgEngine(configFilePath)
+        const chaincode = new Chaincode(docker);
+        await chaincode.init();
 
         for(let peerElm of targets){
             corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
             peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
-            //run insxtall script
-            await cliSingleton.installChaincode(corePeerAdr,peerTlsRootCert)
+            await chaincode.installChaincode(corePeerAdr,peerTlsRootCert);
         }
 
     }
@@ -909,15 +908,15 @@ export class Orchestrator {
             //await cliGenerator.checkCommitReadiness(options.org.peers[0],corePeerAdr,peerTlsRootCert)
            // await cliGenerator.approve(options.org.peers[0],corePeerAdr,peerTlsRootCert)
         }
-       // console.log(options.org)
-
 
     }
 
-    public async approveChaincodeCli(doCommit: boolean): Promise <void> {
+    public async approveChaincodeCli(doCommit: boolean, configFilePath): Promise <void> {
         l(' REQUEST to approve chaincode')
-        const cliSingleton = DockerComposeCliSingleton.getInstance();
-        await cliSingleton.approve()
+        const {docker, organization} = await this.loadOrgEngine(configFilePath)
+        const chaincode = new Chaincode(docker);
+        await chaincode.init();
+        await chaincode.approve();
     }
 
     public async getTargetPeers(configFilePath: string, targets: string[]) {
@@ -932,6 +931,14 @@ export class Orchestrator {
             })
         })
         return targetPeers;
+    }
+
+    public async loadOrgEngine(configFilePath) {
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const organization: Organization = network.organizations[0];
+        const engine = organization.getEngine(organization.peers[0].options.engineName);
+        const docker =  new DockerEngine({ host: engine.options.url, port: engine.options.port });
+        return {docker, organization};
     }
 
 }

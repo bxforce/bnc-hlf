@@ -140,7 +140,8 @@ services:
             l(`Starting CLI ${serviceName}...`);
 
             const engine = this.options.org.getEngine(peer.options.engineName);
-            console.log('after engine')
+            console.log('after engine', engine)
+            console.log(peer)
             this.docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
             this.container = await this.docker.getContainer('cli.org1.bnc.com')
             console.log('after docker')

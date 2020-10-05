@@ -81,8 +81,8 @@ const tasks = {
     return await CLI.installChaincode(name, chaincodePath, targets, version);
   },
 
-  async approveChaincode(commit: boolean) {
-    return await CLI.approveChaincode(commit)
+  async approveChaincode(commit: boolean, filePath) {
+    return await CLI.approveChaincode(commit, filePath)
   },
 
   async upgradeChaincode() {
@@ -268,9 +268,11 @@ chaincodeCmd
     .command('approve')
     .description('approve chaincode')
     .option('--commit', 'also commits chaincode')
+    .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+  //  .requiredOption('-p, --list <items>', 'comma separated list', commaSeparatedList)
    // .requiredOption('-orgs, --list <items>', 'comma separated list of orgMSP', commaSeparatedList)
     .action(async (cmd) => {
-      await tasks.approveChaincode(cmd.commit);
+      await tasks.approveChaincode(cmd.commit, cmd.config);
     });
 /*
 program
