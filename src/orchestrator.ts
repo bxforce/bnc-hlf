@@ -40,7 +40,13 @@ import {Membership, UserParams} from './core/hlf/membership';
 import {Identity} from 'fabric-network';
 import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockercomposebase.yaml';
 import {DockerComposePeerGenerator} from './generators/docker-compose/dockercomposepeer.yaml';
+
+import {DockerComposeCliGenerator} from './generators/docker-compose/dockercomposecli.yaml';
+import {DockerComposeCliSingleton} from './generators/docker-compose/dockerComposeCliSingleton.yaml';
+
+
 import {Organization} from './models/organization';
+import {Peer} from './models/peer';
 import {DockerEngine} from './agents/docker-agent';
 import {DockerComposeOrdererGenerator} from './generators/docker-compose/dockercomposeorderer.yaml';
 import createFolder = SysWrapper.createFolder;
@@ -62,6 +68,9 @@ import getArtifactsPath = Utils.getArtifactsPath;
  * @author ahmed souissi
  */
 export class Orchestrator {
+
+    public cliGenerator;
+  //  public targetPeers;
 
     /**
      * Parse & validate deployment configuration file
@@ -352,6 +361,7 @@ export class Orchestrator {
         // Assign & check root path
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
         await createFolder(path);
+        
 
         // Auto-create docker-compose folder if not exists
         await createFolder(getDockerComposePath(path));
@@ -700,4 +710,228 @@ export class Orchestrator {
         const homedir = require('os').homedir();
         return join(homedir, NETWORK_ROOT_PATH);
     }
+
+    public async deployCli(name: string, configFilePath: string , targets: Peer[] , version: string): Promise<void> {
+        l(`[Chaincode] - Request to install  a chaincode (${name})`);
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        //peer0 of org1
+        const peer: Peer = network.organizations[0].peers[0];
+        l('[End] Blockchain configuration files parsed');
+
+        // Assign & check root path
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            ips: network.ips,
+            envVars: {
+                FABRIC_VERSION: HLF_VERSION.HLF_2,
+                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+            }
+        };
+
+        l('Creating Peer base docker compose file');
+        const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
+        await peerBaseGenerator.createTemplateBase();
+
+        l('Creating Docker network');
+        // TODO use localhost and default port for the default engine
+        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+        await engine.createNetwork({Name: options.composeNetwork});
+
+        /*this.targetPeers = [];
+        targets.forEach((namePeer) => {
+            network.organizations[0].peers.forEach((peer) => {
+                if(namePeer == peer.name){
+                    this.targetPeers.push(peer)
+                }
+
+            })
+        })
+
+         */
+        l('Creating cli container & deploy');
+        this.cliGenerator = new DockerComposeCliGenerator(`docker-compose-cli-${organization.name}.yaml`, options);
+        this.cliGenerator.peers= targets;
+        l(`'Creating Cli container template`);
+        await this.cliGenerator.createTemplateCli();
+
+        await this.cliGenerator.startCli(targets[0])
+
+    }
+
+
+
+    public async deployCliSingleton(name: string, configFilePath: string , targets: Peer[] , version: string): Promise<void> {
+        l(`[Chaincode] - Request to install  a chaincode (${name})`);
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        //peer0 of org1
+        const peer: Peer = network.organizations[0].peers[0];
+        l('[End] Blockchain configuration files parsed');
+
+        // Assign & check root path
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            ips: network.ips,
+            envVars: {
+                FABRIC_VERSION: HLF_VERSION.HLF_2,
+                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+            }
+        };
+
+        l('Creating Peer base docker compose file');
+        const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
+        await peerBaseGenerator.createTemplateBase();
+
+        l('Creating Docker network');
+        // TODO use localhost and default port for the default engine
+        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+        await engine.createNetwork({Name: options.composeNetwork});
+
+        l('Creating cli container & deploy');
+        const cliSingleton = DockerComposeCliSingleton.init(`docker-compose-cli-${organization.name}.yaml`, options);
+        cliSingleton.peers= targets;
+        l(`'Creating Cli container template`);
+        await cliSingleton.createTemplateCli();
+
+        await cliSingleton.startCli(targets[0])
+
+    }
+
+      public async installChaincodeCli(name: string, configFilePath: string , targets: Peer[] , version: string): Promise<void> {
+          const network: Network = await Orchestrator._parse(configFilePath);
+          const organization: Organization = network.organizations[0];
+
+        l('[End] Blockchain configuration files parsed');
+        let peerTlsRootCert;
+        let corePeerAdr ;
+        // loop through the length of targetPeers array and set env + install
+        const cliSingleton = DockerComposeCliSingleton.getInstance();
+
+        for(let peerElm of targets){
+            corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
+            peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
+            //run insxtall script
+            await cliSingleton.installChaincode(corePeerAdr,peerTlsRootCert)
+        }
+
+    }
+
+
+
+    public async installChaincode(name: string, configFilePath: string , targets: Peer[] , version: string): Promise<void> {
+       /* l(`[Chaincode] - Request to install  a chaincode (${name})`);
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        //peer0 of org1
+        const peer: Peer = network.organizations[0].peers[0];
+        l('[End] Blockchain configuration files parsed');
+
+        // Assign & check root path
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            ips: network.ips,
+            envVars: {
+                FABRIC_VERSION: HLF_VERSION.HLF_2,
+                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+            }
+        };
+
+        l('Creating Peer base docker compose file');
+        const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
+        await peerBaseGenerator.createTemplateBase();
+
+        l('Creating Docker network');
+        // TODO use localhost and default port for the default engine
+        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+        await engine.createNetwork({Name: options.composeNetwork});
+
+        let targetPeers = [];
+        targets.forEach((namePeer) => {
+            options.org.peers.forEach((peer) => {
+                if(namePeer == peer.name){
+                    targetPeers.push(peer)
+                }
+
+            })
+        })
+        l('Creating cli container & deploy');
+        this.cliGenerator = new DockerComposeCliGenerator(`docker-compose-cli-${organization.name}.yaml`, options);
+        this.cliGenerator.peers= targetPeers;
+        l(`'Creating Cli container template`);
+        await this.cliGenerator.createTemplateCli();
+
+        await this.cliGenerator.startCli(targetPeers[0])
+
+        */
+
+        //construct the two variables to set in script enVar
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const organization: Organization = network.organizations[0];
+        let peerTlsRootCert;
+        let corePeerAdr ;
+        // loop through the length of targetPeers array and set env + install
+
+        for(let peerElm of targets){
+            corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
+            peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
+            //run insxtall script
+            await this.cliGenerator.installChaincode(corePeerAdr,peerTlsRootCert)
+
+
+            //await cliGenerator.checkCommitReadiness(options.org.peers[0],corePeerAdr,peerTlsRootCert)
+           // await cliGenerator.approve(options.org.peers[0],corePeerAdr,peerTlsRootCert)
+        }
+       // console.log(options.org)
+
+
+    }
+
+    public async approveChaincodeCli(doCommit: boolean): Promise <void> {
+        l(' REQUEST to approve chaincode')
+        const cliSingleton = DockerComposeCliSingleton.getInstance();
+        await cliSingleton.approve()
+    }
+
+    public async getTargetPeers(configFilePath: string, targets: string[]) {
+        const network: Network = await Orchestrator._parse(configFilePath);
+        let targetPeers = [];
+        targets.forEach((namePeer) => {
+            network.organizations[0].peers.forEach((peer) => {
+                if(namePeer == peer.name){
+                    targetPeers.push(peer)
+                }
+
+            })
+        })
+        return targetPeers;
+    }
+
 }

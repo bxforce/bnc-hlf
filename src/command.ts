@@ -77,8 +77,12 @@ const tasks = {
     return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   },
 
-  async installChaincode() {
-    l('[Install Chaincode] Not yet implemented');
+  async installChaincode(name: string, chaincodePath: string , targets: string[] , version: string) {
+    return await CLI.installChaincode(name, chaincodePath, targets, version);
+  },
+
+  async approveChaincode(commit: boolean) {
+    return await CLI.approveChaincode(commit)
   },
 
   async upgradeChaincode() {
@@ -238,6 +242,35 @@ channelCmd
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
     .action(async (cmd) => {
       await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+    });
+
+//peers, chaincodeName, chaincodePath, chaincodeVersion
+//sudo bnc chaincode install -n mycc -v v0 -p p1,p2  -f ./tests/manual/wassim/config-deploy-org2.yaml
+
+function commaSeparatedList(value, dummyPrevious) {
+  return value.split(',');
+}
+
+const chaincodeCmd = program.command('chaincode');
+chaincodeCmd
+    .command('install')
+    .description('install chaincode')
+    .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .requiredOption('-p, --list <items>', 'comma separated list', commaSeparatedList)
+    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
+    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+    .action(async (cmd) => {
+      await tasks.installChaincode(cmd.namech, cmd.config, cmd.list, cmd.vch);
+    });
+
+
+chaincodeCmd
+    .command('approve')
+    .description('approve chaincode')
+    .option('--commit', 'also commits chaincode')
+   // .requiredOption('-orgs, --list <items>', 'comma separated list of orgMSP', commaSeparatedList)
+    .action(async (cmd) => {
+      await tasks.approveChaincode(cmd.commit);
     });
 /*
 program

@@ -54,7 +54,7 @@ organizations:
 peers:
 ${this.network.organizations[0].peers.map((peer, index) => `
   ${peer.name}.${this.network.organizations[0].fullName}:
-    url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${peer.name}.${this.network.organizations[0].fullName}:${peer.options.ports[0]}
+    url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].engineHost(peer.options.engineName)}:${peer.options.ports[0]}
     grpcOptions:
       ssl-target-name-override: ${peer.name}.${this.network.organizations[0].fullName}
       request-timeout: 120001
