@@ -161,15 +161,8 @@ export class CLI {
   //Chaincode commands
   static async installChaincode(name: string, deployPath: string , targets: string[] , version: string) {
     const chaincodeEngine = new Orchestrator();
-    // "peers": ["peer1","peer2"],
-    // "chaincodeName":"mycc",
-    // "chaincodePath":"github.com/example_cc",
-    // "chaincodeVersion":"v0"
-
     let targetPeers = await chaincodeEngine.getTargetPeers(deployPath, targets)
-   // await chaincodeEngine.deployCli(name, deployPath, targetPeers, version);
     await chaincodeEngine.deployCliSingleton(name, deployPath, targetPeers, version)
-  //  await chaincodeEngine.installChaincode(name, deployPath, targetPeers, version);
     await chaincodeEngine.installChaincodeCli(name, deployPath, targetPeers, version)
     return chaincodeEngine;
   }
@@ -180,9 +173,9 @@ export class CLI {
     return  chaincodeEngine;
   }
 
-  static async commitChaincode( config, listOrgs, listPeers, commitFile) {
+  static async commitChaincode( config, listPeers, commitFile) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.commitChaincode(config, listOrgs, listPeers, commitFile);
+    await chaincodeEngine.commitChaincode(config, listPeers, commitFile);
     return  chaincodeEngine;
   }
 }

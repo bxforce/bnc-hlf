@@ -43,7 +43,7 @@ export class Chaincode {
         this.container = await this.docker.getContainer(`cli.${name}`)
     }
 
-    async checkCommitReadiness(arg, argArray, targets): Promise <boolean> {
+    async checkCommitReadiness(arg, targets): Promise <boolean> {
         try {
             const cmd = ['./scripts/commit.sh', `${arg}`, `${targets}`]
            /* for (let singleArg of argArray){

@@ -85,8 +85,8 @@ const tasks = {
     return await CLI.approveChaincode(commit, filePath, name, version, sequence, channelName)
   },
 
-  async commitChaincode(configFile, listOrgs: string[], listPeers: string[], commitFile) {
-    return await CLI.commitChaincode(configFile, listOrgs, listPeers, commitFile)
+  async commitChaincode(configFile, listPeers: string[], commitFile) {
+    return await CLI.commitChaincode(configFile, listPeers, commitFile)
   },
 
   async upgradeChaincode() {
@@ -287,13 +287,12 @@ chaincodeCmd
     .command('commit')
     .description('commit chaincode')
     .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
-    .requiredOption('-o, --list <items>', 'comma separated list org names', commaSeparatedList)
+   // .requiredOption('-o, --list <items>', 'comma separated list org names', commaSeparatedList)
     .requiredOption('-p, --listPeers <items>', 'comma separated list of all peers', commaSeparatedList)
     .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
     // .requiredOption('-orgs, --list <items>', 'comma separated list of orgMSP', commaSeparatedList)
     .action(async (cmd) => {
-      console.log("commmmmmmmmmmm", cmd.list)
-      await tasks.commitChaincode(cmd.config, cmd.list, cmd.listPeers, cmd.confCommit);
+      await tasks.commitChaincode(cmd.config, cmd.listPeers, cmd.confCommit);
     });
 /*
 program
