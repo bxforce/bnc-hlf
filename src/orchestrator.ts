@@ -17,11 +17,13 @@ limitations under the License.
 import {join} from 'path';
 import {d, e, l} from './utils/logs';
 import {DeploymentParser} from './parser/deploymentParser';
+import {CommitParser} from './parser/commitParser';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/networkClean.sh';
 import {ConfigurationValidator} from './parser/validator/configurationValidator';
 import {DockerComposeYamlOptions} from './utils/data-type';
 import {DownloadFabricBinariesGenerator} from './generators/utils/downloadFabricBinaries';
 import {Network} from './models/network';
+import {CommitConfiguration} from './models/commitConfiguration';
 import {GenesisParser} from './parser/genesisParser';
 import {ConfigtxYamlGenerator} from './generators/configtx.yaml';
 import {SysWrapper} from './utils/sysWrapper';
@@ -95,6 +97,18 @@ export class Orchestrator {
         l('[End] Blockchain configuration files parsed');
 
         return network;
+    }
+
+    private static async _parseCommitConfig(commitConfigPath: string): Promise<CommitConfiguration> {
+        l('[Start] Start parsing the blockchain configuration file');
+
+        let configParse = new CommitParser(commitConfigPath);
+        const conf = await configParse.parse();
+        l('[End] Blockchain configuration files parsed');
+
+        console.log("returned config", conf)
+
+        return conf;
     }
 
     /**
@@ -941,13 +955,23 @@ export class Orchestrator {
 
         console.log("finaaaallll", finalArg1)
         chaincode.checkCommitReadiness(finalArg1, argArray)
-        
+
         */
 
 
 
        console.log('parse the commit file to construct args')
-        
+        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        const organizations: Organization[] = conf.organizations;
+
+        organizations.forEach((org) => {
+            for(let singlePeer of org.peers){
+                console.log("construct target peers", singlePeer)
+            }
+        })
+
+
+
     }
 
     public async getTargetPeers(configFilePath: string, targets: string[]) {

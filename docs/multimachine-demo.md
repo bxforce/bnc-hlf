@@ -139,3 +139,17 @@ peer chaincode invoke -o orderer0.bnc.com:7050 --tls --cafile /opt/gopath/src/gi
  ````shell script
 peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
 ````
+
+## DEMO FOR CHAINCODE COMMANDS
+ ````shell script
+sudo bnc chaincode install -n mycc -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org1.yaml
+````
+
+ ````shell script
+sudo bnc chaincode approve --commit false -f ./tests/manual/wassim/config-deploy-org2.yaml -n mycc -s 1 -v 1 -channel mychannel
+````
+
+ ````shell script
+sudo bnc chaincode commit  -p peer0 -o org1,org2  -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml
+````
+
