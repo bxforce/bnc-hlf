@@ -8,9 +8,6 @@ CHANNEL_NAME="mychannel"
 VERSION=1
 SEQUENCE=1
 
-isCommitted=false
-isApproved=false
-
 peerTargets=""
 
 
@@ -23,8 +20,6 @@ queryCommitted() {
   echo "===================== Querying chaincode definition on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME'... ===================== "
 	local rc=1
 	local COUNTER=1
-	# continue to poll
-  # we either get a successful response, or reach MAX RETRY
 	while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ] ; do
     sleep $DELAY
     echo "Attempting to Query committed status on $CORE_PEER_ADDRESS, Retry after $DELAY seconds."
@@ -38,18 +33,15 @@ queryCommitted() {
 		COUNTER=$(expr $COUNTER + 1)
 	done
   echo
-  #cat log.txt
   if test $rc -eq 0; then
     cat log.txt
     echo "===================== Query chaincode definition successful on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME' ===================== "
 		echo "===================== ALREADY COMMITTED ===================== "
 		echo
-		#isCommitted=true
 		exit 1
   else
     echo "!!!!!!!!!!!!!!! After $MAX_RETRY attempts, Query chaincode definition result on $CORE_PEER_ADDRESS is INVALID !!!!!!!!!!!!!!!!"
     echo
-    #exit 1
   fi
 }
 
@@ -57,10 +49,6 @@ queryCommitted() {
 checkCommitReadiness() {
     echo
     echo
-
-    echo "##########################checkCommitReadiness####################"
-
-
     echo "===================== Checking the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME'... ===================== "
     echo $1
     echo $2
@@ -86,21 +74,11 @@ checkCommitReadiness() {
         echo $var
         grep "$var" log.txt &>/dev/null || let rc=1
       done
-
-
-      #echo "$@"
-      #for var in "$@"
-      #do
-      #  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      #  echo $var
-      #  grep "$var" log.txt &>/dev/null || let rc=1
-      #done
       COUNTER=$(expr $COUNTER + 1)
     done
     cat log.txt
     if test $rc -eq 0; then
       echo "===================== Checking the commit readiness of the chaincode definition successful on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME' ===================== "
-      #isApproved=true
     else
       echo "!!!!!!!!!!!!!!! After $MAX_RETRY attempts, Check commit readiness result on $CORE_PEER_ADDRESS is INVALID !!!!!!!!!!!!!!!!"
       echo
@@ -112,20 +90,10 @@ checkCommitReadiness() {
 
 
 
-
 commit() {
   echo "!!!!!!!!!!!!!!!!!!!Into commit!!!!!!!!!!!!!!!!!!!!!!!!!"
-
-  echo "$peerTargets"
-  # peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --channelID mychannel --name mycc --version $VERSION --sequence $SEQUENCE --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer1.org2.bnc.com/tls/ca.crt
-
-
-  # while 'peer chaincode' command can get the orderer endpoint from the
-  # peer (if join was successful), let's supply it directly as we know
-  # it using the "-o" option
   set -x
-  #peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name carBook $PEER_CONN_PARMS --version ${VERSION} --sequence ${VERSION} >&log.txt
-  peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name mycc --version $VERSION --sequence $SEQUENCE  ${peerTargets}
+  peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name mycc --version $VERSION --sequence $SEQUENCE  ${peerTargets} >&log.txt
   res=$?
   set +x
   cat log.txt
@@ -139,10 +107,5 @@ commit() {
 
 
 queryCommitted
-#checkCommitReadiness "$@"
 checkCommitReadiness "$1" "$2"
 commit
-
-#checkCommitReadiness "\"org1MSP\": true" "\"org2MSP\": true"
-#commit
-#check commit readiness needs two MSP of both args
