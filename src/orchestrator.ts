@@ -934,7 +934,7 @@ export class Orchestrator {
     }
 
     public async commitChaincode(configFile, listOrgs, listPeers, commitFile): Promise <void> {
-       /*
+       
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile)
         const chaincode = new Chaincode(docker,"mychannel", "1"); // TODO add those args in command line
@@ -953,22 +953,37 @@ export class Orchestrator {
             argArray.push(finalArg);
         }
 
-        console.log("finaaaallll", finalArg1)
-        chaincode.checkCommitReadiness(finalArg1, argArray)
 
-        */
+
 
 
 
        console.log('parse the commit file to construct args')
         const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
         const organizations: Organization[] = conf.organizations;
-
+        let targets=''
         organizations.forEach((org) => {
+            let nameOrg = org.name;
+            let domainName = org.domainName;
+            let fullName = nameOrg+'.'+domainName;
+            console.log('fullname', fullName)
             for(let singlePeer of org.peers){
+                let namePeer = singlePeer.name;
+                let portPeer = singlePeer.options.ports[0];
+                let pathToCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${fullName}/peers/${namePeer}.${fullName}/tls/ca.crt`
                 console.log("construct target peers", singlePeer)
+                //--peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt
+                targets += `--peerAddresses ${namePeer}.${fullName}:${portPeer} --tlsRootCertFiles ${pathToCert} `
             }
+
+
+            console.log("final targets", targets)
         })
+
+
+
+
+        chaincode.checkCommitReadiness(finalArg1, argArray, targets);
 
 
 

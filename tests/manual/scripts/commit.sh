@@ -11,6 +11,8 @@ SEQUENCE=1
 isCommitted=false
 isApproved=false
 
+peerTargets=""
+
 
 
 echo "INSIDE SCRIPT ###################################"
@@ -30,22 +32,17 @@ queryCommitted() {
     peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name mycc >&log.txt
     #tail -n +2 log.txt > log.tmp && mv log.tmp log.txt #### added this to remove first line
     res=$?
-    echo "reesss $res"
-    echo "$(cat log.txt)"
     set +x
-
 		test $res -eq 0 && VALUE=$(cat log.txt | grep -o '^Version: [0-9], Sequence: [0-9], Endorsement Plugin: escc, Validation Plugin: vscc')
-    echo "here the value"
-    echo $VALUE
-    echo $EXPECTED_RESULT
-
     test "$VALUE" = "$EXPECTED_RESULT" && let rc=0
 		COUNTER=$(expr $COUNTER + 1)
 	done
   echo
-  cat log.txt
+  #cat log.txt
   if test $rc -eq 0; then
+    cat log.txt
     echo "===================== Query chaincode definition successful on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME' ===================== "
+		echo "===================== ALREADY COMMITTED ===================== "
 		echo
 		#isCommitted=true
 		exit 1
@@ -67,6 +64,7 @@ checkCommitReadiness() {
     echo "===================== Checking the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME'... ===================== "
     echo $1
     echo $2
+    peerTargets="$2"
     local rc=1
     local COUNTER=1
     # continue to poll
@@ -118,7 +116,23 @@ checkCommitReadiness() {
 commit() {
   echo "!!!!!!!!!!!!!!!!!!!Into commit!!!!!!!!!!!!!!!!!!!!!!!!!"
 
+  echo "$peerTargets"
   # peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --channelID mychannel --name mycc --version $VERSION --sequence $SEQUENCE --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer1.org2.bnc.com/tls/ca.crt
+
+
+  # while 'peer chaincode' command can get the orderer endpoint from the
+  # peer (if join was successful), let's supply it directly as we know
+  # it using the "-o" option
+  set -x
+  #peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name carBook $PEER_CONN_PARMS --version ${VERSION} --sequence ${VERSION} >&log.txt
+  peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name mycc --version $VERSION --sequence $SEQUENCE  ${peerTargets}
+  res=$?
+  set +x
+  cat log.txt
+  verifyResult $res "Chaincode definition commit failed on channel mychannel failed"
+  echo "===================== Chaincode definition committed on channel mychannel ===================== "
+  echo
+
 }
 
 
