@@ -159,11 +159,11 @@ export class CLI {
   }
 
   //Chaincode commands
-  static async installChaincode(name: string, deployPath: string , targets: string[] , version: string) {
+  static async installChaincode(name: string, deployPath: string , targets: string[] , version: string, chaincodePath: string) {
     const chaincodeEngine = new Orchestrator();
     let targetPeers = await chaincodeEngine.getTargetPeers(deployPath, targets)
     await chaincodeEngine.deployCliSingleton(name, deployPath, targetPeers, version)
-    await chaincodeEngine.installChaincodeCli(name, deployPath, targetPeers, version)
+    await chaincodeEngine.installChaincodeCli(name, deployPath, targetPeers, version, chaincodePath)
     return chaincodeEngine;
   }
 

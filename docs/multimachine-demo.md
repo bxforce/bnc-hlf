@@ -142,7 +142,7 @@ peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
 
 ## DEMO FOR CHAINCODE COMMANDS
  ````shell script
-sudo bnc chaincode install -n mycc -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org1.yaml
+sudo bnc chaincode install -n mycc -cPath abstore/go -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org1.yaml
 ````
 
  ````shell script
@@ -150,6 +150,6 @@ sudo bnc chaincode approve --commit false -f ./tests/manual/wassim/config-deploy
 ````
 
  ````shell script
-sudo bnc chaincode commit  -p peer0 -o org1,org2  -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml
+sudo bnc chaincode commit  -p peer0 -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml
 ````
 

@@ -11,7 +11,7 @@ echo $CC_NAME
 
 packageChaincode() {
   set -x
-  peer lifecycle chaincode package "$CC_NAME.tar.gz" --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label "$CC_NAME"_1 >&log.txt
+  peer lifecycle chaincode package "$CC_NAME.tar.gz" --path "$CC_ROOT_PATH/$CC_PATH" --lang golang --label "$CC_NAME"_1 >&log.txt
   res=$?
   set +x
   cat log.txt

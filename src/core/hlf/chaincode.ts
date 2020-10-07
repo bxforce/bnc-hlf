@@ -64,7 +64,7 @@ export class Chaincode {
         }
     }
 
-    async installChaincode(v1,v2): Promise <boolean> {
+    async installChaincode(v1,v2, path): Promise <boolean> {
         try {
             const cmd = ["./scripts/install.sh"]
             //const cmd = ['bash', '-c', 'source ./scripts/install.sh']
@@ -72,7 +72,8 @@ export class Chaincode {
                 `CORE_PEER_ADDRESS=${v1}`,
                 `CORE_PEER_TLS_ROOTCERT_FILE=${v2}`,
                 `CC_NAME=${this.name}`,
-                `VERSION=${this.version}`
+                `VERSION=${this.version}`,
+                `CC_PATH=${path}`
             ]
             let res = await this.executeCommand(cmd, envArray);
             console.log('RESULT INSTALL CHAINCODE', res)

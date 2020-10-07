@@ -768,7 +768,7 @@ export class Orchestrator {
 
     }
 
-      public async installChaincodeCli(name: string, configFilePath: string , targets: Peer[] , version: string): Promise<void> {
+      public async installChaincodeCli(name: string, configFilePath: string , targets: Peer[] , version: string, chaincodePath: string): Promise<void> {
         l('[End] Blockchain configuration files parsed');
         let peerTlsRootCert;
         let corePeerAdr ;
@@ -780,7 +780,7 @@ export class Orchestrator {
         for(let peerElm of targets){
             corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
             peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
-            await chaincode.installChaincode(corePeerAdr,peerTlsRootCert);
+            await chaincode.installChaincode(corePeerAdr,peerTlsRootCert, chaincodePath);
         }
 
     }

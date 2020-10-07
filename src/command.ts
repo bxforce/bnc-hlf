@@ -77,8 +77,8 @@ const tasks = {
     return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   },
 
-  async installChaincode(name: string, chaincodePath: string , targets: string[] , version: string) {
-    return await CLI.installChaincode(name, chaincodePath, targets, version);
+  async installChaincode(name: string, confPath: string , targets: string[] , version: string, chaincodePath) {
+    return await CLI.installChaincode(name, confPath, targets, version, chaincodePath);
   },
 
   async approveChaincode(commit: boolean, filePath, name: string, version: string, sequence: string, channelName: string) {
@@ -260,11 +260,12 @@ chaincodeCmd
     .command('install')
     .description('install chaincode')
     .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root specified in CLI conf')
     .requiredOption('-p, --list <items>', 'comma separated list', commaSeparatedList)
     .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
     .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
     .action(async (cmd) => {
-      await tasks.installChaincode(cmd.namech, cmd.config, cmd.list, cmd.vch);
+      await tasks.installChaincode(cmd.namech, cmd.config, cmd.list, cmd.vch, cmd.ch);
     });
 
 

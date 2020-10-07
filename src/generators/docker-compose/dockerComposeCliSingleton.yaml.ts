@@ -56,6 +56,7 @@ services:
       #- FABRIC_LOGGING_SPEC=DEBUG
       - FABRIC_LOGGING_SPEC=INFO
       - CHANNEL_NAME=mychannel
+      - CC_ROOT_PATH=/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
       - CORE_PEER_ID=cli
       - CORE_PEER_ADDRESS=${this.options.org.peers[0].name}.${this.options.org.fullName}:${this.options.org.peers[0].options.ports[0]}
       - CORE_PEER_LOCALMSPID=${this.options.org.mspName}
