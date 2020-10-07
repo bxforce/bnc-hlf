@@ -81,8 +81,12 @@ const tasks = {
     return await CLI.installChaincode(name, chaincodePath, targets, version);
   },
 
-  async approveChaincode(commit: boolean, filePath) {
-    return await CLI.approveChaincode(commit, filePath)
+  async approveChaincode(commit: boolean, filePath, name: string, version: string, sequence: string, channelName: string) {
+    return await CLI.approveChaincode(commit, filePath, name, version, sequence, channelName)
+  },
+
+  async commitChaincode(configFile, listOrgs: string[], listPeers: string[], commitFile) {
+    return await CLI.commitChaincode(configFile, listOrgs, listPeers, commitFile)
   },
 
   async upgradeChaincode() {
@@ -269,10 +273,27 @@ chaincodeCmd
     .description('approve chaincode')
     .option('--commit', 'also commits chaincode')
     .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
+    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+    .requiredOption('-s, --sch <chaincode-sequence>', 'sequence of the chaincode')
+    .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
   //  .requiredOption('-p, --list <items>', 'comma separated list', commaSeparatedList)
    // .requiredOption('-orgs, --list <items>', 'comma separated list of orgMSP', commaSeparatedList)
     .action(async (cmd) => {
-      await tasks.approveChaincode(cmd.commit, cmd.config);
+      await tasks.approveChaincode(cmd.commit, cmd.config, cmd.namech, cmd.vch, cmd.sch, cmd.channel);
+    });
+
+chaincodeCmd
+    .command('commit')
+    .description('commit chaincode')
+    .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .requiredOption('-o, --list <items>', 'comma separated list org names', commaSeparatedList)
+    .requiredOption('-p, --listPeers <items>', 'comma separated list of all peers', commaSeparatedList)
+    .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
+    // .requiredOption('-orgs, --list <items>', 'comma separated list of orgMSP', commaSeparatedList)
+    .action(async (cmd) => {
+      console.log("commmmmmmmmmmm", cmd.list)
+      await tasks.commitChaincode(cmd.config, cmd.list, cmd.listPeers, cmd.confCommit);
     });
 /*
 program

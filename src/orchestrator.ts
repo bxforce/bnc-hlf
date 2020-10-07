@@ -823,8 +823,8 @@ export class Orchestrator {
         let corePeerAdr ;
 
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
-        const chaincode = new Chaincode(docker);
-        await chaincode.init();
+        const chaincode = new Chaincode(docker, name, version);
+        await chaincode.init(organization.fullName);
 
         for(let peerElm of targets){
             corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
@@ -911,12 +911,43 @@ export class Orchestrator {
 
     }
 
-    public async approveChaincodeCli(doCommit: boolean, configFilePath): Promise <void> {
+    public async approveChaincodeCli(doCommit: boolean, configFilePath, name, version, sequence, channelName): Promise <void> {
         l(' REQUEST to approve chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
-        const chaincode = new Chaincode(docker);
-        await chaincode.init();
-        await chaincode.approve();
+        const chaincode = new Chaincode(docker, name, version);
+        await chaincode.init(organization.fullName);
+        await chaincode.approve(sequence, channelName);
+    }
+
+    public async commitChaincode(configFile, listOrgs, listPeers, commitFile): Promise <void> {
+       /*
+        l('Request to commit chaincode')
+        const {docker, organization} = await this.loadOrgEngine(configFile)
+        const chaincode = new Chaincode(docker,"mychannel", "1"); // TODO add those args in command line
+        await chaincode.init(organization.fullName);
+        let argArray = [];
+        let finalArg= "";
+        let finalArg1= "";
+        console.log(listOrgs)
+        for(let org of listOrgs){
+            console.log("here", org)
+            let mspName = org+"MSP";
+            console.log(mspName)
+            finalArg = `"${mspName}": true`
+            finalArg1+= `\"${mspName}\": true`
+            finalArg1 += ";"
+            argArray.push(finalArg);
+        }
+
+        console.log("finaaaallll", finalArg1)
+        chaincode.checkCommitReadiness(finalArg1, argArray)
+        
+        */
+
+
+
+       console.log('parse the commit file to construct args')
+        
     }
 
     public async getTargetPeers(configFilePath: string, targets: string[]) {

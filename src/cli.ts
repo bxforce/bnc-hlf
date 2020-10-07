@@ -174,9 +174,15 @@ export class CLI {
     return chaincodeEngine;
   }
 
-  static async approveChaincode(doCommit: boolean, configFile) {
+  static async approveChaincode(doCommit: boolean, configFile, name, version, sequence, channelName) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.approveChaincodeCli(doCommit, configFile);
-   // return  chaincodeEngine;
+    await chaincodeEngine.approveChaincodeCli(doCommit, configFile, name, version, sequence, channelName);
+    return  chaincodeEngine;
+  }
+
+  static async commitChaincode( config, listOrgs, listPeers, commitFile) {
+    const chaincodeEngine = new Orchestrator();
+    await chaincodeEngine.commitChaincode(config, listOrgs, listPeers, commitFile);
+    return  chaincodeEngine;
   }
 }

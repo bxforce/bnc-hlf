@@ -63,8 +63,8 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${this.options.org.fullName}/peers/${this.options.org.peers[0].name}/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${this.options.org.fullName}/peers/${this.options.org.peers[0].name}/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${this.options.org.fullName}/peers/${this.options.org.peers[0].name}.${this.options.org.fullName}/tls/ca.crt
-      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${this.options.org.fullName}/users/Admin@org1.bnc.com/msp
-      - CORE_ORDERER_TLS_ROOTCERT=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${this.options.org.fullName}/users/Admin@${this.options.org.fullName}/msp
+      - CORE_ORDERER_TLS_ROOTCERT=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/${this.options.org.orderers[0].name}.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: /bin/bash
     volumes:
@@ -72,7 +72,7 @@ services:
       - ${this.options.networkRootPath}/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
       - /home/ubuntu/fabric-samples/chaincode/:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
-      - /home/ubuntu/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+      - /home/ubuntu/bnc-hlf/tests/manual/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
     networks:
       - ${this.options.composeNetwork}
   `;
@@ -143,7 +143,7 @@ services:
             console.log('after engine', engine)
             console.log(peer)
             this.docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-            this.container = await this.docker.getContainer('cli.org1.bnc.com')
+            this.container = await this.docker.getContainer(`cli.${this.options.org.fullName}`)
             console.log('after docker')
             await this.docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 

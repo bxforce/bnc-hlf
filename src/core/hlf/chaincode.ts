@@ -29,53 +29,52 @@ export class Chaincode {
     public container;
     public docker;
     public options;
+    public name;
+    public version;
 
 
-    constructor(docker : DockerEngine ) {
+    constructor(docker : DockerEngine, name: string, version: string ) {
         this.docker = docker;
-       // this.container = await this.docker.getContainer('cli.org1.bnc.com')
-    }
-    async init() {
-        this.container = await this.docker.getContainer('cli.org1.bnc.com')
+        this.name = name;
+        this.version = version;
     }
 
+    async init(name) {
+        this.container = await this.docker.getContainer(`cli.${name}`)
+    }
 
-   /*async loadConf(configFilePath: string , peer: Peer) {
-        const orchestrator = new Orchestrator()
-        const network: Network = await orchestrator._parse(configFilePath);
-        l('[End] Blockchain configuration files parsed');
-
-        // Assign & check root path
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
-
-        this.options= DockerComposeYamlOptions = {
-            networkRootPath: path,
-            composeNetwork: BNC_NETWORK,
-            org: network.organizations[0],
-            ips: network.ips,
-            envVars: {
-                FABRIC_VERSION: HLF_VERSION.HLF_2,
-                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
-                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+    async checkCommitReadiness(arg, argArray): Promise <boolean> {
+        try {
+            const cmd = ['./scripts/commit.sh', `${arg}`, "second arg"]
+           /* for (let singleArg of argArray){
+                cmd.push(singleArg)
             }
-        };
 
-        console.log(peer.options.engineName)
-
-        const engine = this.options.org.getEngine(peer.options.engineName);
-        console.log('after engine', engine)
-        this.docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
-        this.container = await this.docker.getContainer('cli.org1.bnc.com')
+            */
+           console.log("heeere is arg before send")
+            console.log(arg)
+           //cmd.push(arg)
+        //    const cmd = ['bash', '-c', './scripts/commit.sh', arg]
+            let res = await this.executeApprove(cmd);
+            console.log('RESULT check  commit readiness', res)
+            return true;
+        } catch(err) {
+            e(err);
+            return false;
+        }
     }
-
-    */
 
     async installChaincode(v1,v2): Promise <boolean> {
         try {
-            this.container = await this.docker.getContainer('cli.org1.bnc.com')
             const cmd = ["./scripts/install.sh"]
             //const cmd = ['bash', '-c', 'source ./scripts/install.sh']
-            let res = await this.execute(cmd, v1, v2);
+            let envArray = [
+                `CORE_PEER_ADDRESS=${v1}`,
+                `CORE_PEER_TLS_ROOTCERT_FILE=${v2}`,
+                `CC_NAME=${this.name}`,
+                `VERSION=${this.version}`
+            ]
+            let res = await this.executeCommand(cmd, envArray);
             console.log('RESULT INSTALL CHAINCODE', res)
             return true;
         } catch(err) {
@@ -85,13 +84,17 @@ export class Chaincode {
     }
 
 
-    async approve(): Promise <boolean> {
+    async approve(sequence, channelName): Promise <boolean> {
         try {
-
-            //  this.container = await this.docker.getContainer('cli.org1.bnc.com')
             const cmd = ["./scripts/approve.sh"]
             //  const cmd = ['bash', '-c', 'source ./scripts/install.sh']
-            let res = await this.executeApprove(cmd);
+            let envArray = [
+                `SEQUENCE=${sequence}`,
+                `CC_NAME=${this.name}`,
+                `VERSION=${this.version}`,
+                `CHANNEL_NAME=${channelName}`
+            ]
+            let res = await this.executeCommand(cmd, envArray);
             console.log('RESULT  Approve', res)
             return true;
         } catch(err) {
@@ -130,6 +133,35 @@ export class Chaincode {
             AttachStderr: true,
             Tty: true
         });
+
+        return new Promise(async (resolve, reject) => {
+            return await exec.start(async (err, stream) => {
+                if (err) return reject();
+                let message = '';
+                stream.on('data', data => message += data.toString());
+                console.log('mmessage', message)
+                stream.on('end', () => resolve(message));
+            });
+        });
+    }
+
+
+    async executeCommand(command,envArray? : any) {
+
+        let cmdObject = {
+            Cmd: command,
+            Env: [],
+            AttachStdout: true,
+            AttachStderr: true,
+            Tty: true
+        }
+        if(envArray){
+            for(let singleVar of envArray){
+                cmdObject.Env.push(singleVar)
+            }
+
+        }
+        const exec = await this.container.exec(cmdObject);
 
         return new Promise(async (resolve, reject) => {
             return await exec.start(async (err, stream) => {
