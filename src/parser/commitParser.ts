@@ -70,11 +70,11 @@ export class CommitParser extends BaseParser {
         const { template_folder, fabric, tls, consensus, organisations } = yamlOrganisations;
 
         organisations.forEach(org => {
-            const { organisation, domain_name, orderers, peers } = org;
+            const { organisation, domain_name, peers } = org;
 
             // parse & store orderers
             const ords = [];
-            orderers.forEach((ord, index) => {
+         /*   orderers.forEach((ord, index) => {
                 const { orderer, port: ordererPort } = ord;
                 ords.push(
                     new Orderer(orderer, {
@@ -87,6 +87,8 @@ export class CommitParser extends BaseParser {
                     })
                 );
             });
+
+          */
 
             // peer parsing
             const parsedPeers: Peer[] = [];
