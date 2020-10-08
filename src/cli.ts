@@ -167,15 +167,28 @@ export class CLI {
     return chaincodeEngine;
   }
 
-  static async approveChaincode(doCommit: boolean, configFile, name, version, sequence, channelName) {
+  static async approveChaincode(configFile, name, version, sequence, channelName) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.approveChaincodeCli(doCommit, configFile, name, version, sequence, channelName);
+    await chaincodeEngine.approveChaincodeCli(configFile, name, version, sequence, channelName);
     return  chaincodeEngine;
   }
 
   static async commitChaincode( config, commitFile, chaincodeName, version, sequence, nameChannel) {
     const chaincodeEngine = new Orchestrator();
     await chaincodeEngine.commitChaincode(config, commitFile, chaincodeName, version, sequence, nameChannel);
+    return  chaincodeEngine;
+  }
+
+  static async deployChaincode(configDeployFile, commitFile, nameChaincode, chaincodePath, version, sequence, nameChannel, targets: string[]){
+    const chaincodeEngine = new Orchestrator();
+    let targetPeers = await chaincodeEngine.getTargetPeers(configDeployFile, targets)
+    await chaincodeEngine.deployCliSingleton(nameChaincode, configDeployFile, targetPeers, version)
+    await chaincodeEngine.installChaincodeCli(nameChaincode, configDeployFile, targetPeers, version, chaincodePath)
+
+    await chaincodeEngine.approveChaincodeCli(configDeployFile, nameChaincode, version, sequence, nameChannel);
+
+    await chaincodeEngine.commitChaincode(configDeployFile, commitFile, nameChaincode, version, sequence, nameChannel);
+
     return  chaincodeEngine;
   }
 }

@@ -783,7 +783,7 @@ export class Orchestrator {
 
     }
 
-    public async approveChaincodeCli(doCommit: boolean, configFilePath, name, version, sequence, channelName): Promise <void> {
+    public async approveChaincodeCli(configFilePath, name, version, sequence, channelName): Promise <void> {
         l(' REQUEST to approve chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
         const chaincode = new Chaincode(docker, name, version);

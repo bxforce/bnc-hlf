@@ -146,10 +146,14 @@ sudo bnc chaincode install -n mycc -cPath abstore/go -v 1 -p peer0  -f ./tests/m
 ````
 
  ````shell script
-sudo bnc chaincode approve --commit false -f ./tests/manual/wassim/config-deploy-org2.yaml -n mycc -s 1 -v 1 -channel mychannel
+sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org2.yaml -n mycc -s 1 -v 1 -channel mychannel
 ````
 
  ````shell script
 sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml -chaincode mycc -v 1 -s 1 -channel mychannel
+````
+
+ ````shell script
+sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml -n mycc -cPath abstore/go -v 1 -s 1 -channel mychannel -p peer0
 ````
 
