@@ -20,12 +20,35 @@ import { ConsensusType } from '../utils/constants';
 import { OrdererOrganization } from './ordererOrganization';
 import { e } from '../utils/logs';
 
+export class commitOptions {
+    channelName: string;
+    chaincodeName: string;
+    chaincodePath: string;
+    version: string;
+    sequence: string;
+}
+
 
 
 export class CommitConfiguration {
+
     organizations: Organization[] = [];
     /* This ca will be used to generate only orderer msp */
     ordererOrganization?: OrdererOrganization;
 
-    constructor(public path: string) {}
+    constructor(public path: string,
+                public channelName: string,
+                public chaincodeName: string,
+                public chaincodePath: string,
+                public version: string,
+                public sequence: string) {
+        this.channelName= channelName;
+        this.chaincodeName= chaincodeName;
+        this.chaincodePath= chaincodePath;
+        this.version= version;
+        this.sequence= sequence;
+
+    }
+
+
 }

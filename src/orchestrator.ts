@@ -101,7 +101,7 @@ export class Orchestrator {
         let configParse = new CommitParser(commitConfigPath);
         const conf = await configParse.parse();
         l('[End] Blockchain configuration files parsed');
-
+        console.log("######################## parsed commit conf", conf)
         return conf;
     }
 
@@ -791,11 +791,24 @@ export class Orchestrator {
         await chaincode.approve(sequence, channelName);
     }
 
-    public async commitChaincode(configFile, commitFile, chaincodeName, version, sequence, nameChannel): Promise <void> {
+    public async deployChaincode(configDeployFile, commitFile, targets: string[]): Promise <void> {
+        let targetPeers = await this.getTargetPeers(configDeployFile, targets)
+        let config = await this.getChaincodeParams(commitFile);
+        await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version)
+        await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
+
+        await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.sequence, config.nameChannel);
+
+        await this.commitChaincode(configDeployFile, commitFile);
+    }
+
+    public async commitChaincode(configFile, commitFile): Promise <void> {
        
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile)
-        const chaincode = new Chaincode(docker,chaincodeName, version); // TODO add those args in command line
+        let config = await this.getChaincodeParams(commitFile);
+        console.log("lllllllllllllllllllllllllll", config)
+        const chaincode = new Chaincode(docker,config.chaincodeName, config.version); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
         let finalArg1= "";
@@ -807,7 +820,19 @@ export class Orchestrator {
         }
 
         let targets = await this.getTargetCommitPeers(commitFile)
-        chaincode.checkCommitReadiness(finalArg1, targets, sequence, nameChannel);
+        chaincode.checkCommitReadiness(finalArg1, targets, config.sequence, config.nameChannel);
+    }
+
+    public async getChaincodeParams(commitFile: string){
+        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        let chaincodeParams: any = {};
+        chaincodeParams.nameChannel = conf.channelName;
+        chaincodeParams.chaincodeName = conf.chaincodeName;
+        chaincodeParams.chaincodePath = conf.chaincodePath;
+        chaincodeParams.version = conf.version;
+        chaincodeParams.sequence = conf.sequence;
+
+        return chaincodeParams;
     }
 
     public async getCommitOrgNames(commitFile: string){

@@ -53,8 +53,8 @@ export class CommitParser extends BaseParser {
         // Parsing chains definition
         const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
         // build the network instance
-        const { template_folder, fabric, consensus } = parsedYaml['chains'];
-        const conf: CommitConfiguration = new CommitConfiguration(this.fullFilePath);
+        const { template_folder, fabric, consensus, channel, chaincode, path_chaincode, version, sequence } = parsedYaml['chains'];
+        const conf: CommitConfiguration = new CommitConfiguration(this.fullFilePath, channel, chaincode, path_chaincode, version, sequence);
         conf.organizations = organizations;
         return conf;
     }

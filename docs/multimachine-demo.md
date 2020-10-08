@@ -154,6 +154,6 @@ sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./
 ````
 
  ````shell script
-sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml -n mycc -cPath abstore/go -v 1 -s 1 -channel mychannel -p peer0
+sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml -p peer0
 ````
 

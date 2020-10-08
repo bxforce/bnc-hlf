@@ -175,20 +175,13 @@ export class CLI {
 
   static async commitChaincode( config, commitFile, chaincodeName, version, sequence, nameChannel) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.commitChaincode(config, commitFile, chaincodeName, version, sequence, nameChannel);
+    await chaincodeEngine.commitChaincode(config, commitFile);
     return  chaincodeEngine;
   }
 
-  static async deployChaincode(configDeployFile, commitFile, nameChaincode, chaincodePath, version, sequence, nameChannel, targets: string[]){
+  static async deployChaincode(configDeployFile, commitFile, targets: string[]){
     const chaincodeEngine = new Orchestrator();
-    let targetPeers = await chaincodeEngine.getTargetPeers(configDeployFile, targets)
-    await chaincodeEngine.deployCliSingleton(nameChaincode, configDeployFile, targetPeers, version)
-    await chaincodeEngine.installChaincodeCli(nameChaincode, configDeployFile, targetPeers, version, chaincodePath)
-
-    await chaincodeEngine.approveChaincodeCli(configDeployFile, nameChaincode, version, sequence, nameChannel);
-
-    await chaincodeEngine.commitChaincode(configDeployFile, commitFile, nameChaincode, version, sequence, nameChannel);
-
+    await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets)
     return  chaincodeEngine;
   }
 }
