@@ -43,20 +43,17 @@ export class Chaincode {
         this.container = await this.docker.getContainer(`cli.${name}`)
     }
 
-    async checkCommitReadiness(arg, targets): Promise <boolean> {
+    async checkCommitReadiness(arg, targets, sequence, nameChannel): Promise <boolean> {
         try {
             const cmd = ['./scripts/commit.sh', `${arg}`, `${targets}`]
-           /* for (let singleArg of argArray){
-                cmd.push(singleArg)
-            }
-
-            */
-           console.log("heeere is arg before send")
-            console.log(arg)
-           //cmd.push(arg)
-        //    const cmd = ['bash', '-c', './scripts/commit.sh', arg]
-            let res = await this.executeApprove(cmd);
-            console.log('RESULT check  commit readiness', res)
+            let envArray = [
+                `SEQUENCE=${sequence}`,
+                `CC_NAME=${this.name}`,
+                `VERSION=${this.version}`,
+                `CHANNEL_NAME=${nameChannel}`
+            ]
+            let res = await this.executeCommand(cmd, envArray);
+            console.log(res)
             return true;
         } catch(err) {
             e(err);
@@ -67,7 +64,6 @@ export class Chaincode {
     async installChaincode(v1,v2, path): Promise <boolean> {
         try {
             const cmd = ["./scripts/install.sh"]
-            //const cmd = ['bash', '-c', 'source ./scripts/install.sh']
             let envArray = [
                 `CORE_PEER_ADDRESS=${v1}`,
                 `CORE_PEER_TLS_ROOTCERT_FILE=${v2}`,
@@ -76,7 +72,7 @@ export class Chaincode {
                 `CC_PATH=${path}`
             ]
             let res = await this.executeCommand(cmd, envArray);
-            console.log('RESULT INSTALL CHAINCODE', res)
+            console.log(res)
             return true;
         } catch(err) {
             e(err);
@@ -88,7 +84,6 @@ export class Chaincode {
     async approve(sequence, channelName): Promise <boolean> {
         try {
             const cmd = ["./scripts/approve.sh"]
-            //  const cmd = ['bash', '-c', 'source ./scripts/install.sh']
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -96,56 +91,13 @@ export class Chaincode {
                 `CHANNEL_NAME=${channelName}`
             ]
             let res = await this.executeCommand(cmd, envArray);
-            console.log('RESULT  Approve', res)
+            console.log(res)
             return true;
         } catch(err) {
             e(err);
             return false;
         }
     }
-
-    async executeApprove(command) {
-        const exec = await this.container.exec({
-            Cmd: command,
-            AttachStdout: true,
-            AttachStderr: true,
-            Tty: true
-        });
-
-        return new Promise(async (resolve, reject) => {
-            return await exec.start(async (err, stream) => {
-                if (err) return reject();
-                let message = '';
-                stream.on('data', data => message += data.toString());
-                console.log('mmessage', message)
-                stream.on('end', () => resolve(message));
-            });
-        });
-    }
-
-
-    async execute(command,var1,var2) {
-        const exec = await this.container.exec({
-            Cmd: command,
-            Env: [`CORE_PEER_ADDRESS=${var1}`,
-                `CORE_PEER_TLS_ROOTCERT_FILE=${var2}`
-            ],
-            AttachStdout: true,
-            AttachStderr: true,
-            Tty: true
-        });
-
-        return new Promise(async (resolve, reject) => {
-            return await exec.start(async (err, stream) => {
-                if (err) return reject();
-                let message = '';
-                stream.on('data', data => message += data.toString());
-                console.log('mmessage', message)
-                stream.on('end', () => resolve(message));
-            });
-        });
-    }
-
 
     async executeCommand(command,envArray? : any) {
 
@@ -169,7 +121,7 @@ export class Chaincode {
                 if (err) return reject();
                 let message = '';
                 stream.on('data', data => message += data.toString());
-                console.log('mmessage', message)
+                console.log('Data:', message)
                 stream.on('end', () => resolve(message));
             });
         });

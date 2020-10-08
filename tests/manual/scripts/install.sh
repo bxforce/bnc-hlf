@@ -3,11 +3,6 @@
 #source install.sh
 set -e
 
-echo "HELLOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-echo "${CORE_PEER_ADDRESS}"
-#VERSION=1
-#CC_NAME=mycc
-echo $CC_NAME
 
 packageChaincode() {
   set -x

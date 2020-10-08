@@ -45,7 +45,6 @@ checkApprovedForMyOrg() {
       echo "Attempting to check the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS, Retry after 1 seconds."
       set -x
       peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --output json >&log.txt
-      #peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name mycc --version 1 --sequence 1 --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --output json >&log.txt
       res=$?
       set +x
       let rc=0

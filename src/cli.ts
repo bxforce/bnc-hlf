@@ -173,9 +173,9 @@ export class CLI {
     return  chaincodeEngine;
   }
 
-  static async commitChaincode( config, listPeers, commitFile) {
+  static async commitChaincode( config, commitFile, chaincodeName, version, sequence, nameChannel) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.commitChaincode(config, listPeers, commitFile);
+    await chaincodeEngine.commitChaincode(config, commitFile, chaincodeName, version, sequence, nameChannel);
     return  chaincodeEngine;
   }
 }

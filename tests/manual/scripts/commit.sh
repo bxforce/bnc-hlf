@@ -4,10 +4,6 @@ DELAY=3
 # another container before giving up
 MAX_RETRY=3
 
-CHANNEL_NAME="mychannel"
-VERSION=1
-SEQUENCE=1
-
 peerTargets=""
 
 
@@ -24,7 +20,7 @@ queryCommitted() {
     sleep $DELAY
     echo "Attempting to Query committed status on $CORE_PEER_ADDRESS, Retry after $DELAY seconds."
     set -x
-    peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name mycc >&log.txt
+    peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name $CC_NAME >&log.txt
     #tail -n +2 log.txt > log.tmp && mv log.tmp log.txt #### added this to remove first line
     res=$?
     set +x
@@ -61,7 +57,7 @@ checkCommitReadiness() {
       sleep $DELAY
       echo "Attempting to check the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS, Retry after $DELAY seconds."
       set -x
-      peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name mycc --version $VERSION --sequence $SEQUENCE --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --output json >&log.txt
+      peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --output json >&log.txt
       res=$?
       set +x
       let rc=0
@@ -93,7 +89,7 @@ checkCommitReadiness() {
 commit() {
   echo "!!!!!!!!!!!!!!!!!!!Into commit!!!!!!!!!!!!!!!!!!!!!!!!!"
   set -x
-  peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name mycc --version $VERSION --sequence $SEQUENCE  ${peerTargets} >&log.txt
+  peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE  ${peerTargets} >&log.txt
   res=$?
   set +x
   cat log.txt

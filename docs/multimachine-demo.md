@@ -150,6 +150,6 @@ sudo bnc chaincode approve --commit false -f ./tests/manual/wassim/config-deploy
 ````
 
  ````shell script
-sudo bnc chaincode commit  -p peer0 -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml
+sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml -chaincode mycc -v 1 -s 1 -channel mychannel
 ````
 

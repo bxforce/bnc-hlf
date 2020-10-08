@@ -102,8 +102,6 @@ export class Orchestrator {
         const conf = await configParse.parse();
         l('[End] Blockchain configuration files parsed');
 
-        console.log("returned config", conf)
-
         return conf;
     }
 
@@ -793,11 +791,11 @@ export class Orchestrator {
         await chaincode.approve(sequence, channelName);
     }
 
-    public async commitChaincode(configFile, listPeers, commitFile): Promise <void> {
+    public async commitChaincode(configFile, commitFile, chaincodeName, version, sequence, nameChannel): Promise <void> {
        
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile)
-        const chaincode = new Chaincode(docker,"mychannel", "1"); // TODO add those args in command line
+        const chaincode = new Chaincode(docker,chaincodeName, version); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
         let finalArg1= "";
@@ -809,7 +807,7 @@ export class Orchestrator {
         }
 
         let targets = await this.getTargetCommitPeers(commitFile)
-        chaincode.checkCommitReadiness(finalArg1, targets);
+        chaincode.checkCommitReadiness(finalArg1, targets, sequence, nameChannel);
     }
 
     public async getCommitOrgNames(commitFile: string){
@@ -823,7 +821,6 @@ export class Orchestrator {
     }
 
     public async getTargetCommitPeers(commitFile: string){
-        console.log('parse the commit file to construct args')
         const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
         const organizations: Organization[] = conf.organizations;
         let targets=''
@@ -831,18 +828,13 @@ export class Orchestrator {
             let nameOrg = org.name;
             let domainName = org.domainName;
             let fullName = nameOrg+'.'+domainName;
-            console.log('fullname', fullName)
             for(let singlePeer of org.peers){
                 let namePeer = singlePeer.name;
                 let portPeer = singlePeer.options.ports[0];
                 let pathToCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${fullName}/peers/${namePeer}.${fullName}/tls/ca.crt`
-                console.log("construct target peers", singlePeer)
-                //--peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt
                 targets += `--peerAddresses ${namePeer}.${fullName}:${portPeer} --tlsRootCertFiles ${pathToCert} `
             }
 
-
-            console.log("final targets", targets)
         })
 
         return targets;
