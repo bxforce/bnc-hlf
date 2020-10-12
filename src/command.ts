@@ -280,10 +280,7 @@ chaincodeCmd
     .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
     .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
     .option('--upgrade', 'option used when approving to upgrade chaincode')
-  //  .requiredOption('-s, --sch <chaincode-sequence>', 'sequence of the chaincode')
     .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
-  //  .requiredOption('-p, --list <items>', 'comma separated list', commaSeparatedList)
-   // .requiredOption('-orgs, --list <items>', 'comma separated list of orgMSP', commaSeparatedList)
     .action(async (cmd) => {
       await tasks.approveChaincode(cmd.config, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade);
     });
@@ -294,10 +291,6 @@ chaincodeCmd
     .requiredOption('-f, --config <path>', 'Absolute path to the config deploy file')
     .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
     .option('--upgrade', 'option used when approving to upgrade chaincode')
-  //  .requiredOption('-chaincode, --chaincode <chaincode-name>', 'name of the chaincode')
-//    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
-  //  .requiredOption('-s, --sch <chaincode-sequence>', 'sequence of the chaincode')
-//    .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
     .action(async (cmd) => {
       await tasks.commitChaincode(cmd.config, cmd.confCommit, cmd.upgrade);
     });
