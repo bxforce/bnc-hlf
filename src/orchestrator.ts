@@ -34,7 +34,8 @@ import {
     HLF_CA_VERSION,
     HLF_CLIENT_ACCOUNT_ROLE,
     HLF_VERSION,
-    NETWORK_ROOT_PATH
+    NETWORK_ROOT_PATH,
+    SEQUENCE
 } from './utils/constants';
 import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
 import {ClientConfig} from './core/hlf/helpers';
@@ -782,12 +783,23 @@ export class Orchestrator {
 
     }
 
-    public async approveChaincodeCli(configFilePath, name, version, sequence, channelName): Promise <void> {
+    public async approveChaincodeCli(configFilePath, name, version, channelName, upgrade?:boolean): Promise <void> {
         l(' REQUEST to approve chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
         const chaincode = new Chaincode(docker, name, version);
         await chaincode.init(organization.fullName);
-        await chaincode.approve(sequence, channelName);
+        if(!upgrade){
+            l(' APPROVING CHAINCODE FOR FIRST TIME DEPLOY')
+            await chaincode.approve(SEQUENCE, channelName);
+        } else {
+            //get last sequence number
+            l(' APPROVING CHAINCODE TO UPGRADE')
+            let seq = await this.getLastSequence(configFilePath, name, version,channelName);
+            let lastSequence = seq.split(':');
+            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+            await chaincode.approve(finalSequence, channelName);
+        }
+
     }
 
     public async getLastSequence(configFilePath, name, version, channelName) {
@@ -799,31 +811,21 @@ export class Orchestrator {
         return seq;
     }
 
-    public async deployChaincode(configDeployFile, commitFile, targets: string[]): Promise <void> {
-        let targetPeers;
-        if(!targets){
-            targetPeers = await this.loadAllPeersForInstall(configDeployFile);
-        } else {
-            targetPeers = await this.getTargetPeers(configDeployFile, targets)
-        }
+    public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean): Promise <void> {
+        let targetPeers = await this.getTargetPeers(configDeployFile, targets)
 
         let config = await this.getChaincodeParams(commitFile);
-
-        /*let last = await this.getLastSequence(configDeployFile, config.chaincodeName, config.version, config.nameChannel)
-        console.log('last', last);
-        const seq = last.split(':')
-        console.log("here",seq[1].trim())
-
-         */
         await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version)
         await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
 
-        await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.sequence, config.nameChannel);
+        await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.nameChannel, upgrade);
 
-        await this.commitChaincode(configDeployFile, commitFile);
+        await this.commitChaincode(configDeployFile, commitFile, upgrade);
+
+
     }
 
-    public async commitChaincode(configFile, commitFile): Promise <void> {
+    public async commitChaincode(configFile, commitFile, upgrade?: boolean): Promise <void> {
        
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile)
@@ -840,7 +842,18 @@ export class Orchestrator {
         }
 
         let targets = await this.getTargetCommitPeers(commitFile)
-        chaincode.checkCommitReadiness(finalArg1, targets, config.sequence, config.nameChannel);
+        if(!upgrade){
+            l(' COMMITTING CHAINCODE FOR FIRST TIME DEPLOY')
+            chaincode.checkCommitReadiness(finalArg1, targets, SEQUENCE, config.nameChannel);
+        } else {
+            //get last sequence number
+            l(' COMMITTING CHAINCODE TO UPGRADE')
+            let seq = await this.getLastSequence(configFile, config.chaincodeName, config.version,config.nameChannel);
+            let lastSequence = seq.split(':');
+            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.nameChannel);
+        }
+
     }
 
     public async getChaincodeParams(commitFile: string){
@@ -850,7 +863,6 @@ export class Orchestrator {
         chaincodeParams.chaincodeName = conf.chaincodeName;
         chaincodeParams.chaincodePath = conf.chaincodePath;
         chaincodeParams.version = conf.version;
-        chaincodeParams.sequence = conf.sequence;
 
         return chaincodeParams;
     }
@@ -885,17 +897,22 @@ export class Orchestrator {
         return targets;
     }
 
-    public async getTargetPeers(configFilePath: string, targets: string[]) {
+    public async getTargetPeers(configFilePath: string, targets?: string[]) {
         const network: Network = await Orchestrator._parse(configFilePath);
-        let targetPeers = [];
-        targets.forEach((namePeer) => {
-            network.organizations[0].peers.forEach((peer) => {
-                if(namePeer == peer.name){
-                    targetPeers.push(peer)
-                }
+        let targetPeers: Peer[] = [];
+        if(!targets){ //load all peers
+            targetPeers = network.organizations[0].peers;
+        }else {
+            targets.forEach((namePeer) => {
+                network.organizations[0].peers.forEach((peer) => {
+                    if(namePeer == peer.name){
+                        targetPeers.push(peer)
+                    }
 
+                })
             })
-        })
+        }
+
         return targetPeers;
     }
 
@@ -904,7 +921,6 @@ export class Orchestrator {
         const network: Network = await Orchestrator._parse(configFile);
         let peers: Peer[] = [];
         peers = network.organizations[0].peers;
-        console.log("here are the peers for install", peers)
         return peers;
     }
 

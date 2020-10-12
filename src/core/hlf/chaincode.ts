@@ -108,8 +108,7 @@ export class Chaincode {
                 `VERSION=${this.version}`,
                 `CHANNEL_NAME=${channelName}`
             ]
-            let res = await this.executeCommandTest(cmd, envArray);
-            console.log("rrrrrrrrrrrrrrrrrr", res)
+            let res = await this.executeCommand(cmd, envArray);
             return res.toString();
         } catch(err) {
             e(err);
@@ -123,7 +122,7 @@ export class Chaincode {
             Env: [],
             AttachStdout: true,
             AttachStderr: true,
-            Tty: true
+            Tty: false
         }
         if(envArray){
             for(let singleVar of envArray){
@@ -144,7 +143,7 @@ export class Chaincode {
         });
     }
 
-
+/*
     async executeCommandTest(command,envArray? : any): Promise<any> {
 
         let cmdObject = {
@@ -172,4 +171,6 @@ export class Chaincode {
             });
         });
     }
+    
+ */
 }

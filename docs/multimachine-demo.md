@@ -141,17 +141,29 @@ peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
 ````
 
 ## DEMO FOR CHAINCODE COMMANDS
+first install on peer0 of org1, if -p is not specified it will install on all peers
  ````shell script
 sudo bnc chaincode install -n mycc -cPath abstore/go -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org1.yaml
 ````
-
+Then install on peer0 of org2
  ````shell script
-sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org2.yaml -n mycc -s 1 -v 1 -channel mychannel
+sudo bnc chaincode install -n mycc -cPath abstore/go -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org2.yaml
+````
+Approve chaincode definition on org2
+ ````shell script
+sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org2.yaml -n mycc -v 1 -channel mychannel
 ````
 
+Approve chaincode definition on org1
  ````shell script
-sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml -chaincode mycc -v 1 -s 1 -channel mychannel
+sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org1.yaml -n mycc -v 1 -channel mychannel
 ````
+Commit chaincode only as org1
+ ````shell script
+sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml
+````
+
+If you to do all previous steps in one single command use the following:
 
  ````shell script
 sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml -p peer0
@@ -161,4 +173,6 @@ If you want to install chaincode on all peers defined in config-deploy , do not 
 ````shell script
 sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml 
 ````
+## DEMO FOR CHAINCODE UPGRADE COMMANDS
 
+add the flag --upgrade in the approve/commit and modify your version

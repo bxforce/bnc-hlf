@@ -96,3 +96,4 @@ export const MAX_ENROLLMENT_COUNT = 3;
 export const ENABLE_CONTAINER_LOGGING = true;
 export const CHANNEL_RAFT_ID = 'system-channel';
 export const CHANNEL_DEFAULT_NAME = 'mychannel';
+export const SEQUENCE = 1;
