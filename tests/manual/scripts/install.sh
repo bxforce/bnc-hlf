@@ -6,7 +6,7 @@ set -e
 
 packageChaincode() {
   set -x
-  peer lifecycle chaincode package "$CC_NAME.tar.gz" --path "$CC_ROOT_PATH/$CC_PATH" --lang golang --label "$CC_NAME"_1 >&log.txt
+  peer lifecycle chaincode package "$CC_NAME.tar.gz" --path "$CC_ROOT_PATH/$CC_PATH" --lang golang --label "$CC_NAME"_"$VERSION" >&log.txt
   res=$?
   set +x
   cat log.txt
@@ -38,8 +38,8 @@ queryInstalled() {
   PACKAGE_ID=$(sed -n "/${CC_NAME}_${VERSION}/{s/^Package ID: //; s/, Label:.*$//; p;}" log.txt)
   verifyResult $res "Query installed on ${CORE_PEER_ADDRESS} has failed"
   echo "$PACKAGE_ID"
-  echo "$PACKAGE_ID" >&"package_$CC_NAME.txt"
-  cat "package_$CC_NAME.txt"
+  echo "$PACKAGE_ID" >&"package_${CC_NAME}_${VERSION}.txt"
+  cat "package_${CC_NAME}_${VERSION}.txt"
   echo "===================== Query installed successful  on channel ===================== "
   echo
 }

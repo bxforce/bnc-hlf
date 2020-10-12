@@ -306,7 +306,7 @@ chaincodeCmd
     .description('deploys chaincode')
     .requiredOption('-f, --config <path>', 'Absolute path to deploy config file')
     .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
-    .requiredOption('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
+    .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
     .action(async (cmd) => {
       await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list);
     });

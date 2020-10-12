@@ -2,7 +2,7 @@
 
 echo "$CC_NAME"
 
-PACKAGE_ID=$(</opt/gopath/src/github.com/hyperledger/fabric/peer/"package_$CC_NAME".txt)
+PACKAGE_ID=$(</opt/gopath/src/github.com/hyperledger/fabric/peer/"package_${CC_NAME}_${VERSION}".txt)
 
 echo "$PACKAGE_ID"
 echo "$SEQUENCE"

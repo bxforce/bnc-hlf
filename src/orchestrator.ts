@@ -101,7 +101,6 @@ export class Orchestrator {
         let configParse = new CommitParser(commitConfigPath);
         const conf = await configParse.parse();
         l('[End] Blockchain configuration files parsed');
-        console.log("######################## parsed commit conf", conf)
         return conf;
     }
 
@@ -791,9 +790,31 @@ export class Orchestrator {
         await chaincode.approve(sequence, channelName);
     }
 
+    public async getLastSequence(configFilePath, name, version, channelName) {
+        l(' REQUEST to approve chaincode')
+        const {docker, organization} = await this.loadOrgEngine(configFilePath)
+        const chaincode = new Chaincode(docker, name, version);
+        await chaincode.init(organization.fullName);
+        let seq =  await chaincode.getLastSequence(channelName);
+        return seq;
+    }
+
     public async deployChaincode(configDeployFile, commitFile, targets: string[]): Promise <void> {
-        let targetPeers = await this.getTargetPeers(configDeployFile, targets)
+        let targetPeers;
+        if(!targets){
+            targetPeers = await this.loadAllPeersForInstall(configDeployFile);
+        } else {
+            targetPeers = await this.getTargetPeers(configDeployFile, targets)
+        }
+
         let config = await this.getChaincodeParams(commitFile);
+
+        /*let last = await this.getLastSequence(configDeployFile, config.chaincodeName, config.version, config.nameChannel)
+        console.log('last', last);
+        const seq = last.split(':')
+        console.log("here",seq[1].trim())
+
+         */
         await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version)
         await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
 
@@ -807,7 +828,6 @@ export class Orchestrator {
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile)
         let config = await this.getChaincodeParams(commitFile);
-        console.log("lllllllllllllllllllllllllll", config)
         const chaincode = new Chaincode(docker,config.chaincodeName, config.version); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
@@ -877,6 +897,15 @@ export class Orchestrator {
             })
         })
         return targetPeers;
+    }
+
+    public async loadAllPeersForInstall(configFile: string): Promise <Peer []> {
+        // @ts-ignore
+        const network: Network = await Orchestrator._parse(configFile);
+        let peers: Peer[] = [];
+        peers = network.organizations[0].peers;
+        console.log("here are the peers for install", peers)
+        return peers;
     }
 
     public async loadOrgEngine(configFilePath) {

@@ -150,10 +150,15 @@ sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org2.yaml -n m
 ````
 
  ````shell script
-sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml -chaincode mycc -v 1 -s 1 -channel mychannel
+sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml -chaincode mycc -v 1 -s 1 -channel mychannel
 ````
 
  ````shell script
-sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-commit.yaml -p peer0
+sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml -p peer0
+````
+If you want to install chaincode on all peers defined in config-deploy , do not specify -p
+ 
+````shell script
+sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml 
 ````
 
