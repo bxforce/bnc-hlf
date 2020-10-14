@@ -74,6 +74,13 @@ services:
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
       - /home/ubuntu/fabric-samples/chaincode/:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
       - /home/ubuntu/bnc-hlf/tests/manual/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+${this.options.ips ? `
+    extra_hosts:
+${this.options.ips
+        .map(host => `
+      - "${host.ip}"
+`).join('')}
+`: ``}
     networks:
       - ${this.options.composeNetwork}
   `;
