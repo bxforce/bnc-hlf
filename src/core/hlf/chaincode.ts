@@ -142,35 +142,4 @@ export class Chaincode {
             });
         });
     }
-
-/*
-    async executeCommandTest(command,envArray? : any): Promise<any> {
-
-        let cmdObject = {
-            Cmd: command,
-            Env: [],
-            AttachStdout: true,
-            AttachStderr: true,
-            Tty: false
-        }
-        if(envArray){
-            for(let singleVar of envArray){
-                cmdObject.Env.push(singleVar)
-            }
-
-        }
-        const exec = await this.container.exec(cmdObject);
-
-        return new Promise(async (resolve, reject) => {
-            return await exec.start(async (err, stream) => {
-                if (err) return reject();
-                let message = '';
-                stream.on('data', data => message += data.toString());
-                console.log('Data:', message)
-                stream.on('end', () => resolve(message));
-            });
-        });
-    }
-    
- */
 }

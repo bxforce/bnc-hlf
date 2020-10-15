@@ -72,7 +72,7 @@ services:
       - /var/run/:/host/var/run/
       - ${this.options.networkRootPath}/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
-      - /home/ubuntu/fabric-samples/chaincode/:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
+      - ${this.options.cliChaincodeRootPath}:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
       - /home/ubuntu/bnc-hlf/tests/manual/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
 ${this.options.ips ? `
     extra_hosts:
@@ -148,11 +148,8 @@ ${this.options.ips
             l(`Starting CLI ${serviceName}...`);
 
             const engine = this.options.org.getEngine(peer.options.engineName);
-            console.log('after engine', engine)
-            console.log(peer)
             this.docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
             this.container = await this.docker.getContainer(`cli.${this.options.org.fullName}`)
-            console.log('after docker')
             await this.docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 
             l(`Service Peer ${serviceName} started successfully !!!`);
@@ -163,80 +160,6 @@ ${this.options.ips
             return false;
         }
     }
-
-    async installChaincode(v1,v2): Promise <boolean> {
-        try {
-          //  this.container = await this.docker.getContainer('cli.org1.bnc.com')
-            const cmd = ["./scripts/install.sh"]
-            //const cmd = ['bash', '-c', 'source ./scripts/install.sh']
-            let res = await this.execute(cmd, v1, v2);
-            console.log('RESULT INSTALL CHAINCODE', res)
-            return true;
-        } catch(err) {
-            e(err);
-            return false;
-        }
-    }
-
-
-    async approve(): Promise <boolean> {
-        try {
-
-          //  this.container = await this.docker.getContainer('cli.org1.bnc.com')
-            const cmd = ["./scripts/approve.sh"]
-            //  const cmd = ['bash', '-c', 'source ./scripts/install.sh']
-            let res = await this.executeApprove(cmd);
-            console.log('RESULT  Approve', res)
-            return true;
-        } catch(err) {
-            e(err);
-            return false;
-        }
-    }
-
-    async execute(command,var1,var2) {
-        const exec = await this.container.exec({
-            Cmd: command,
-            Env: [`CORE_PEER_ADDRESS=${var1}`,
-                `CORE_PEER_TLS_ROOTCERT_FILE=${var2}`
-            ],
-            AttachStdout: true,
-            AttachStderr: true,
-            Tty: true
-        });
-
-        return new Promise(async (resolve, reject) => {
-            return await exec.start(async (err, stream) => {
-                if (err) return reject();
-                let message = '';
-                stream.on('data', data => message += data.toString());
-                console.log('mmessage', message)
-                stream.on('end', () => resolve(message));
-            });
-        });
-    }
-
-    async executeApprove(command) {
-        const exec = await this.container.exec({
-            Cmd: command,
-            AttachStdout: true,
-            AttachStderr: true,
-            Tty: true
-        });
-
-        return new Promise(async (resolve, reject) => {
-            return await exec.start(async (err, stream) => {
-                if (err) return reject();
-                let message = '';
-                stream.on('data', data => message += data.toString());
-                console.log('mmessage', message)
-                stream.on('end', () => resolve(message));
-            });
-        });
-    }
-
-
-
 
     get peers() {
         return this._peers;

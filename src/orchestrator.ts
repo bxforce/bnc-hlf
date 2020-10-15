@@ -720,7 +720,7 @@ export class Orchestrator {
         return join(homedir, NETWORK_ROOT_PATH);
     }
 
-    public async deployCliSingleton(name: string, configFilePath: string , targets: Peer[] , version: string): Promise<void> {
+    public async deployCliSingleton(name: string, configFilePath: string , targets: Peer[] , version: string, chaincodeRootPath:string): Promise<void> {
         l(`[Chaincode] - Request to install  a chaincode (${name})`);
         const network: Network = await Orchestrator._parse(configFilePath);
         const isNetworkValid = network.validate();
@@ -744,7 +744,8 @@ export class Orchestrator {
                 FABRIC_VERSION: HLF_VERSION.HLF_2,
                 FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
                 THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
-            }
+            },
+            cliChaincodeRootPath: chaincodeRootPath
         };
 
         l('Creating Peer base docker compose file');
@@ -774,7 +775,6 @@ export class Orchestrator {
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
         const chaincode = new Chaincode(docker, name, version);
         await chaincode.init(organization.fullName);
-
         for(let peerElm of targets){
             corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
             peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
@@ -815,7 +815,7 @@ export class Orchestrator {
         let targetPeers = await this.getTargetPeers(configDeployFile, targets)
 
         let config = await this.getChaincodeParams(commitFile);
-        await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version)
+        await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodeRootPath)
         await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
 
         await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.nameChannel, upgrade);
@@ -861,6 +861,7 @@ export class Orchestrator {
         let chaincodeParams: any = {};
         chaincodeParams.nameChannel = conf.channelName;
         chaincodeParams.chaincodeName = conf.chaincodeName;
+        chaincodeParams.chaincodeRootPath = conf.chaincodeRootPath;
         chaincodeParams.chaincodePath = conf.chaincodePath;
         chaincodeParams.version = conf.version;
 

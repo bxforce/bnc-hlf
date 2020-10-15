@@ -61,8 +61,6 @@ checkCommitReadiness() {
       res=$?
       set +x
       let rc=0
-      echo " seee what it isss"
-
       IFS=';' read -ra allvars <<< $(echo $1)
       for var in "${allvars[@]}"
       do

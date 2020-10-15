@@ -23,6 +23,7 @@ import { e } from '../utils/logs';
 export class commitOptions {
     channelName: string;
     chaincodeName: string;
+    chaincodeRootPath: string;
     chaincodePath: string;
     version: string;
 }
@@ -38,10 +39,12 @@ export class CommitConfiguration {
     constructor(public path: string,
                 public channelName: string,
                 public chaincodeName: string,
+                public chaincodeRootPath: string,
                 public chaincodePath: string,
                 public version: string) {
         this.channelName= channelName;
         this.chaincodeName= chaincodeName;
+        this.chaincodeRootPath= chaincodeRootPath;
         this.chaincodePath= chaincodePath;
         this.version= version;
 
