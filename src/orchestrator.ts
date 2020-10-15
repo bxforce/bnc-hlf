@@ -759,7 +759,7 @@ export class Orchestrator {
 
         l('Creating cli container & deploy');
         const cliSingleton = DockerComposeCliSingleton.init(`docker-compose-cli-${organization.name}.yaml`, options);
-        cliSingleton.peers= targets;
+       
         l(`'Creating Cli container template`);
         await cliSingleton.createTemplateCli();
 

@@ -32,10 +32,7 @@ export class DockerComposeCliSingleton extends BaseGenerator {
 
     public container;
     public docker;
-    private _peers;
-
-
-
+    
     /* docker compose content for peers */
     contents = `
 version: '2'
@@ -159,13 +156,5 @@ ${this.options.ips
             e(err);
             return false;
         }
-    }
-
-    get peers() {
-        return this._peers;
-    }
-
-    set peers(value) {
-        this._peers = value;
     }
 }
