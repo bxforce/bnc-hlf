@@ -264,7 +264,7 @@ chaincodeCmd
     .command('install')
     .description('install chaincode')
     .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
-    .requiredOption('-cPath, --chroot <path>', 'path to chaincode root')
+    .requiredOption('-cRootPath, --chroot <path>', 'path to chaincode root')
     .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
     .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
     .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')

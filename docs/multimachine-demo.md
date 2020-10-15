@@ -143,7 +143,7 @@ peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
 ## DEMO FOR CHAINCODE COMMANDS
 first install on peer0 of org1, if -p is not specified it will install on all peers
  ````shell script
-sudo bnc chaincode install -n mycc -cPath abstore/go -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org1.yaml
+sudo bnc chaincode install -n mycc -cRootPath /home/ubuntu/fabric-samples/chaincode/ -cPath abstore/go -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org1.yaml
 ````
 Then install on peer0 of org2
  ````shell script
