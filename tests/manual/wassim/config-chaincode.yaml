@@ -1,13 +1,10 @@
-chains:
+chaincode:
   template_folder: "/home/ubuntu/hyperledger-fabric-network"
-  fabric: "2.0.0"
-  tls: true
-  consensus: "raft"
   channel: "mychannel"
   chaincode: "mycc"
   root_path_chaincode: "/home/ubuntu/fabric-samples/chaincode/"
-  path_chaincode: "abstoreup/go"
-  version: "2"
+  path_chaincode: "abstore/go"
+  version: "1"
   organisations:
     - organisation: "org1"
       domain_name: "bnc.com"
