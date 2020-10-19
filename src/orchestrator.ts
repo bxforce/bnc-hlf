@@ -70,7 +70,6 @@ import getArtifactsPath = Utils.getArtifactsPath;
 export class Orchestrator {
 
     public cliGenerator;
-  //  public targetPeers;
 
     /**
      * Parse & validate deployment configuration file

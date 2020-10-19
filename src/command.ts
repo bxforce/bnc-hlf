@@ -252,8 +252,6 @@ channelCmd
       await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
     });
 
-//peers, chaincodeName, chaincodePath, chaincodeVersion
-//sudo bnc chaincode install -n mycc -v v0 -p p1,p2  -f ./tests/manual/wassim/config-deploy-org2.yaml
 
 function commaSeparatedList(value, dummyPrevious) {
   return value.split(',');
