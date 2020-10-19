@@ -8,9 +8,6 @@ peerTargets=""
 
 
 
-echo "INSIDE SCRIPT ###################################"
-
-
 queryCommitted() {
   EXPECTED_RESULT="Version: ${VERSION}, Sequence: ${SEQUENCE}, Endorsement Plugin: escc, Validation Plugin: vscc"
   echo "===================== Querying chaincode definition on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME'... ===================== "
@@ -64,8 +61,6 @@ checkCommitReadiness() {
       IFS=';' read -ra allvars <<< $(echo $1)
       for var in "${allvars[@]}"
       do
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo $var
         grep "$var" log.txt &>/dev/null || let rc=1
       done
       COUNTER=$(expr $COUNTER + 1)
@@ -85,7 +80,6 @@ checkCommitReadiness() {
 
 
 commit() {
-  echo "!!!!!!!!!!!!!!!!!!!Into commit!!!!!!!!!!!!!!!!!!!!!!!!!"
   set -x
   peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE  ${peerTargets} >&log.txt
   res=$?

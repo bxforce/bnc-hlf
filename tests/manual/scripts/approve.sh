@@ -52,8 +52,6 @@ checkApprovedForMyOrg() {
       echo "$@"
       for var in "$@"
       do
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo $var
         grep "$var" log.txt &>/dev/null || let rc=1
       done
       COUNTER=$(expr $COUNTER + 1)

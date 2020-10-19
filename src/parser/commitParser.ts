@@ -50,10 +50,10 @@ export class CommitParser extends BaseParser {
 
         const parsedYaml = await this.parseRaw();
 
-        // Parsing chains definition
-        const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
+        // Parsing chaincode definition
+        const organizations: Organization[] = this.buildOrganisations(parsedYaml['chaincode']);
         // build the network instance
-        const { template_folder, fabric, consensus, channel, chaincode, root_path_chaincode, path_chaincode, version } = parsedYaml['chains'];
+        const { template_folder, channel, chaincode, root_path_chaincode, path_chaincode, version } = parsedYaml['chaincode'];
         const conf: CommitConfiguration = new CommitConfiguration(this.fullFilePath, channel, chaincode,root_path_chaincode, path_chaincode, version);
         conf.organizations = organizations;
         return conf;
@@ -67,29 +67,11 @@ export class CommitParser extends BaseParser {
      */
     private buildOrganisations(yamlOrganisations): Organization[] {
         const organizations: Organization[] = [];
-        const { template_folder, fabric, tls, consensus, organisations } = yamlOrganisations;
+        const { template_folder, organisations } = yamlOrganisations;
 
         organisations.forEach(org => {
             const { organisation, domain_name, peers } = org;
-
-            // parse & store orderers
             const ords = [];
-         /*   orderers.forEach((ord, index) => {
-                const { orderer, port: ordererPort } = ord;
-                ords.push(
-                    new Orderer(orderer, {
-                     //   engineName: ordererEngineName,
-                        consensus,
-                        ports: [
-                            ordererPort ?? `${index*1000+ORDERER_DEFAULT_PORT}`
-                        ],
-                        number: index
-                    })
-                );
-            });
-
-          */
-
             // peer parsing
             const parsedPeers: Peer[] = [];
             peers.forEach((pe, index) => {
@@ -109,8 +91,6 @@ export class CommitParser extends BaseParser {
                     orderers: ords,
                     peers: parsedPeers,
                     templateFolder: template_folder,
-                    fabricVersion: fabric,
-                    tls,
                     domainName: domain_name,
                 })
             );
