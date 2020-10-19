@@ -71,7 +71,7 @@ services:
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
       - ${this.options.cliChaincodeRootPath}:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
       - /home/ubuntu/bnc-hlf/tests/manual/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
-${this.options.ips ? `
+${this.options.ips && this.options.ips.length > 0 ?  `
     extra_hosts:
 ${this.options.ips
         .map(host => `

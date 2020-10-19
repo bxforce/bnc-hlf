@@ -57,7 +57,7 @@ ${this.options.org.orderers.map(orderer => `
     environment:
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
     container_name: ${this.options.org.ordererName(orderer)}
-${this.options.ips ? `
+${this.options.ips && this.options.ips.length > 0 ?  `
     extra_hosts:
 ${this.options.ips
       .map(host => `
