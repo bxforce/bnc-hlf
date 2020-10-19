@@ -1,6 +1,0 @@
-{
-	"approvals": {
-		"org1MSP": true,
-		"org2MSP": true
-	}
-}

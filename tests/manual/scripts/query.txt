@@ -1,2 +1,0 @@
-Committed chaincode definition for chaincode 'mycc' on channel 'mychannel':
-Version: 2, Sequence: 2, Endorsement Plugin: escc, Validation Plugin: vscc, Approvals: [org1MSP: true, org2MSP: true]
