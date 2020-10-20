@@ -77,8 +77,20 @@ const tasks = {
     return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   },
 
-  async installChaincode() {
-    l('[Install Chaincode] Not yet implemented');
+  async installChaincode(name: string, confPath: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
+    return await CLI.installChaincode(name, confPath, version, chaincodeRootPath, chaincodePath, targets);
+  },
+
+  async approveChaincode(filePath, name: string, version: string, channelName: string, upgrade?: boolean) {
+    return await CLI.approveChaincode(filePath, name, version, channelName, upgrade)
+  },
+
+  async commitChaincode(configFile, commitFile, upgrade?: boolean) {
+    return await CLI.commitChaincode(configFile, commitFile, upgrade)
+  },
+
+  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean) {
+    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade)
   },
 
   async upgradeChaincode() {
@@ -238,6 +250,60 @@ channelCmd
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
     .action(async (cmd) => {
       await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+    });
+
+
+function commaSeparatedList(value, dummyPrevious) {
+  return value.split(',');
+}
+
+const chaincodeCmd = program.command('chaincode');
+chaincodeCmd
+    .command('install')
+    .description('install chaincode')
+    .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .requiredOption('-cRootPath, --chroot <path>', 'path to chaincode root')
+    .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
+    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
+    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+    .option('-p, --list <items>', 'comma separated list', commaSeparatedList)
+    .action(async (cmd) => {
+      await tasks.installChaincode(cmd.namech, cmd.config, cmd.vch, cmd.chroot, cmd.ch, cmd.list);
+    });
+
+
+chaincodeCmd
+    .command('approve')
+    .description('approve chaincode')
+    .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
+    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+    .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
+    .action(async (cmd) => {
+      await tasks.approveChaincode(cmd.config, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade);
+    });
+
+chaincodeCmd
+    .command('commit')
+    .description('commit chaincode')
+    .requiredOption('-f, --config <path>', 'Absolute path to the config deploy file')
+    .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
+    .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .action(async (cmd) => {
+      await tasks.commitChaincode(cmd.config, cmd.confCommit, cmd.upgrade);
+    });
+
+
+chaincodeCmd
+    .command('deploy')
+    .description('deploys chaincode')
+    .requiredOption('-f, --config <path>', 'Absolute path to deploy config file')
+    .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
+    .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
+    .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .action(async (cmd) => {
+      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
     });
 /*
 program

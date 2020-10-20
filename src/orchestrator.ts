@@ -17,11 +17,13 @@ limitations under the License.
 import {join} from 'path';
 import {d, e, l} from './utils/logs';
 import {DeploymentParser} from './parser/deploymentParser';
+import {CommitParser} from './parser/commitParser';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/networkClean.sh';
 import {ConfigurationValidator} from './parser/validator/configurationValidator';
 import {DockerComposeYamlOptions} from './utils/data-type';
 import {DownloadFabricBinariesGenerator} from './generators/utils/downloadFabricBinaries';
 import {Network} from './models/network';
+import {CommitConfiguration} from './models/commitConfiguration';
 import {GenesisParser} from './parser/genesisParser';
 import {ConfigtxYamlGenerator} from './generators/configtx.yaml';
 import {SysWrapper} from './utils/sysWrapper';
@@ -32,15 +34,19 @@ import {
     HLF_CA_VERSION,
     HLF_CLIENT_ACCOUNT_ROLE,
     HLF_VERSION,
-    NETWORK_ROOT_PATH
+    NETWORK_ROOT_PATH,
+    SEQUENCE
 } from './utils/constants';
 import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
 import {ClientConfig} from './core/hlf/helpers';
 import {Membership, UserParams} from './core/hlf/membership';
+import {Chaincode} from'./core/hlf/chaincode';
 import {Identity} from 'fabric-network';
 import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockercomposebase.yaml';
 import {DockerComposePeerGenerator} from './generators/docker-compose/dockercomposepeer.yaml';
+import {DockerComposeCliSingleton} from './generators/docker-compose/dockerComposeCliSingleton.yaml';
 import {Organization} from './models/organization';
+import {Peer} from './models/peer';
 import {DockerEngine} from './agents/docker-agent';
 import {DockerComposeOrdererGenerator} from './generators/docker-compose/dockercomposeorderer.yaml';
 import createFolder = SysWrapper.createFolder;
@@ -62,6 +68,8 @@ import getArtifactsPath = Utils.getArtifactsPath;
  * @author ahmed souissi
  */
 export class Orchestrator {
+
+    public cliGenerator;
 
     /**
      * Parse & validate deployment configuration file
@@ -85,6 +93,15 @@ export class Orchestrator {
         l('[End] Blockchain configuration files parsed');
 
         return network;
+    }
+
+    private static async _parseCommitConfig(commitConfigPath: string): Promise<CommitConfiguration> {
+        l('[Start] Start parsing the blockchain configuration file');
+
+        let configParse = new CommitParser(commitConfigPath);
+        const conf = await configParse.parse();
+        l('[End] Blockchain configuration files parsed');
+        return conf;
     }
 
     /**
@@ -352,6 +369,7 @@ export class Orchestrator {
         // Assign & check root path
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
         await createFolder(path);
+        
 
         // Auto-create docker-compose folder if not exists
         await createFolder(getDockerComposePath(path));
@@ -700,4 +718,218 @@ export class Orchestrator {
         const homedir = require('os').homedir();
         return join(homedir, NETWORK_ROOT_PATH);
     }
+
+    public async deployCliSingleton(name: string, configFilePath: string , targets: Peer[] , version: string, chaincodeRootPath:string): Promise<void> {
+        l(`[Chaincode] - Request to install  a chaincode (${name})`);
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        //peer0 of org1
+        const peer: Peer = network.organizations[0].peers[0];
+        l('[End] Blockchain configuration files parsed');
+
+        // Assign & check root path
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            ips: network.ips,
+            envVars: {
+                FABRIC_VERSION: HLF_VERSION.HLF_2,
+                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+            },
+            cliChaincodeRootPath: chaincodeRootPath
+        };
+
+        l('Creating Peer base docker compose file');
+        const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
+        await peerBaseGenerator.createTemplateBase();
+
+        l('Creating Docker network');
+        // TODO use localhost and default port for the default engine
+        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+        await engine.createNetwork({Name: options.composeNetwork});
+
+        l('Creating cli container & deploy');
+        const cliSingleton = DockerComposeCliSingleton.init(`docker-compose-cli-${organization.name}.yaml`, options);
+       
+        l(`'Creating Cli container template`);
+        await cliSingleton.createTemplateCli();
+
+        await cliSingleton.startCli(targets[0])
+
+    }
+
+      public async installChaincodeCli(name: string, configFilePath: string , targets: Peer[] , version: string, chaincodePath: string): Promise<void> {
+        l('[End] Blockchain configuration files parsed');
+        let peerTlsRootCert;
+        let corePeerAdr ;
+
+        const {docker, organization} = await this.loadOrgEngine(configFilePath)
+        const chaincode = new Chaincode(docker, name, version);
+        await chaincode.init(organization.fullName);
+        for(let peerElm of targets){
+            corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
+            peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
+            await chaincode.installChaincode(corePeerAdr,peerTlsRootCert, chaincodePath);
+        }
+
+    }
+
+    public async approveChaincodeCli(configFilePath, name, version, channelName, upgrade?:boolean): Promise <void> {
+        l(' REQUEST to approve chaincode')
+        const {docker, organization} = await this.loadOrgEngine(configFilePath)
+        const chaincode = new Chaincode(docker, name, version);
+        await chaincode.init(organization.fullName);
+        if(!upgrade){
+            l(' APPROVING CHAINCODE FOR FIRST TIME DEPLOY')
+            await chaincode.approve(SEQUENCE, channelName);
+        } else {
+            //get last sequence number
+            l(' APPROVING CHAINCODE TO UPGRADE')
+            let seq = await this.getLastSequence(configFilePath, name, version,channelName);
+            let lastSequence = seq.split(':');
+            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+            await chaincode.approve(finalSequence, channelName);
+        }
+
+    }
+
+    public async getLastSequence(configFilePath, name, version, channelName) {
+        l(' REQUEST to approve chaincode')
+        const {docker, organization} = await this.loadOrgEngine(configFilePath)
+        const chaincode = new Chaincode(docker, name, version);
+        await chaincode.init(organization.fullName);
+        let seq =  await chaincode.getLastSequence(channelName);
+        return seq;
+    }
+
+    public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean): Promise <void> {
+        let targetPeers = await this.getTargetPeers(configDeployFile, targets)
+
+        let config = await this.getChaincodeParams(commitFile);
+        await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodeRootPath)
+        await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
+
+        await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.nameChannel, upgrade);
+
+        await this.commitChaincode(configDeployFile, commitFile, upgrade);
+
+
+    }
+
+    public async commitChaincode(configFile, commitFile, upgrade?: boolean): Promise <void> {
+       
+        l('Request to commit chaincode')
+        const {docker, organization} = await this.loadOrgEngine(configFile)
+        let config = await this.getChaincodeParams(commitFile);
+        const chaincode = new Chaincode(docker,config.chaincodeName, config.version); // TODO add those args in command line
+        await chaincode.init(organization.fullName);
+
+        let finalArg1= "";
+        let allOrgs = await this.getCommitOrgNames(commitFile);
+        for(let org of allOrgs){
+            let mspName = org+"MSP";
+            finalArg1+= `\"${mspName}\": true`
+            finalArg1 += ";"
+        }
+
+        let targets = await this.getTargetCommitPeers(commitFile)
+        if(!upgrade){
+            l(' COMMITTING CHAINCODE FOR FIRST TIME DEPLOY')
+            chaincode.checkCommitReadiness(finalArg1, targets, SEQUENCE, config.nameChannel);
+        } else {
+            //get last sequence number
+            l(' COMMITTING CHAINCODE TO UPGRADE')
+            let seq = await this.getLastSequence(configFile, config.chaincodeName, config.version,config.nameChannel);
+            let lastSequence = seq.split(':');
+            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.nameChannel);
+        }
+
+    }
+
+    public async getChaincodeParams(commitFile: string){
+        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        let chaincodeParams: any = {};
+        chaincodeParams.nameChannel = conf.channelName;
+        chaincodeParams.chaincodeName = conf.chaincodeName;
+        chaincodeParams.chaincodeRootPath = conf.chaincodeRootPath;
+        chaincodeParams.chaincodePath = conf.chaincodePath;
+        chaincodeParams.version = conf.version;
+
+        return chaincodeParams;
+    }
+
+    public async getCommitOrgNames(commitFile: string){
+        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        const organizations: Organization[] = conf.organizations;
+        let listOrgs=[];
+        organizations.forEach((org) => {
+            listOrgs.push(org.name);
+        })
+        return listOrgs;
+    }
+
+    public async getTargetCommitPeers(commitFile: string){
+        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        const organizations: Organization[] = conf.organizations;
+        let targets=''
+        organizations.forEach((org) => {
+            let nameOrg = org.name;
+            let domainName = org.domainName;
+            let fullName = nameOrg+'.'+domainName;
+            for(let singlePeer of org.peers){
+                let namePeer = singlePeer.name;
+                let portPeer = singlePeer.options.ports[0];
+                let pathToCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${fullName}/peers/${namePeer}.${fullName}/tls/ca.crt`
+                targets += `--peerAddresses ${namePeer}.${fullName}:${portPeer} --tlsRootCertFiles ${pathToCert} `
+            }
+
+        })
+
+        return targets;
+    }
+
+    public async getTargetPeers(configFilePath: string, targets?: string[]) {
+        const network: Network = await Orchestrator._parse(configFilePath);
+        let targetPeers: Peer[] = [];
+        if(!targets){ //load all peers
+            targetPeers = network.organizations[0].peers;
+        }else {
+            targets.forEach((namePeer) => {
+                network.organizations[0].peers.forEach((peer) => {
+                    if(namePeer == peer.name){
+                        targetPeers.push(peer)
+                    }
+
+                })
+            })
+        }
+
+        return targetPeers;
+    }
+
+    public async loadAllPeersForInstall(configFile: string): Promise <Peer []> {
+        // @ts-ignore
+        const network: Network = await Orchestrator._parse(configFile);
+        let peers: Peer[] = [];
+        peers = network.organizations[0].peers;
+        return peers;
+    }
+
+    public async loadOrgEngine(configFilePath) {
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const organization: Organization = network.organizations[0];
+        const engine = organization.getEngine(organization.peers[0].options.engineName);
+        const docker =  new DockerEngine({ host: engine.options.url, port: engine.options.port });
+        return {docker, organization};
+    }
+
 }

@@ -157,4 +157,31 @@ export class CLI {
     await channelEngine.updateChannel(anchortx, namech, deployConfigPath);
     return channelEngine;
   }
+
+  //Chaincode commands
+  static async installChaincode(name: string, deployPath: string  , version: string, chaincodeRootPath: string, chaincodePath: string,  targets?: string[]) {
+    const chaincodeEngine = new Orchestrator();
+    let targetPeers = await chaincodeEngine.getTargetPeers(deployPath, targets)
+    await chaincodeEngine.deployCliSingleton(name, deployPath, targetPeers, version, chaincodeRootPath)
+    await chaincodeEngine.installChaincodeCli(name, deployPath, targetPeers, version, chaincodePath)
+    return chaincodeEngine;
+  }
+
+  static async approveChaincode(configFile, name, version, channelName, upgrade?: boolean) {
+    const chaincodeEngine = new Orchestrator();
+    await chaincodeEngine.approveChaincodeCli(configFile, name, version, channelName, upgrade);
+    return  chaincodeEngine;
+  }
+
+  static async commitChaincode( config, commitFile, upgrade?: boolean) {
+    const chaincodeEngine = new Orchestrator();
+    await chaincodeEngine.commitChaincode(config, commitFile, upgrade);
+    return  chaincodeEngine;
+  }
+
+  static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean){
+    const chaincodeEngine = new Orchestrator();
+    await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade)
+    return  chaincodeEngine;
+  }
 }

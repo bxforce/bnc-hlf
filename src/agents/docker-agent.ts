@@ -108,6 +108,7 @@ export class DockerEngine {
     }
     l(`Docker network (${options.name}) already exists`);
   }
+  
 
   getContainer(id: string): DockerContainer {
     let container = new DockerContainer(this);
@@ -277,7 +278,9 @@ export class DockerEngine {
 export class DockerContainer {
   public container: Container;
 
-  constructor(public engine: DockerEngine, public options?: ContainerCreateOptions) {}
+  constructor(public engine: DockerEngine, public options?: ContainerCreateOptions) {
+    
+  }
 
   async create(): Promise<void> {
     this.container = await this.engine.createContainer(this.options);
@@ -293,6 +296,10 @@ export class DockerContainer {
 
   stop(options?: {}): Promise<any> {
     return this.container.stop(options);
+  }
+
+  exec(options?: {}): Promise<any> {
+    return this.container.exec(options);
   }
 
   remove(options?: ContainerRemoveOptions): Promise<any> {

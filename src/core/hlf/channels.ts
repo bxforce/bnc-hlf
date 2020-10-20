@@ -136,6 +136,12 @@ export class Channels extends ClientHelper {
       };
       const results = await channel.joinChannel(joinRequest);
 
+      d(this.peers)
+      d(this.client.newTransactionID())
+      d(genesisBlock)
+
+      d("#####")
+
       d(util.format('Join Channel R E S P O N S E : %j', results));
       if (results[0] && results[0].response && results[0].response.status === 200) {
         l(util.format('Successfully joined peers in organization %s to the channel \'%s\'', orgMspId, channelName));

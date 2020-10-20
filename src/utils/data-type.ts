@@ -32,6 +32,7 @@ export class DockerComposeYamlOptions {
     FABRIC_CA_VERSION?: string;
     THIRDPARTY_VERSION?: string;
   };
+  cliChaincodeRootPath?: string;
 }
 
 export class CSR {
