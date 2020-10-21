@@ -24,6 +24,7 @@ export class commitOptions {
     channelName: string;
     chaincodeName: string;
     chaincodeRootPath: string;
+    scriptsRootPath: string;
     chaincodePath: string;
     version: string;
 }
@@ -40,11 +41,13 @@ export class CommitConfiguration {
                 public channelName: string,
                 public chaincodeName: string,
                 public chaincodeRootPath: string,
+                public scriptsRootPath: string,
                 public chaincodePath: string,
                 public version: string) {
         this.channelName= channelName;
         this.chaincodeName= chaincodeName;
         this.chaincodeRootPath= chaincodeRootPath;
+        this.scriptsRootPath= scriptsRootPath;
         this.chaincodePath= chaincodePath;
         this.version= version;
 

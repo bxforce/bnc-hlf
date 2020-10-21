@@ -159,10 +159,10 @@ export class CLI {
   }
 
   //Chaincode commands
-  static async installChaincode(name: string, deployPath: string  , version: string, chaincodeRootPath: string, chaincodePath: string,  targets?: string[]) {
+  static async installChaincode(name: string, deployPath: string, version: string, chaincodeRootPath: string, chaincodePath: string, targets?: string[]) {
     const chaincodeEngine = new Orchestrator();
     let targetPeers = await chaincodeEngine.getTargetPeers(deployPath, targets)
-    await chaincodeEngine.deployCliSingleton(name, deployPath, targetPeers, version, chaincodeRootPath)
+    await chaincodeEngine.deployCliSingleton(name, deployPath, targetPeers, version, chaincodeRootPath, chaincodeRootPath)
     await chaincodeEngine.installChaincodeCli(name, deployPath, targetPeers, version, chaincodePath)
     return chaincodeEngine;
   }
@@ -182,6 +182,12 @@ export class CLI {
   static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean){
     const chaincodeEngine = new Orchestrator();
     await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade)
+    return  chaincodeEngine;
+  }
+  
+  static async startFabricCli(configDeployFile, commitFile){
+    const chaincodeEngine = new Orchestrator();
+    await chaincodeEngine.deployCli(configDeployFile, commitFile)
     return  chaincodeEngine;
   }
 }

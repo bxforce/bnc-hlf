@@ -70,7 +70,7 @@ services:
       - ${this.options.networkRootPath}/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
       - ${this.options.cliChaincodeRootPath}:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
-      - /home/ubuntu/bnc-hlf/tests/manual/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+      - ${this.options.cliScriptsRootPath}:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
 ${this.options.ips && this.options.ips.length > 0 ?  `
     extra_hosts:
 ${this.options.ips
@@ -138,14 +138,14 @@ ${this.options.ips
      * Start a single peer container
      * @param peer
      */
-    async startCli(peer: Peer): Promise<boolean> {
+    async startCli(): Promise<boolean> {
         try {
             const serviceName =  `cli.${this.options.org.fullName}`;
 
             l(`Starting CLI ${serviceName}...`);
 
-            const engine = this.options.org.getEngine(peer.options.engineName);
-            this.docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+            //const engine = this.options.org.getEngine(peer.options.engineName);
+            this.docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // { host: engine.options.url, port: engine.options.port });
             this.container = await this.docker.getContainer(`cli.${this.options.org.fullName}`)
             await this.docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 

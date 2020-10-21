@@ -21,6 +21,7 @@ import { l } from './utils/logs';
 import { CLI } from './cli';
 
 const pkg = require('../package.json');
+import { CONFIG_DEFAULT_PATH } from './utils/constants';
 
 /**
  *
@@ -91,6 +92,10 @@ const tasks = {
 
   async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean) {
     return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade)
+  },
+
+  async startFabricCli(configDeployFile, commitFile) {
+    return await CLI.startFabricCli(configDeployFile, commitFile)
   },
 
   async upgradeChaincode() {
@@ -176,11 +181,11 @@ const tasks = {
 
 program
   .command('init')
-    .description("creates genesis.block and configtx files for channel and anchor update")
+  .description("creates genesis.block and configtx files for channel and anchor update")
   .option('--genesis', 'generate genesis block')
   .option('--configtx', 'generate channel configuration file')
   .option('--anchortx', 'generate anchor peer update file')
-  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .action(async cmd => {
     await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });
@@ -188,7 +193,7 @@ program
 program
   .command('enroll-peers')
   .description('creates crypto material for the peers')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.generatePeersCredentials(cmd.config);
@@ -198,7 +203,7 @@ program
 program
   .command('enroll-orderers')
   .description('creates crypto material for the orderers')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file')
+  .option('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file', CONFIG_DEFAULT_PATH)
   .action(async (cmd: any) => {
     if (cmd) {
       await tasks.generateOrdererCredentials(cmd.config);
@@ -206,9 +211,22 @@ program
   });
 
 program
+  .command('generate')
+  .description("creates crypto material, genesis.block and configtx files")
+  .option('--genesis', 'generate genesis block')
+  .option('--configtx', 'generate channel configuration file')
+  .option('--anchortx', 'generate anchor peer update file')
+  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .action(async cmd => {
+    await tasks.generatePeersCredentials(cmd.config);
+    await tasks.generateOrdererCredentials(cmd.config);
+    await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+  });
+
+program
   .command('start')
   .description('create/start network')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .action(async cmd => {
     await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
   });
@@ -216,7 +234,7 @@ program
 program
   .command('stop')
   .description('stop the blockchain')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+  .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-r, --rmi', 'remove docker containers')
   .action(async (cmd: any) => {
     await tasks.stop(cmd.config, cmd.rmi);
@@ -226,7 +244,7 @@ const channelCmd = program.command('channel');
 channelCmd
   .command('create')
   .description('create channel if it does not exist')
-  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .action(async cmd => {
@@ -236,7 +254,7 @@ channelCmd
 channelCmd
    .command('join')
    .description('join peers to channel')
-    .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
    .action(async cmd => {
      await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.config);
@@ -245,13 +263,25 @@ channelCmd
 channelCmd
     .command('update')
     .description('commit anchor update to peers on channel')
-    .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
-    .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
+    .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+    .requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
     .action(async (cmd) => {
       await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
     });
 
+channelCmd
+    .command('deploy')
+    .description('deploy channel')
+    .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+    .requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
+    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+    .requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
+    .action(async (cmd) => {
+      await tasks.createChannel(cmd.namech, cmd.channelTx, cmd.config);
+      await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.config);
+      await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+    });
 
 function commaSeparatedList(value, dummyPrevious) {
   return value.split(',');
@@ -261,7 +291,7 @@ const chaincodeCmd = program.command('chaincode');
 chaincodeCmd
     .command('install')
     .description('install chaincode')
-    .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
     .requiredOption('-cRootPath, --chroot <path>', 'path to chaincode root')
     .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
     .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
@@ -275,7 +305,7 @@ chaincodeCmd
 chaincodeCmd
     .command('approve')
     .description('approve chaincode')
-    .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
+    .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
     .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
     .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
     .option('--upgrade', 'option used when approving to upgrade chaincode')
@@ -287,24 +317,34 @@ chaincodeCmd
 chaincodeCmd
     .command('commit')
     .description('commit chaincode')
-    .requiredOption('-f, --config <path>', 'Absolute path to the config deploy file')
-    .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
+    .option('-f, --config <path>', 'Absolute path to the config deploy file', CONFIG_DEFAULT_PATH)
+    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
     .option('--upgrade', 'option used when approving to upgrade chaincode')
     .action(async (cmd) => {
       await tasks.commitChaincode(cmd.config, cmd.confCommit, cmd.upgrade);
     });
 
-
 chaincodeCmd
     .command('deploy')
     .description('deploys chaincode')
-    .requiredOption('-f, --config <path>', 'Absolute path to deploy config file')
-    .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
+    .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
     .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
     .option('--upgrade', 'option used when approving to upgrade chaincode')
     .action(async (cmd) => {
       await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
     });
+
+chaincodeCmd
+    .command('cli')
+    .description('start fabric cli')
+    .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+    .action(async (cmd) => {
+      await tasks.startFabricCli(cmd.config, cmd.confCommit);
+    });
+
+
 /*
 program
   .command('new')

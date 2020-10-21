@@ -718,8 +718,55 @@ export class Orchestrator {
         const homedir = require('os').homedir();
         return join(homedir, NETWORK_ROOT_PATH);
     }
+    
+    public async deployCli(configFilePath: string, commitFile: string): Promise<void> {
+        let config = await this.getChaincodeParams(commitFile);
+        
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        //peer0 of org1
+        const peer: Peer = network.organizations[0].peers[0];
 
-    public async deployCliSingleton(name: string, configFilePath: string , targets: Peer[] , version: string, chaincodeRootPath:string): Promise<void> {
+        // Assign & check root path
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            ips: network.ips,
+            envVars: {
+                FABRIC_VERSION: HLF_VERSION.HLF_2,
+                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
+                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+            },
+            cliChaincodeRootPath: config.chaincodeRootPath,
+            cliScriptsRootPath: config.scriptsRootPath
+        };
+
+        l('Creating Peer base docker compose file');
+        const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
+        await peerBaseGenerator.createTemplateBase();
+
+        l('Creating Docker network');
+        // TODO use localhost and default port for the default engine
+        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+        await engine.createNetwork({Name: options.composeNetwork});
+
+        l('Creating cli container');
+        const cliSingleton = DockerComposeCliSingleton.init(`docker-compose-cli.yaml`, options);
+       
+        l(`'Creating Cli container template`);
+        await cliSingleton.createTemplateCli();
+
+        await cliSingleton.startCli()
+    }
+
+    public async deployCliSingleton(name: string, configFilePath: string, targets: Peer[], version: string, chaincodeRootPath: string, scriptsRootPath: string): Promise<void> {
         l(`[Chaincode] - Request to install  a chaincode (${name})`);
         const network: Network = await Orchestrator._parse(configFilePath);
         const isNetworkValid = network.validate();
@@ -744,7 +791,8 @@ export class Orchestrator {
                 FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
                 THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
             },
-            cliChaincodeRootPath: chaincodeRootPath
+            cliChaincodeRootPath: chaincodeRootPath,
+            cliScriptsRootPath: scriptsRootPath
         };
 
         l('Creating Peer base docker compose file');
@@ -762,7 +810,7 @@ export class Orchestrator {
         l(`'Creating Cli container template`);
         await cliSingleton.createTemplateCli();
 
-        await cliSingleton.startCli(targets[0])
+        await cliSingleton.startCli() // targets[0]
 
     }
 
@@ -812,16 +860,11 @@ export class Orchestrator {
 
     public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean): Promise <void> {
         let targetPeers = await this.getTargetPeers(configDeployFile, targets)
-
         let config = await this.getChaincodeParams(commitFile);
-        await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodeRootPath)
+        await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath)
         await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
-
         await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.nameChannel, upgrade);
-
         await this.commitChaincode(configDeployFile, commitFile, upgrade);
-
-
     }
 
     public async commitChaincode(configFile, commitFile, upgrade?: boolean): Promise <void> {
@@ -861,6 +904,7 @@ export class Orchestrator {
         chaincodeParams.nameChannel = conf.channelName;
         chaincodeParams.chaincodeName = conf.chaincodeName;
         chaincodeParams.chaincodeRootPath = conf.chaincodeRootPath;
+        chaincodeParams.scriptsRootPath = conf.scriptsRootPath;
         chaincodeParams.chaincodePath = conf.chaincodePath;
         chaincodeParams.version = conf.version;
 
@@ -928,7 +972,7 @@ export class Orchestrator {
         const network: Network = await Orchestrator._parse(configFilePath);
         const organization: Organization = network.organizations[0];
         const engine = organization.getEngine(organization.peers[0].options.engineName);
-        const docker =  new DockerEngine({ host: engine.options.url, port: engine.options.port });
+        const docker =  new DockerEngine({socketPath: '/var/run/docker.sock'}); //{ host: engine.options.url, port: engine.options.port });
         return {docker, organization};
     }
 
