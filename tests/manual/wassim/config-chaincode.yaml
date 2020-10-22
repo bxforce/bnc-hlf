@@ -3,6 +3,7 @@ chaincode:
   channel: "mychannel"
   chaincode: "mycc"
   root_path_chaincode: "/home/ubuntu/fabric-samples/chaincode/"
+  root_path_scripts: "/home/ubuntu/bnc-hlf/tests/manual/scripts"
   path_chaincode: "abstore/go"
   version: "1"
   organisations:

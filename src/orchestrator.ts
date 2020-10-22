@@ -720,8 +720,7 @@ export class Orchestrator {
     }
     
     public async deployCli(configFilePath: string, commitFile: string): Promise<void> {
-        let config = await this.getChaincodeParams(commitFile);
-        
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
         const network: Network = await Orchestrator._parse(configFilePath);
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
@@ -859,19 +858,19 @@ export class Orchestrator {
     }
 
     public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean): Promise <void> {
-        let targetPeers = await this.getTargetPeers(configDeployFile, targets)
-        let config = await this.getChaincodeParams(commitFile);
+        let targetPeers = await this.getTargetPeers(configDeployFile, targets);
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
         await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath)
         await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
-        await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.nameChannel, upgrade);
+        await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.channelName, upgrade);
         await this.commitChaincode(configDeployFile, commitFile, upgrade);
     }
 
     public async commitChaincode(configFile, commitFile, upgrade?: boolean): Promise <void> {
        
         l('Request to commit chaincode')
-        const {docker, organization} = await this.loadOrgEngine(configFile)
-        let config = await this.getChaincodeParams(commitFile);
+        const {docker, organization} = await this.loadOrgEngine(configFile);
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
         const chaincode = new Chaincode(docker,config.chaincodeName, config.version); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
@@ -886,29 +885,16 @@ export class Orchestrator {
         let targets = await this.getTargetCommitPeers(commitFile)
         if(!upgrade){
             l(' COMMITTING CHAINCODE FOR FIRST TIME DEPLOY')
-            chaincode.checkCommitReadiness(finalArg1, targets, SEQUENCE, config.nameChannel);
+            chaincode.checkCommitReadiness(finalArg1, targets, SEQUENCE, config.channelName);
         } else {
             //get last sequence number
             l(' COMMITTING CHAINCODE TO UPGRADE')
-            let seq = await this.getLastSequence(configFile, config.chaincodeName, config.version,config.nameChannel);
+            let seq = await this.getLastSequence(configFile, config.chaincodeName, config.version,config.channelName);
             let lastSequence = seq.split(':');
             let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
-            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.nameChannel);
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName);
         }
 
-    }
-
-    public async getChaincodeParams(commitFile: string){
-        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
-        let chaincodeParams: any = {};
-        chaincodeParams.nameChannel = conf.channelName;
-        chaincodeParams.chaincodeName = conf.chaincodeName;
-        chaincodeParams.chaincodeRootPath = conf.chaincodeRootPath;
-        chaincodeParams.scriptsRootPath = conf.scriptsRootPath;
-        chaincodeParams.chaincodePath = conf.chaincodePath;
-        chaincodeParams.version = conf.version;
-
-        return chaincodeParams;
     }
 
     public async getCommitOrgNames(commitFile: string){
