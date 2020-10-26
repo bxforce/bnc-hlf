@@ -17,9 +17,9 @@ limitations under the License.
 /* tslint:disable:no-inferrable-types */
 import { Organization } from './organization';
 import { Channel } from './channel';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../utils/constants';
 import { OrdererOrganization } from './ordererOrganization';
-import { e } from '../utils/logs';
+import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../../utils/constants';
+import { e } from '../../utils/logs';
 
 export class NetworkOptions {
   hyperledgerVersion?: HLF_VERSION;
@@ -38,12 +38,9 @@ export class NetworkOptions {
 export class Network {
   organizations: Organization[] = [];
   channel: Channel;
-  //added this for extra host ips
-  ips: [];
-
-  /* This ca will be used to generate only orderer msp */
-  ordererOrganization?: OrdererOrganization;
-
+  ips: []; //added this for extra host ips
+  ordererOrganization?: OrdererOrganization; /* This ca will be used to generate only orderer msp */
+  
   constructor(public path: string, public options: NetworkOptions) {}
 
   /**
@@ -55,12 +52,10 @@ export class Network {
       e(`This implementation supports currently only HLF ${HLF_VERSION.HLF_2}`);
       return false;
     }
-
     if(this.options.consensus !== ConsensusType.RAFT) {
       e(`This implementation supports currently on consensus protocol: ${ConsensusType.RAFT}`);
       return false;
     }
-
     return true;
   }
 }

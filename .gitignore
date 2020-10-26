@@ -114,6 +114,7 @@ Desktop.ini
 ######################
 /bin/
 /deploy/
+scripts
 
 ######################
 # Logs

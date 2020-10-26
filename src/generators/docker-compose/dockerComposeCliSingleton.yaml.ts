@@ -15,12 +15,11 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { DockerComposeYamlOptions } from '../../utils/datatype';
 import { e, l } from '../../utils/logs';
-import { DockerEngine } from '../../agents/docker-agent';
-import { DockerContainer } from '../../agents/docker-agent';
-import { Peer } from '../../models/peer';
-import { Utils } from '../../utils/utils';
+import { DockerEngine } from '../../utils/dockerAgent';
+import { Peer } from '../../parser/model/peer';
+import { Utils } from '../../utils/helper';
 import getDockerComposePath = Utils.getDockerComposePath;
 import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
 const fs = require('fs');
@@ -30,9 +29,6 @@ const yaml = require('js-yaml')
 export class DockerComposeCliSingleton extends BaseGenerator {
     private static instance: DockerComposeCliSingleton;
 
-    public container;
-    public docker;
-    
     /* docker compose content for peers */
     contents = `
 version: '2'
@@ -82,16 +78,13 @@ ${this.options.ips
       - ${this.options.composeNetwork}
   `;
 
-
-
-
-
     /**
      * The Singleton's constructor should always be private to prevent direct
      * construction calls with the `new` operator.
      */
-    private constructor(filename: string, private options: DockerComposeYamlOptions) {
-
+    private constructor(filename: string, 
+                        private options: DockerComposeYamlOptions,
+                        private readonly dockerEngine: DockerEngine) {
         super(filename, getDockerComposePath(options.networkRootPath));
     }
 
@@ -111,11 +104,11 @@ ${this.options.ips
         return DockerComposeCliSingleton.instance;
     }
 
-    public static init(filename: string, options: DockerComposeYamlOptions): DockerComposeCliSingleton{
+    public static init(filename: string, options: DockerComposeYamlOptions, dockerEngine: DockerEngine): DockerComposeCliSingleton{
         if(DockerComposeCliSingleton.instance != null){
             console.log("ALREADY initialized")
         }
-        DockerComposeCliSingleton.instance = new DockerComposeCliSingleton(filename, options);
+        DockerComposeCliSingleton.instance = new DockerComposeCliSingleton(filename, options, dockerEngine);
         return DockerComposeCliSingleton.instance;
     }
 
@@ -145,9 +138,8 @@ ${this.options.ips
             l(`Starting CLI ${serviceName}...`);
 
             //const engine = this.options.org.getEngine(peer.options.engineName);
-            this.docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // { host: engine.options.url, port: engine.options.port });
-            this.container = await this.docker.getContainer(`cli.${this.options.org.fullName}`)
-            await this.docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
+            //this.container = await this.dockerEngine.getContainer(`cli.${this.options.org.fullName}`)
+            await this.dockerEngine.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 
             l(`Service Peer ${serviceName} started successfully !!!`);
 

@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { DockerComposeYamlOptions } from '../../utils/datatype';
 import { BaseGenerator } from '../base';
 import { e } from '../../utils/logs';
-import { Utils } from '../../utils/utils';
-import { Network } from '../../models/network';
+import { Utils } from '../../utils/helper';
+import { Network } from '../../parser/model/network';
 import { ConsensusType } from '../../utils/constants';
 import getDockerComposePath = Utils.getDockerComposePath;
 

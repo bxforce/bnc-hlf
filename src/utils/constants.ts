@@ -43,7 +43,7 @@ export enum HLF_CA_VERSION {
   HLF_2= '1.4.4'
 }
 
-export enum Type_User {
+export enum USER_TYPE {
   admin = 'admin',
   user = 'user'
 }

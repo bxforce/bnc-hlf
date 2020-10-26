@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { BaseGenerator } from './base';
+import { BaseGenerator } from '../base';
 import { join } from 'path';
 
 export class NetworkCleanShOptions {

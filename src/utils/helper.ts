@@ -15,14 +15,14 @@ limitations under the License.
 */
 
 import { exec } from 'shelljs';
-import { Peer } from '../models/peer';
-import { Organization } from '../models/organization';
-import { Orderer } from '../models/orderer';
+import { Peer } from '../parser/model/peer';
+import { Organization } from '../parser/model/organization';
+import { Orderer } from '../parser/model/orderer';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
 import { BNC_TOOL_NAME } from './constants';
 import * as sudo from 'sudo-prompt';
 import * as chalk from 'chalk';
 import { e } from './logs';
-import { OrdererOrganization } from '../models/ordererOrganization';
 
 /**
  * Common utils functions
@@ -30,49 +30,9 @@ import { OrdererOrganization } from '../models/ordererOrganization';
  * @author wassim.znaidi@gmail.com
  */
 export namespace Utils {
-  export function toPascalCase(text: string): string {
-    return text.match(/[a-z]+/gi)
-      .map(function(word) {
-        return word.charAt(0).toUpperCase() + word.substr(1).toLowerCase();
-      })
-      .join('');
-  }
-
+  
   export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  export function changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<boolean> {
-    const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
-
-    return new Promise((resolved, rejected) => {
-      exec(command, { silent: true }, function(code, stdout, stderr) {
-        return code === 0 ? resolved() : rejected();
-      });
-    });
-  }
-
-  export function changeOwnership(folder: string): Promise<boolean> {
-    const options = {
-      name: BNC_TOOL_NAME
-    };
-
-    const command = `chown -R 1001:1001 ${folder}`;
-
-    return new Promise((resolved, rejected) => {
-      sudo.exec(command, options, (error, stdout, stderr) => {
-        if (error) {
-          rejected(error);
-        }
-
-        if (stderr) {
-          console.error(chalk.red(stderr));
-          e(stderr);
-        }
-
-        resolved(true);
-      });
-    });
   }
 
   /**
@@ -127,8 +87,7 @@ export namespace Utils {
    * @param orderer
    */
   export function getOrdererMspPath(rootPath: string, ordererOrganization: OrdererOrganization, orderer: Orderer): string {
-    const ordererFullName = ordererOrganization.ordererFullName(orderer);
-    return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${ordererFullName}/msp`;
+    return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${orderer.fullName}/msp`;
 
   }
 
@@ -139,8 +98,7 @@ export namespace Utils {
    * @param orderer
    */
   export function getOrdererTlsPath(rootPath: string, ordererOrganization: OrdererOrganization, orderer: Orderer): string {
-    const ordererFullName = ordererOrganization.ordererFullName(orderer);
-    return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${ordererFullName}/tls`;
+    return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${orderer.fullName}/tls`;
   }
 
   /**
@@ -163,4 +121,49 @@ export namespace Utils {
   export function getPropertiesPath(rootPath: string): string {
     return `${rootPath}/settings`;
   }
+  
+  /*
+  export function changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<boolean> {
+    const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
+
+    return new Promise((resolved, rejected) => {
+      exec(command, { silent: true }, function(code, stdout, stderr) {
+        return code === 0 ? resolved() : rejected();
+      });
+    });
+  }
+
+  export function changeOwnership(folder: string): Promise<boolean> {
+    const options = {
+      name: BNC_TOOL_NAME
+    };
+
+    const command = `chown -R 1001:1001 ${folder}`;
+
+    return new Promise((resolved, rejected) => {
+      sudo.exec(command, options, (error, stdout, stderr) => {
+        if (error) {
+          rejected(error);
+        }
+
+        if (stderr) {
+          console.error(chalk.red(stderr));
+          e(stderr);
+        }
+
+        resolved(true);
+      });
+    });
+  }
+
+  export function toPascalCase(text: string): string {
+    return text.match(/[a-z]+/gi)
+      .map(function(word) {
+        return word.charAt(0).toUpperCase() + word.substr(1).toLowerCase();
+      })
+      .join('');
+  }
+  */
 }
+
+

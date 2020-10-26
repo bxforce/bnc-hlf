@@ -15,15 +15,15 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { DockerComposeYamlOptions } from '../../utils/data-type';
-import { DockerEngine } from '../../agents/docker-agent';
+import { DockerComposeYamlOptions } from '../../utils/datatype';
+import { DockerEngine } from '../../utils/dockerAgent';
 import { d, e, l } from '../../utils/logs';
-import { DOCKER_CA_DELAY, DOCKER_DEFAULT } from '../../utils/constants';
-import { Utils } from '../../utils/utils';
+import { DOCKER_CA_DELAY } from '../../utils/constants';
+import { Utils } from '../../utils/helper';
 import delay = Utils.delay;
-import { Network } from '../../models/network';
-import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
-import changeOwnership = Utils.changeOwnership;
+import { Network } from '../../parser/model/network';
+//import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
+//import changeOwnership = Utils.changeOwnership;
 import getDockerComposePath = Utils.getDockerComposePath;
 
 /**
@@ -72,17 +72,13 @@ services:
   constructor(filename: string,
               path: string,
               private network: Network,
-              private options?: DockerComposeYamlOptions,
-              private readonly dockerEngine?: DockerEngine) {
+              private options: DockerComposeYamlOptions,
+              private readonly dockerEngine: DockerEngine) {
 
     super(filename, getDockerComposePath(options.networkRootPath));
 
     this.caName = this.network.ordererOrganization.caName;
     this.rootPath = this.network.options.networkConfigPath;
-
-    if (!this.dockerEngine) {
-      this.dockerEngine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
-    }
   }
 
   /**
@@ -91,7 +87,7 @@ services:
   async startTlsCa(): Promise<boolean> {
     try {
       await this.dockerEngine.composeOne(`${this.caName}`, { cwd: this.path, config: this.filename });
-      await changeOwnership(`${this.rootPath}`);
+      //await changeOwnership(`${this.rootPath}`);
 
       return true;
     } catch (err) {

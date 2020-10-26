@@ -16,9 +16,7 @@ limitations under the License.
 
 /* tslint:disable:no-inferrable-types */
 import { Organization } from './organization';
-import { ConsensusType } from '../utils/constants';
 import { OrdererOrganization } from './ordererOrganization';
-import { e } from '../utils/logs';
 
 export class commitOptions {
     channelName: string;
@@ -29,14 +27,10 @@ export class commitOptions {
     version: string;
 }
 
-
-
 export class CommitConfiguration {
-
     organizations: Organization[] = [];
-    /* This ca will be used to generate only orderer msp */
-    ordererOrganization?: OrdererOrganization;
-
+    ordererOrganization?: OrdererOrganization; /* This ca will be used to generate only orderer msp */
+    
     constructor(public path: string,
                 public channelName: string,
                 public chaincodeName: string,
@@ -44,14 +38,11 @@ export class CommitConfiguration {
                 public scriptsRootPath: string,
                 public chaincodePath: string,
                 public version: string) {
-        this.channelName= channelName;
-        this.chaincodeName= chaincodeName;
-        this.chaincodeRootPath= chaincodeRootPath;
-        this.scriptsRootPath= scriptsRootPath;
-        this.chaincodePath= chaincodePath;
-        this.version= version;
-
+        this.channelName = channelName;
+        this.chaincodeName = chaincodeName;
+        this.chaincodeRootPath = chaincodeRootPath;
+        this.scriptsRootPath = scriptsRootPath;
+        this.chaincodePath = chaincodePath;
+        this.version = version;
     }
-
-
 }

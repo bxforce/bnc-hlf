@@ -15,15 +15,15 @@ limitations under the License.
 */
 
 import { l } from '../utils/logs';
-import { Organization } from '../models/organization';
-import { Engine } from '../models/engine';
-import { Peer } from '../models/peer';
-import { Orderer } from '../models/orderer';
+import { Organization } from '../parser/model/organization';
+import { Engine } from '../parser/model/engine';
+import { Peer } from '../parser/model/peer';
+import { Orderer } from '../parser/model/orderer';
 import { BaseParser } from './base';
-import { Ca } from '../models/ca';
-import { Network } from '../models/network';
+import { Ca } from '../parser/model/ca';
+import { Network } from '../parser/model/network';
 import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
-import { OrdererOrganization } from '../models/ordererOrganization';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
 
 /**
  * Parser class for the deployment configuration file
@@ -46,7 +46,6 @@ export class DeploymentParser extends BaseParser {
    */
   async parse(): Promise<Network> {
     l('Starting Parsing configuration file');
-
     const parsedYaml = await this.parseRaw();
 
     // Parsing chains definition
@@ -56,9 +55,7 @@ export class DeploymentParser extends BaseParser {
     const engines: Engine[] = DeploymentParser.buildEngine(parsedYaml['engines']);
 
     // parse IPS
-
     const ips = parsedYaml['ips'];
-   
 
     // Set engine for every organization
     organizations.map(organization => {
@@ -82,7 +79,8 @@ export class DeploymentParser extends BaseParser {
 
     // set a default ordererOrganization
     const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
-      domainName: organizations[0].domainName
+      domainName: organizations[0].domainName,
+      ca: new Ca('ca.orderer', {})
     });
     for(const org of network.organizations) {
       ordererOrganization.orderers.push(...org.orderers);
@@ -140,6 +138,7 @@ export class DeploymentParser extends BaseParser {
         const { orderer, engine_name: ordererEngineName, port: ordererPort } = ord;
         ords.push(
           new Orderer(orderer, {
+            domainName: domain_name,
             engineName: ordererEngineName,
             consensus,
             ports: [

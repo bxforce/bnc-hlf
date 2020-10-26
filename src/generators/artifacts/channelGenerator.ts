@@ -15,17 +15,17 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { Network } from '../../models/network';
+import { Network } from '../../parser/model/network';
 import { AdminCAAccount } from '../crypto/createOrgCerts';
 import { e, l } from '../../utils/logs';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Channels } from '../../core/hlf/channels';
 import { SysWrapper } from '../../utils/sysWrapper';
 import existsPath = SysWrapper.existsPath;
-import { Utils } from '../../utils/utils';
+import { Utils } from '../../utils/helper';
 import getPropertiesPath = Utils.getPropertiesPath;
 import { X509Identity } from 'fabric-network';
-import { User } from '../../models/user';
+import { User } from '../../parser/model/user';
 import { DEFAULT_CA_ADMIN } from '../../utils/constants';
 import getPeerMspPath = Utils.getPeerMspPath;
 
@@ -65,7 +65,7 @@ ${this.network.organizations[0].peers.map((peer, index) => `
 
 orderers:
     ${this.network.organizations[0].orderers[0].name}.${this.network.ordererOrganization.domainName}:
-      url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].orderers[0].options.host}:${this.network.ordererOrganization.orderers[0].options.ports[0]}
+      url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].orderers[0].fullName}:${this.network.ordererOrganization.orderers[0].options.ports[0]}
       grpcOptions:
         ssl-target-name-override: ${this.network.ordererOrganization.orderers[0].name}.${this.network.ordererOrganization.domainName}
         grpc-max-send-message-length: 40000
@@ -160,11 +160,11 @@ orderers:
       // create the provided channel
       const isJoined = await channelClient.joinChannel(channelName, this.network.organizations[0].mspName);
       if(!isJoined) {
-        e(`Error channel (${channelName}) creation !!!`);
+        e(`Error channel (${channelName}) join !!!`);
         return false;
       }
 
-      l(`Channel (${channelName}) creation successfully !!!`);
+      l(`Channel (${channelName}) join successfully !!!`);
       return true;
     } catch (err) {
       e(err);

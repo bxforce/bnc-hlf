@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { Network } from '../../models/network';
+import { Network } from '../../parser/model/network';
 
 // TODO inline the script with the one here: https://github.com/hyperledger/fabric/blob/master/scripts/bootstrap.sh
 /**

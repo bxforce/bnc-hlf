@@ -15,16 +15,16 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { DockerComposeYamlOptions } from '../../utils/data-type';
-import { DockerEngine } from '../../agents/docker-agent';
+import { DockerComposeYamlOptions } from '../../utils/datatype';
+import { DockerEngine } from '../../utils/dockerAgent';
 import { d, e, l } from '../../utils/logs';
-import { DOCKER_CA_DELAY, DOCKER_DEFAULT } from '../../utils/constants';
-import { Utils } from '../../utils/utils';
+import { DOCKER_CA_DELAY } from '../../utils/constants';
+import { Utils } from '../../utils/helper';
 import delay = Utils.delay;
-import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
-import changeOwnership = Utils.changeOwnership;
+//import changeOwnerShipWithPassword = Utils.changeOwnerShipWithPassword;
+//import changeOwnership = Utils.changeOwnership;
 import getDockerComposePath = Utils.getDockerComposePath;
-import { Network } from '../../models/network';
+import { Network } from '../../parser/model/network';
 
 /**
  *
@@ -72,16 +72,12 @@ services:
               private options?: DockerComposeYamlOptions,
               private readonly dockerEngine?: DockerEngine) {
     super(filename, getDockerComposePath(options.networkRootPath));
-
-    if (!this.dockerEngine) {
-      this.dockerEngine = new DockerEngine({ host: DOCKER_DEFAULT.IP as string, port: DOCKER_DEFAULT.PORT });
-    }
   }
 
   async startTlsCa() {
     try {
       await this.dockerEngine.composeOne(`${this.options.org.caName}`, { cwd: this.path, config: this.filename });
-      await changeOwnership(`${this.options.networkRootPath}/${this.options.org.name}`);
+      //await changeOwnership(`${this.options.networkRootPath}/${this.options.org.name}`);
     } catch (err) {
       e(err);
     }

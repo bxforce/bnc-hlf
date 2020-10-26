@@ -16,6 +16,7 @@ limitations under the License.
 
 export class OrdererOptions {
   consensus: string;
+  domainName?: string;
   engineName?: string;
   number?: number;
   ports?: string[];
@@ -27,8 +28,14 @@ export class OrdererOptions {
  * @author wassim.znaidi@gmail.com
  */
 export class Orderer {
+  domainName: string;
+  
   constructor(public name: string, public options: OrdererOptions) {}
-
+  
+  get fullName(): string {
+    return `${this.name}.${this.options.domainName}`;
+  }
+  
   get mspName(): string {
     return `${this.name}MSP`;
   }

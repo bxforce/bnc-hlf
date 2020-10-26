@@ -43,12 +43,8 @@ export class OrdererOrganization {
     }
   }
 
-  ordererFullName(orderer: Orderer): string {
-    return `${orderer.name}.${this.domainName}`;
-  }
-
   get caName(): string {
-    return `${this.ca.name}.${this.name}`;
+    return `${this.ca.name}`; // .${this.name}
   }
 
   get caCn(): string {

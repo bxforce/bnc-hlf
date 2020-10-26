@@ -15,11 +15,11 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { DockerComposeYamlOptions } from '../../utils/datatype';
 import { e, l } from '../../utils/logs';
-import { DockerEngine } from '../../agents/docker-agent';
-import { Peer } from '../../models/peer';
-import { Utils } from '../../utils/utils';
+import { DockerEngine } from '../../utils/dockerAgent';
+import { Peer } from '../../parser/model/peer';
+import { Utils } from '../../utils/helper';
 import getDockerComposePath = Utils.getDockerComposePath;
 import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
 const fs = require('fs');
@@ -112,7 +112,9 @@ ${this.options.ips
    * @param filename
    * @param options
    */
-  constructor(filename: string, private options: DockerComposeYamlOptions) {
+  constructor(filename: string, 
+              private options: DockerComposeYamlOptions,
+              private readonly dockerEngine: DockerEngine) {
     super(filename, getDockerComposePath(options.networkRootPath));
   }
 
@@ -141,10 +143,10 @@ ${this.options.ips
 
       l(`Starting Peer ${serviceName}...`);
 
-      const engine = this.options.org.getEngine(peer.options.engineName);
-      const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+      //const engine = this.options.org.getEngine(peer.options.engineName);
+      //const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
 
-      await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
+      await this.dockerEngine.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 
       l(`Service Peer ${serviceName} started successfully !!!`);
 

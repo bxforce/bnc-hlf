@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Organization } from '../models/organization';
-import { Network } from '../models/network';
+import { Organization } from '../parser/model/organization';
+import { Network } from '../parser/model/network';
 import { IEnrollResponse } from 'fabric-ca-client';
 
 /**

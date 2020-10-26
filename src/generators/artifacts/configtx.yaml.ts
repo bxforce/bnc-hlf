@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { BaseGenerator } from './base';
-import { Network } from '../models/network';
-import { Utils } from '../utils/utils';
-import { e } from '../utils/logs';
-import { SysWrapper } from '../utils/sysWrapper';
-import { CHANNEL_RAFT_ID, ConsensusType, GENESIS_FILE_NAME } from '../utils/constants';
+import { BaseGenerator } from '../base';
+import { Network } from '../../parser/model/network';
+import { Utils } from '../../utils/helper';
+import { e } from '../../utils/logs';
+import { SysWrapper } from '../../utils/sysWrapper';
+import { CHANNEL_RAFT_ID, ConsensusType, GENESIS_FILE_NAME } from '../../utils/constants';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;

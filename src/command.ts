@@ -16,169 +16,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/* tslint:disable:no-unused-variable */
 import * as program from 'commander';
-import { l } from './utils/logs';
-import { CLI } from './cli';
-
 const pkg = require('../package.json');
-import { CONFIG_DEFAULT_PATH } from './utils/constants';
+
+import { CLI } from './cli';
+import { CONFIG_DEFAULT_PATH, CHANNEL_DEFAULT_NAME } from './utils/constants';
 
 /**
  *
- * @author ahmed Souissi
- * @author sahar Fehri
+ * @author Ahmed Souissi
+ * @author Sahar Fehri
  * @author wassim.znaidi@gmail.com
  */
-const tasks = {
-  async generateGenesis(filePath: string) {
-    return await CLI.generateGenesis(filePath);
-  },
-
-  async generateChannelConfig(genesisConfigFilePath: string) {
-    return await CLI.generateChannelConfig(genesisConfigFilePath);
-  },
-
-  async generateAnchorPeer(genesisConfigFilePath: string) {
-    return await CLI.generateAnchorPeer(genesisConfigFilePath);
-  },
-
-  async generateOrdererCredentials(genesisConfigFilePath: string) {
-    return await CLI.generateOrdererCredentials(genesisConfigFilePath);
-  },
-
-  async generatePeersCredentials(deploymentConfigFilePath: string) {
-    return await CLI.generatePeersCredentials(deploymentConfigFilePath);
-  },
-
-  async createNetwork(filePath: string) {
-    return await CLI.createNetwork(filePath);
-  },
-
-  async cleanNetwork(rmi: boolean) {
-    return await CLI.cleanNetwork(rmi);
-  },
-
-  async validateAndParse(filePath: string, skipDownload?: boolean) {
-    return await CLI.validateAndParse(filePath, skipDownload);
-  },
-
-  async deployHlfServices(filePath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
-    return await CLI.deployHlfContainers(filePath, skipDownload, enablePeers, enableOrderers);
-  },
-
-  async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
-    return await CLI.enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
-  },
-
-  async fetchIdentity(id, caInfo, walletDirectoryName, ccpPath) {
-    return await CLI.fetchIdentity(id, caInfo, walletDirectoryName, ccpPath);
-  },
-
-  async deleteIdentity(id, caInfo, walletDirectoryName, ccpPath) {
-    return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
-  },
-
-  async installChaincode(name: string, confPath: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
-    return await CLI.installChaincode(name, confPath, version, chaincodeRootPath, chaincodePath, targets);
-  },
-
-  async approveChaincode(filePath, name: string, version: string, channelName: string, upgrade?: boolean) {
-    return await CLI.approveChaincode(filePath, name, version, channelName, upgrade)
-  },
-
-  async commitChaincode(configFile, commitFile, upgrade?: boolean) {
-    return await CLI.commitChaincode(configFile, commitFile, upgrade)
-  },
-
-  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean) {
-    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade)
-  },
-
-  async startFabricCli(configDeployFile, commitFile) {
-    return await CLI.startFabricCli(configDeployFile, commitFile)
-  },
-
-  async upgradeChaincode() {
-    l('[Upgrade Chaincode] Not yet implemented');
-  },
-
-  async invokeChaincode() {
-    l('[Invoke Chaincode] Not yet implemented');
-  },
-
-  async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any) {
-    l('Request Init command ...');
-
-    // Generate the configtx.yaml file (mainly for genesis block)
-    await CLI.generateConfigtx(genesisConfigPath);
-
-    if (!(genesis || configtx || anchortx)) {
-      l('[Init]: generate all config files (genesis, configtx, anchortx)...');
-
-      await CLI.generateGenesis(genesisConfigPath);
-      await CLI.generateChannelConfig(genesisConfigPath);
-      await CLI.generateAnchorPeer(genesisConfigPath);
-
-    } else {
-      if (genesis) {
-        l('[Init]: generate genesis block ... ');
-
-        await CLI.generateGenesis(genesisConfigPath);
-
-        l('[Init]: genesis block generated done !!! ');
-      }
-
-      if (configtx) {
-        l('[Init]: generate channel config file... ');
-
-        await CLI.generateChannelConfig(genesisConfigPath);
-
-        l('[Init]: channel configuration generated done !!! ');
-      }
-
-      if (anchortx) {
-        l('[Init]: generate the anchor peer update file...');
-
-        await CLI.generateAnchorPeer(genesisConfigPath);
-
-        l('[Init]: anchor peer update generated done !!!');
-      }
-    }
-
-    l('[Init]: exit command !!!');
-  },
-
-  async enrollConfig(config: string, admin: boolean) {
-    if (admin) {
-      l('[enroll admin] Not yet implemented');
-    } else {
-      l('[enroll all] Not yet implemented');
-    }
-    //l('config file: ' + config;
-  },
-
-  async stop(deployConfigFilePath: string, forceRemove: boolean) {
-    l('Request stop command ...');
-
-    await CLI.stopBlockchain(deployConfigFilePath, false, false, forceRemove);
-
-    l('Blockchain stopped !!!');
-  },
-
-  async createChannel(channelName, channeltxPath, deploymentConfigFilePath) {
-    return await CLI.createChannel(channelName, channeltxPath, deploymentConfigFilePath);
-  },
-
-   async joinChannel(nameChannel, nameOrg, deploymentConfigFilePath) {
-     return await CLI.joinChannel(nameChannel, nameOrg, deploymentConfigFilePath);
-   },
-  async updateChannel(anchortx, namech, deploymentConfigFilePath) {
-    return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath);
-  }
-};
-
-// --> start official commands
-
 program
   .command('init')
   .description("creates genesis.block and configtx files for channel and anchor update")
@@ -187,7 +37,7 @@ program
   .option('--anchortx', 'generate anchor peer update file')
   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .action(async cmd => {
-    await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+    await CLI.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });
 
 program
@@ -196,7 +46,7 @@ program
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .action(async (cmd: any) => {
     if (cmd) {
-      await tasks.generatePeersCredentials(cmd.config);
+      await CLI.generatePeersCredentials(cmd.config);
     }
   });
 
@@ -206,7 +56,7 @@ program
   .option('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file', CONFIG_DEFAULT_PATH)
   .action(async (cmd: any) => {
     if (cmd) {
-      await tasks.generateOrdererCredentials(cmd.config);
+      await CLI.generateOrdererCredentials(cmd.config);
     }
   });
 
@@ -218,9 +68,9 @@ program
   .option('--anchortx', 'generate anchor peer update file')
   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .action(async cmd => {
-    await tasks.generatePeersCredentials(cmd.config);
-    await tasks.generateOrdererCredentials(cmd.config);
-    await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+    await CLI.generatePeersCredentials(cmd.config);
+    await CLI.generateOrdererCredentials(cmd.config);
+    await CLI.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
   });
 
 program
@@ -228,7 +78,7 @@ program
   .description('create/start network')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .action(async cmd => {
-    await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
+    await CLI.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
   });
 
 program
@@ -237,7 +87,14 @@ program
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-r, --rmi', 'remove docker containers')
   .action(async (cmd: any) => {
-    await tasks.stop(cmd.config, cmd.rmi);
+    await CLI.stopHlfServices(cmd.config, cmd.rmi);
+  });
+
+program
+  .command('clean')
+  .option('-R, --no-rmi', 'Do not remove docker images')
+  .action(async (cmd: any) => {
+    await CLI.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
 const channelCmd = program.command('channel');
@@ -245,10 +102,10 @@ channelCmd
   .command('create')
   .description('create channel if it does not exist')
   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
-  .requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
+  //.requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .action(async cmd => {
-    await tasks.createChannel(cmd.namech, cmd.channelTx, cmd.config);
+    await CLI.createChannel(cmd.namech, cmd.config);
   });
 
 channelCmd
@@ -257,35 +114,29 @@ channelCmd
    .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
    .action(async cmd => {
-     await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.config);
+     await CLI.joinChannel(cmd.namech, cmd.config);
    });
 
 channelCmd
     .command('update')
     .description('commit anchor update to peers on channel')
     .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
-    .requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
+    //.requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
     .action(async (cmd) => {
-      await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+      await CLI.updateChannel(cmd.namech, cmd.config);
     });
 
 channelCmd
     .command('deploy')
     .description('deploy channel')
     .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
-    .requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
-    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-    .requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
+    .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
     .action(async (cmd) => {
-      await tasks.createChannel(cmd.namech, cmd.channelTx, cmd.config);
-      await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.config);
-      await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+      await CLI.createChannel(cmd.namech, cmd.config);
+      await CLI.joinChannel(cmd.namech, cmd.config);
+      await CLI.updateChannel(cmd.namech, cmd.config);
     });
-
-function commaSeparatedList(value, dummyPrevious) {
-  return value.split(',');
-}
 
 const chaincodeCmd = program.command('chaincode');
 chaincodeCmd
@@ -296,11 +147,10 @@ chaincodeCmd
     .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
     .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
     .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
-    .option('-p, --list <items>', 'comma separated list', commaSeparatedList)
+    .option('-p, --list <items>', 'comma separated list', x => { x.split(','); })
     .action(async (cmd) => {
-      await tasks.installChaincode(cmd.namech, cmd.config, cmd.vch, cmd.chroot, cmd.ch, cmd.list);
+      await CLI.installChaincode(cmd.namech, cmd.config, cmd.vch, cmd.chroot, cmd.ch, cmd.list);
     });
-
 
 chaincodeCmd
     .command('approve')
@@ -311,7 +161,7 @@ chaincodeCmd
     .option('--upgrade', 'option used when approving to upgrade chaincode')
     .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
     .action(async (cmd) => {
-      await tasks.approveChaincode(cmd.config, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade);
+      await CLI.approveChaincode(cmd.config, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade);
     });
 
 chaincodeCmd
@@ -321,7 +171,7 @@ chaincodeCmd
     .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
     .option('--upgrade', 'option used when approving to upgrade chaincode')
     .action(async (cmd) => {
-      await tasks.commitChaincode(cmd.config, cmd.confCommit, cmd.upgrade);
+      await CLI.commitChaincode(cmd.config, cmd.confCommit, cmd.upgrade);
     });
 
 chaincodeCmd
@@ -329,10 +179,10 @@ chaincodeCmd
     .description('deploys chaincode')
     .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
     .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-    .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
+    .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
     .option('--upgrade', 'option used when approving to upgrade chaincode')
     .action(async (cmd) => {
-      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
+      await CLI.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
     });
 
 chaincodeCmd
@@ -341,125 +191,8 @@ chaincodeCmd
     .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
     .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
     .action(async (cmd) => {
-      await tasks.startFabricCli(cmd.config, cmd.confCommit);
+      await CLI.startFabricCli(cmd.config, cmd.confCommit);
     });
 
-
-/*
-program
-  .command('new')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      // TODO check if the file exists
-
-      await tasks.createNetwork(cmd.config);
-    }
-  });
-
-
-
-program
-  .command('parse')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.validateAndParse(cmd.config, !!cmd.skipDownload);
-    }
-  });
-
-program
-  .command('deploy-hlf')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
-    }
-  });
-
-program
-  .command('deploy-orderers')
-  .requiredOption('-c, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .option('--skip-download', 'Skip downloading the Fabric Binaries and Docker images')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, false, true);
-    }
-  });
-
- */
-
-program
-  .command('clean')
-  .option('-R, --no-rmi', 'Do not remove docker images')
-  .action(async (cmd: any) => {
-    await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
-  });
-/*
-program
-  .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
-  .option('-R, --no-rmi', 'Do not remove docker images')
-  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
-  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
-  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
-  .action(async (type: string, id: string, secret: string, affiliation: string, mspID: string, args: string[], cmd: any) => {
-    await tasks.enroll(type, id, secret, affiliation, mspID, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath); // if -R is not passed cmd.rmi is true
-
-  });
-
-program
-  .command('fetch-identity <id> [args...]')
-  .option('-R, --no-rmi', 'Do not remove docker images')
-  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
-  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
-  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
-  .action(async (id: string, args: string[], cmd: any) => {
-    await tasks.fetchIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
-  });
-
-program  // just for testing to be deleted
-  .command('delete-identity <id> [args...]')
-  .option('-R, --no-rmi', 'Do not remove docker images')
-  .option('-ca, --caInfo <caInfo>', 'add ca info', 'ca.org1.example.com')
-  .option('-w, --walletDirectoryName <walletDirectoryName>', 'add walle t directory name', 'wallet')
-  .option('-ccp, --ccpPath <ccpPath>', 'add ccpPath', '../../../tests/ca/connection-org1.json')
-  .action(async (id: string, args: string[], cmd: any) => {
-    await tasks.deleteIdentity(id, cmd.caInfo, cmd.walletDirectoryName, cmd.ccpPath);
-  });
-
-
-
-program
-  .command('enroll')
-  .option('--admin', 'enroll admin')
-  .requiredOption('-f, --config <path>', 'configurationTemplateFilePath')
-  .action(async cmd => {
-    await tasks.enrollConfig(cmd.config, cmd.admin);
-  });
-
- */
-
-// channelCmd
-//   .command('join')
-//   .description('join channel')
-//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
-//   .option('-p, --list <items>', 'comma separated list')
-//   .action(async cmd => {
-//     await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.list);
-//   });
-// channelCmd
-//   .command('update')
-//   .description('update channel')
-//   .requiredOption('-t, --anchortx <update-path>', 'configurationTemplateFilePath')
-//   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-//   .requiredOption('-o, --nameorg <org-name>', 'name of the organization')
-//   .action(async (cmd) => {
-//     await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.nameorg);
-//   });
-
 program.version(pkg.version);
-
 program.parse(process.argv);

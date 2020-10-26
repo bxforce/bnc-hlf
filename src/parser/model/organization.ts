@@ -98,35 +98,6 @@ export class Organization {
   }
 
   /**
-   * return the organization full name
-   * Equal to name + domain name
-   */
-  get fullName(): string {
-    return `${this.name}.${this.domainName}`;
-  }
-
-  /**
-   * return the organization MSP ID (or MSP name)
-   */
-  get mspName(): string {
-    return `${this.name}MSP`;
-  }
-
-  /**
-   * return the CA name
-   */
-  get caName(): string {
-    return `${this.ca.name}.${this.name}`;
-  }
-
-  /**
-   * Return the CA common name (CN)
-   */
-  get caCn(): string {
-    return `${this.caName}.${this.domainName}`;
-  }
-
-  /**
    * return the peer full name
    * @param pIndex
    */
@@ -162,14 +133,6 @@ export class Organization {
    * Equal to ordererName + domain name
    * @param orderer
    */
-  ordererName(orderer: Orderer ): string {
-    return `${orderer.name}.${this.domainName}`;
-  }
-
-  ordererFullName(orderer: Orderer ): string {
-    return `${orderer.name}.${this.fullName}`;
-  }
-
   engineHost(engineName: string): string {
     const engine = this.engines.find(eng => eng.name === engineName);
     return engine ? engine.options.url : 'undefined';
@@ -186,10 +149,38 @@ export class Organization {
   getOrdererExtraHost(): Orderer[] {
     return this.orderers.filter(orderer => this.engineHost(orderer.options.engineName) !== '127.0.0.1');
   }
+  
+  /**
+   * return the organization full name
+   * Equal to name + domain name
+   */
+  get fullName(): string {
+    return `${this.name}.${this.domainName}`;
+  }
+
+  /**
+   * return the organization MSP ID (or MSP name)
+   */
+  get mspName(): string {
+    return `${this.name}MSP`;
+  }
+
+  /**
+   * return the CA name
+   */
+  get caName(): string {
+    return `${this.ca.name}.${this.name}`;
+  }
+
+  /**
+   * Return the CA common name (CN)
+   */
+  get caCn(): string {
+    return `${this.caName}.${this.domainName}`;
+  }
 
   get adminUser(): string {
     return `${this.name}admin`;
-
   }
 
   get adminUserPass(): string {
@@ -199,5 +190,4 @@ export class Organization {
   get adminUserFull(): string {
     return `Admin@${this.fullName}`;
   }
-
 }

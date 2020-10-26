@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {Organization} from '../models/organization';
-import {Network} from '../models/network';
+import {Organization} from '../parser/model/organization';
+import {Network} from '../parser/model/network';
 import {BaseParser} from './base';
-import {Orderer} from '../models/orderer';
-import {Peer} from '../models/peer';
+import {Orderer} from '../parser/model/orderer';
+import {Peer} from '../parser/model/peer';
 import {ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION} from '../utils/constants';
-import {Ca} from '../models/ca';
-import {OrdererOrganization} from '../models/ordererOrganization';
-import {Channel} from '../models/channel';
+import {Ca} from '../parser/model/ca';
+import {OrdererOrganization} from '../parser/model/ordererOrganization';
+import {Channel} from '../parser/model/channel';
 
 /**
  *
@@ -40,10 +40,10 @@ export class GenesisParser extends BaseParser {
         const {template_folder, consensus, ordererDomain, ca, channel, organisations} = genesisBlock;
         const networkConsensus = consensus as ConsensusType;
         const networkChannel = new Channel(channel);
-
+        
         // Parse CA
         const {type, url, port, settings} = ca;
-        const caEntity = new Ca('caOrderer', {
+        const caEntity = new Ca('ca.orderer', {
             number: 0,
             port: port,
             host: url,
@@ -72,6 +72,7 @@ export class GenesisParser extends BaseParser {
                 ords.push(
                     new Orderer(ordererName, {
                         consensus,
+                        domainName: orgDomain,
                         host: ordererHost,
                         ports: [ordererPort]
                     })

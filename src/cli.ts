@@ -14,180 +14,132 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/* tslint:disable:no-unused-variable */
-import {Orchestrator} from './orchestrator';
-import { Type_User }  from './utils/constants';
-import { Network } from './models/network';
+import { l } from './utils/logs';
+import { Orchestrator } from './orchestrator';
 
 /**
  *
+ * @author Ahmed Souissi
+ * @author Sahar Fehri
  * @author wassim.znaidi@gmail.com
- * @author sahar
- * @author ahmed
  */
 export class CLI {
-  static async validateAndParse(configFilePath: string, skipDownload?: boolean) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.validateAndParse(configFilePath, skipDownload);
-    return orchEngine;
+
+  static async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any) {
+    l('Request Init command ...');
+    await Orchestrator.generateConfigtx(genesisConfigPath); // Generate the configtx.yaml file (mainly for genesis block)
+    if (!(genesis || configtx || anchortx)) {
+      l('[Init]: generate all config files (genesis, configtx, anchortx)...');
+      await Orchestrator.generateGenesis(genesisConfigPath);
+      await Orchestrator.generateChannelConfig(genesisConfigPath);
+      await Orchestrator.generateAnchorPeer(genesisConfigPath);
+    } else {
+      if (genesis) {
+        l('[Init]: generate genesis block ... ');
+        await Orchestrator.generateGenesis(genesisConfigPath);
+        l('[Init]: genesis block generated done !!! ');
+      }
+      if (configtx) {
+        l('[Init]: generate channel config file... ');
+        await Orchestrator.generateChannelConfig(genesisConfigPath);
+        l('[Init]: channel configuration generated done !!! ');
+      }
+      if (anchortx) {
+        l('[Init]: generate the anchor peer update file...');
+        await Orchestrator.generateAnchorPeer(genesisConfigPath);
+        l('[Init]: anchor peer update generated done !!!');
+      }
+    }
+    l('[Init]: exit command !!!');
+  }
+  
+  static async generatePeersCredentials(deployConfigPath: string) {
+    await Orchestrator.generatePeersCredentials(deployConfigPath);
   }
 
-  static async generatePeersCredentials(configFilePath: string) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.generatePeersCredentials(configFilePath);
-    return orchEngine;
+  static async generateOrdererCredentials(genesisConfigFilePath: string) {
+    await Orchestrator.generateOrdererCredentials(genesisConfigFilePath);
   }
 
-  static async deployHlfContainers(configFilePath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.deployHLFContainers(configFilePath, skipDownload, enablePeers, enableOrderers);
-    return orchEngine;
+  static async createChannel(channelName, deployConfigPath) {
+    await Orchestrator.createChannel(channelName, deployConfigPath);
   }
 
-  static async createNetwork(configFilePath: string) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.initNetwork(configFilePath);
-    return orchEngine;
+  static async joinChannel(channelName, deployConfigPath) {
+     await Orchestrator.joinChannel(channelName, deployConfigPath);
+  }
+  
+  static async updateChannel(channelName, deployConfigPath) {
+    await Orchestrator.updateChannel(channelName, deployConfigPath);
+  }
+
+  static async installChaincode(name: string, deployConfigPath: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
+    await Orchestrator.installChaincode(name, deployConfigPath, version, chaincodeRootPath, chaincodePath, targets);
+  }
+
+  static async approveChaincode(filePath, name: string, version: string, channelName: string, upgrade?: boolean) {
+    await Orchestrator.approveChaincodeCli(filePath, name, version, channelName, upgrade)
+  }
+
+  static async commitChaincode(configFile, commitFile, upgrade?: boolean) {
+    await Orchestrator.commitChaincode(configFile, commitFile, upgrade)
+  }
+
+  static async deployChaincode(deployConfigPath, commitFile, targets?: string[], upgrade?: boolean) {
+    await Orchestrator.deployChaincode(deployConfigPath, commitFile, targets, upgrade)
+  }
+
+  static async upgradeChaincode() {
+    l('[Upgrade Chaincode] Not yet implemented');
+  }
+
+  static async invokeChaincode() {
+    l('[Invoke Chaincode] Not yet implemented');
+  }
+  
+  static async startFabricCli(deployConfigPath, commitFile) {
+    await Orchestrator.deployCli(deployConfigPath, commitFile)
+  }
+
+  static async deployHlfServices(deployConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
+    await Orchestrator.deployHlfServices(deployConfigPath, skipDownload, enablePeers, enableOrderers);
+  }
+
+  static async stopHlfServices(deployConfigPath: string, forceRemove: boolean) {
+    l('Request stop command ...');
+    await Orchestrator.stopHlfServices(deployConfigPath, false, false, forceRemove);
+    l('Blockchain stopped !!!');
   }
 
   static async cleanNetwork(rmi: boolean) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.cleanDocker(rmi);
-    return orchEngine;
+    await Orchestrator.cleanDocker(rmi);
   }
 
-  /**
-   * Stop the blockchain already deployed using the deployment config file
-   * @param deployConfigPath
-   * @param deleteNetwork
-   * @param deleteVolume
-   * @param forceRemove
-   */
-  static async stopBlockchain(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean, forceRemove: boolean) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.stopBlockchainContainer(deployConfigPath, deleteNetwork, deleteVolume, forceRemove);
-    return orchEngine;
-  }
-
-  /**
-   * Generate the Configtx yaml file
-   * @param configGenesisFilePath genesis configuration input file
-   */
-  static async generateConfigtx(configGenesisFilePath: string) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.generateConfigtx(configGenesisFilePath);
-    return orchEngine;
-  }
-
-  /**
-   * Generate the genesis block file
-   * @param configGenesisFilePath
-   */
-  static async generateGenesis(configGenesisFilePath: string) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.generateGenesis(configGenesisFilePath);
-    return orchEngine;
-  }
-
-  /**
-   * Generate the channel configuration file
-   * @param configGenesisFilePath
-   */
-  static async generateChannelConfig(configGenesisFilePath: string) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.generateConfigChannel(configGenesisFilePath);
-    return orchEngine;
-  }
-
-  /**
-   * Generate the anchor peer update file
-   * @param configGenesisFilePath
-   */
-  static async generateAnchorPeer(configGenesisFilePath: string) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.generateAnchorPeer(configGenesisFilePath);
-    return orchEngine;
-  }
-
-  static async generateOrdererCredentials(configGenesisFilePath: string) {
-    const orchEngine = new Orchestrator();
-    await orchEngine.generateOrdererCredentials(configGenesisFilePath);
-    return orchEngine;
-  }
-
+  /****************************************************************************/
+  
+/*
   static async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
-    const enrollEngine = new Orchestrator();
-    if(type == Type_User.admin){
-      await enrollEngine.enroll(id, secret, mspID, caInfo, walletDirectoryName, ccpPath);
+    if(type == USER_TYPE.admin){
+      await Orchestrator.enroll(id, secret, mspID, caInfo, walletDirectoryName, ccpPath);
     } else {
-      await enrollEngine.registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
+      await Orchestrator.registerUser(id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath);
     }
   }
 
+  static async createNetwork(filePath: string) {
+    return await Orchestrator.initNetwork(filePath);
+  }
+
+  static async cleanNetwork(rmi: boolean) {
+    return await Orchestrator.cleanNetwork(rmi);
+  }
+
   static async fetchIdentity(id, caInfo, walletDirectoryName, ccpPath) {
-    const enrollEngine = new Orchestrator();
-    await enrollEngine.fetchIdentity(id, caInfo, walletDirectoryName, ccpPath);
+    await Orchestrator.fetchIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
 
   static async deleteIdentity(id, caInfo, walletDirectoryName, ccpPath) {
-    const enrollEngine = new Orchestrator();
-    await enrollEngine.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
+    return await Orchestrator.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   }
-
-  /**
-   * Create a new channel
-   * @param channelName
-   * @param channeltxPath
-   * @param deployConfigPath
-   */
-  static async createChannel(channelName, channeltxPath, deployConfigPath) {
-    const channelEngine = new Orchestrator();
-    await channelEngine.createChannel(channelName, channeltxPath, deployConfigPath);
-    return channelEngine;
-  }
-
-   static async joinChannel(nameChannel, nameOrg, deployConfigPath) {
-     const channelEngine = new Orchestrator();
-     await channelEngine.joinChannel(nameChannel, deployConfigPath);
-     return channelEngine;
-   }
-  //
-  static async updateChannel(anchortx, namech, deployConfigPath) {
-    const channelEngine = new Orchestrator();
-    await channelEngine.updateChannel(anchortx, namech, deployConfigPath);
-    return channelEngine;
-  }
-
-  //Chaincode commands
-  static async installChaincode(name: string, deployPath: string, version: string, chaincodeRootPath: string, chaincodePath: string, targets?: string[]) {
-    const chaincodeEngine = new Orchestrator();
-    let targetPeers = await chaincodeEngine.getTargetPeers(deployPath, targets)
-    await chaincodeEngine.deployCliSingleton(name, deployPath, targetPeers, version, chaincodeRootPath, chaincodeRootPath)
-    await chaincodeEngine.installChaincodeCli(name, deployPath, targetPeers, version, chaincodePath)
-    return chaincodeEngine;
-  }
-
-  static async approveChaincode(configFile, name, version, channelName, upgrade?: boolean) {
-    const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.approveChaincodeCli(configFile, name, version, channelName, upgrade);
-    return  chaincodeEngine;
-  }
-
-  static async commitChaincode( config, commitFile, upgrade?: boolean) {
-    const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.commitChaincode(config, commitFile, upgrade);
-    return  chaincodeEngine;
-  }
-
-  static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean){
-    const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade)
-    return  chaincodeEngine;
-  }
-  
-  static async startFabricCli(configDeployFile, commitFile){
-    const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.deployCli(configDeployFile, commitFile)
-    return  chaincodeEngine;
-  }
-}
+*/
+};

@@ -314,7 +314,4 @@ export class Channels extends ClientHelper {
     }
     return targets;
   }
-
-
-
 }

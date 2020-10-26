@@ -15,16 +15,16 @@ limitations under the License.
 */
 
 import { l } from '../utils/logs';
-import { Organization } from '../models/organization';
-import { Engine } from '../models/engine';
-import { Peer } from '../models/peer';
-import { Orderer } from '../models/orderer';
+import { Organization } from '../parser/model/organization';
+import { Engine } from '../parser/model/engine';
+import { Peer } from '../parser/model/peer';
+import { Orderer } from '../parser/model/orderer';
 import { BaseParser } from './base';
-import { Ca } from '../models/ca';
-import { Network } from '../models/network';
-import { CommitConfiguration } from '../models/commitConfiguration';
+import { Ca } from '../parser/model/ca';
+import { Network } from '../parser/model/network';
+import { CommitConfiguration } from '../parser/model/commitConfiguration';
 import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
-import { OrdererOrganization } from '../models/ordererOrganization';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
 
 /**
  * Parser class for the deployment configuration file

@@ -18,7 +18,7 @@ import * as FabricCAServices from 'fabric-ca-client';
 import { IEnrollmentRequest, IEnrollResponse, IRegisterRequest, TLSOptions } from 'fabric-ca-client';
 import { ClientConfig, ClientHelper } from './helpers';
 import { d, e } from '../../utils/logs';
-import { CSR, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/data-type';
+import { CSR, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/datatype';
 
 export type UserParams = IRegisterRequest;
 export type AdminParams = IEnrollmentRequest;

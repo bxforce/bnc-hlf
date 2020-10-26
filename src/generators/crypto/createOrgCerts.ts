@@ -15,26 +15,26 @@ limitations under the License.
 */
 
 import { ensureDir } from 'fs-extra';
-import { CSR, DockerComposeYamlOptions, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/data-type';
+import { CSR, DockerComposeYamlOptions, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/datatype';
 import { d, e } from '../../utils/logs';
 import { SysWrapper } from '../../utils/sysWrapper';
 import { BaseGenerator } from '../base';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Membership, UserParams } from '../../core/hlf/membership';
 import { HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
-import { Peer } from '../../models/peer';
+import { Peer } from '../../parser/model/peer';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import createFile = SysWrapper.createFile;
-import { Utils } from '../../utils/utils';
+import { Utils } from '../../utils/helper';
 import getPeerMspPath = Utils.getPeerMspPath;
 import getPeerTlsPath = Utils.getPeerTlsPath;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import getPropertiesPath = Utils.getPropertiesPath;
 import copyFile = SysWrapper.copyFile;
 import getOrganizationUsersPath = Utils.getOrganizationUsersPath;
-import { Organization } from '../../models/organization';
+import { Organization } from '../../parser/model/organization';
 import { CertificateCsr } from '../utils/certificateCsr';
-import { Network } from '../../models/network';
+import { Network } from '../../parser/model/network';
 
 export interface AdminCAAccount {
   name: string;
@@ -63,7 +63,7 @@ client:
 
 certificateAuthorities:
   ${this.options.org.caName}:
-    url: http${this.options.org.isSecure ? 's' : ''}://${this.options.org.engineHost(this.options.org.ca.options.engineName)}:${this.options.org.ca.options.port}
+    url: http${this.options.org.isSecure ? 's' : ''}://${this.options.org.caName}:${this.options.org.ca.options.port}
     httpOptions:
       verify: false
     tlsCACerts:

@@ -16,23 +16,23 @@ limitations under the License.
 
 import { BaseGenerator } from '../base';
 import { AdminCAAccount } from './createOrgCerts';
-import { Network } from '../../models/network';
+import { Network } from '../../parser/model/network';
 import { d, e } from '../../utils/logs';
 import { ensureDir } from 'fs-extra';
 import { SysWrapper } from '../../utils/sysWrapper';
-import { Orderer } from '../../models/orderer';
+import { Orderer } from '../../parser/model/orderer';
 import { Membership, UserParams } from '../../core/hlf/membership';
 import { ConsensusType, HLF_CLIENT_ACCOUNT_ROLE, MAX_ENROLLMENT_COUNT } from '../../utils/constants';
 import { IEnrollmentRequest, IEnrollResponse } from 'fabric-ca-client';
 import { ClientConfig } from '../../core/hlf/helpers';
-import { Utils } from '../../utils/utils';
+import { Utils } from '../../utils/helper';
 import createFile = SysWrapper.createFile;
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererMspPath = Utils.getOrdererMspPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getPropertiesPath = Utils.getPropertiesPath;
 import copyFile = SysWrapper.copyFile;
-import { CSR, IEnrollSecretResponse } from '../../utils/data-type';
+import { CSR, IEnrollSecretResponse } from '../../utils/datatype';
 import { CertificateCsr } from '../utils/certificateCsr';
 
 /**
@@ -153,13 +153,12 @@ certificateAuthorities:
         const ordererKey = csr ? csr.key : ordererEnrollment.enrollment.key.toBytes();
 
         const baseOrdererPath = `${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${domain}/orderers`;
-        const ordererMspPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/msp`;
-        const ordererFullName = this.network.ordererOrganization.ordererFullName(orderer);
+        const ordererMspPath = `${baseOrdererPath}/${orderer.fullName}/msp`;
 
         await createFile(`${ordererMspPath}/admincerts/${this.network.ordererOrganization.adminUserFull}-cert.pem`, ordAdminCert);
         await createFile(`${ordererMspPath}/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
         await createFile(`${ordererMspPath}/keystore/priv_sk`, ordererKey);
-        await createFile(`${ordererMspPath}/signcerts/${ordererFullName}-cert.pem`, ordererCert);
+        await createFile(`${ordererMspPath}/signcerts/${orderer.fullName}-cert.pem`, ordererCert);
 
         // Generate TLS file if it's enabled
         if (this.network.ordererOrganization.isSecure || this.network.options.consensus === ConsensusType.RAFT) {
@@ -169,7 +168,7 @@ certificateAuthorities:
           const ordererTlsCertificate = ordererTlsEnrollment.certificate;
           const ordererTlsKey = csr ? csr.key : ordererTlsEnrollment.key.toBytes();
 
-          const ordererTlsPath = `${baseOrdererPath}/${this.network.ordererOrganization.ordererFullName(orderer)}/tls`;
+          const ordererTlsPath = `${baseOrdererPath}/${orderer.fullName}/tls`;
           await copyFile(tlsCaCerts, `${ordererTlsPath}/ca.crt`);
           await createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
           await createFile(`${ordererTlsPath}/server.key`, ordererTlsKey);
@@ -265,7 +264,7 @@ certificateAuthorities:
     try {
       // enroll & store orderer crypto credentials
       const params: UserParams = {
-        enrollmentID: `${this.network.ordererOrganization.ordererFullName(orderer)}`,
+        enrollmentID: `${orderer.fullName}`,
         enrollmentSecret: `${orderer.name}pw`,
         role: HLF_CLIENT_ACCOUNT_ROLE.orderer,
         maxEnrollments: MAX_ENROLLMENT_COUNT,
@@ -294,7 +293,7 @@ certificateAuthorities:
     try {
       // enroll & store peer crypto credentials
       const request: IEnrollmentRequest = {
-        enrollmentID: `${this.network.ordererOrganization.ordererFullName(orderer)}`,
+        enrollmentID: `${orderer.fullName}`,
         enrollmentSecret: secret,
         profile: 'tls'
       };

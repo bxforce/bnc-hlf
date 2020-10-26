@@ -20,10 +20,10 @@ import { ensureFile } from 'fs-extra';
 import * as fs from 'fs';
 import { ClientConfig, ClientHelper } from './helpers';
 import { d, e, l } from '../../utils/logs';
-import { DockerEngine } from '../../agents/docker-agent';
-import { Peer } from '../../models/peer';
+import { DockerEngine } from '../../utils/dockerAgent';
+import { Peer } from '../../parser/model/peer';
 import { Orchestrator } from '../../orchestrator';
-import {Network} from '../../models/network';
+import {Network} from '../../parser/model/network';
 
 export class Chaincode {
     public container;

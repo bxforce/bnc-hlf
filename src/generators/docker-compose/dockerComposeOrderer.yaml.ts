@@ -15,15 +15,14 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { DockerComposeYamlOptions } from '../../utils/data-type';
+import { DockerComposeYamlOptions } from '../../utils/datatype';
 import { e, l } from '../../utils/logs';
-import { DockerEngine } from '../../agents/docker-agent';
-import { Utils } from '../../utils/utils';
+import { DockerEngine } from '../../utils/dockerAgent';
+import { Utils } from '../../utils/helper';
 import getDockerComposePath = Utils.getDockerComposePath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constants';
-import { Orderer } from '../../models/orderer';
-import { Network } from '../../models/network';
+import { Orderer } from '../../parser/model/orderer';
 
 const fs = require('fs');
 const yaml = require('js-yaml')
@@ -50,13 +49,13 @@ networks:
 
 services:
 ${this.options.org.orderers.map(orderer => `
-  ${this.options.org.ordererName(orderer)}:
+  ${orderer.fullName}:
     extends:
       file:   base/docker-compose-base.yaml
       service: orderer-base  
     environment:
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
-    container_name: ${this.options.org.ordererName(orderer)}
+    container_name: ${orderer.fullName}
 ${this.options.ips && this.options.ips.length > 0 ?  `
     extra_hosts:
 ${this.options.ips
@@ -68,9 +67,9 @@ ${this.options.ips
       - ${this.options.composeNetwork}   
     volumes:
       - ${getArtifactsPath(this.options.networkRootPath)}/${GENESIS_FILE_NAME}:/var/hyperledger/orderer/orderer.genesis.block
-      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${this.options.org.ordererName(orderer)}/msp:/var/hyperledger/orderer/msp
-      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${this.options.org.ordererName(orderer)}/tls/:/var/hyperledger/orderer/tls
-      - ${this.options.org.ordererName(orderer)}:/var/hyperledger/production/orderer
+      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${orderer.fullName}/msp:/var/hyperledger/orderer/msp
+      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${orderer.fullName}/tls/:/var/hyperledger/orderer/tls
+      - ${orderer.fullName}:/var/hyperledger/production/orderer
     ports:
       - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
 `).join('')}  
@@ -82,7 +81,9 @@ ${this.options.ips
    * @param options
    * @param network
    */
-  constructor(filename: string, private options: DockerComposeYamlOptions, private network?: Network) {
+  constructor(filename: string, 
+              private options: DockerComposeYamlOptions, 
+              private readonly dockerEngine: DockerEngine) {
     super(filename, getDockerComposePath(options.networkRootPath));
   }
 
@@ -110,10 +111,10 @@ ${this.options.ips
 
       l(`Starting Orderer ${serviceName}...`);
 
-      const engine = this.options.org.getEngine(orderer.options.engineName);
-      const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+      //const engine = this.options.org.getEngine(orderer.options.engineName);
+      //const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
 
-      await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
+      await this.dockerEngine.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 
       l(`Service Orderer ${serviceName} started successfully !!!`);
 
