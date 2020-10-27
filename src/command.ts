@@ -91,10 +91,11 @@ program
   });
 
 program
-  .command('clean')
+  .command('clear')
+  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
-    await CLI.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
+    await CLI.cleanNetwork(cmd.config, cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
 const channelCmd = program.command('channel');

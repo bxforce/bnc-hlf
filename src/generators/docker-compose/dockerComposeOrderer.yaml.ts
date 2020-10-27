@@ -76,6 +76,8 @@ ${this.options.ips
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${orderer.fullName}/msp:/var/hyperledger/orderer/msp
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${orderer.fullName}/tls/:/var/hyperledger/orderer/tls
       - ${orderer.fullName}:/var/hyperledger/production/orderer
+    labels:
+      - "bnc=hlf"
     ports:
       - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
       - ${orderer.options.ports[1]}:${orderer.options.ports[1]}

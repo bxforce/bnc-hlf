@@ -50,6 +50,8 @@ services:
       - FABRIC_CA_SERVER_CSR_CN=${this.options.org.caCn}
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
+    labels:
+      - "bnc=hlf"
     ports:
       - "${this.options.org.ca.options.port}:${this.options.org.ca.options.port}"
     volumes:

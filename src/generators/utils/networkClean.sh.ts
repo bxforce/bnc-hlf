@@ -19,6 +19,7 @@ import { join } from 'path';
 
 export class NetworkCleanShOptions {
   removeImages: boolean;
+  path: string;
 }
 
 /**
@@ -28,11 +29,14 @@ export class NetworkCleanShOptions {
 export class NetworkCleanShGenerator extends BaseGenerator {
   success = join(this.path, 'networkclean.sh.successful');
   contents = `#!/bin/bash
-set -e
-#clean
-docker stop $(docker ps -a | awk '$2~/hyperledger/ {print $1}') 
-docker rm -f $(docker ps -a | awk '$2~/hyperledger/ {print $1}') $(docker ps -a | awk '{ print $1,$2 }' | grep dev-peer | awk '{print $1 }') || true
+docker rm -f $(docker ps -aq -f label=bnc) 
+docker rm -f $(docker ps -a | awk '{ print $1,$2 }' | grep dev-peer | awk '{print $1 }') $(docker ps -a | awk '{ print $1,$2 }' | grep couchdb | awk '{print $1 }')
+docker rm -f cli.org1.bnc.com
+docker volume prune -f
 ${this.options.removeImages ? `docker rmi -f $(docker images | grep dev-peer | awk '{print $3}') || true` : ``}
+mv ${this.options.path}/fabric-binaries /tmp/; 
+rm -rf ${this.options.path}/*; 
+mv /tmp/fabric-binaries ${this.options.path}/;
 `;
 
   constructor(filename: string, path: string, private options: NetworkCleanShOptions) {

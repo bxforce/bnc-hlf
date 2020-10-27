@@ -77,6 +77,8 @@ ${this.options.org.peers
       ## Logging level
       #- CORE_LOGGING_LEVEL=INFO
       #- CORE_CHAINCODE_LOGLEVEL=INFO
+    labels:
+      - "bnc=hlf"
     ports:
       - ${peer.options.ports[0]}:${peer.options.ports[0]}
       - ${peer.options.ports[3]}:${peer.options.ports[3]}

@@ -529,9 +529,13 @@ export class Orchestrator {
      * Clean all docker
      * @param rmi remove image also
      */
-    static async cleanDocker(rmi: boolean) {
+    static async cleanDocker(deploymentConfigPath: string, rmi: boolean) {
+        const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
         const options = new NetworkCleanShOptions();
         options.removeImages = rmi;
+        options.path = path;
 
         let networkClean = new NetworkCleanShGenerator('clean.sh', 'na', options);
         await networkClean.run();

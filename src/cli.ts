@@ -111,8 +111,8 @@ export class CLI {
     l('Blockchain stopped !!!');
   }
 
-  static async cleanNetwork(rmi: boolean) {
-    await Orchestrator.cleanDocker(rmi);
+  static async cleanNetwork(deployConfigPath: string, rmi: boolean) {
+    await Orchestrator.cleanDocker(deployConfigPath, rmi);
   }
 
   /****************************************************************************/

@@ -61,6 +61,8 @@ services:
       - CORE_ORDERER_ID=${this.options.org.orderers[0].name}.${this.options.org.domainName}:${this.options.org.orderers[0].options.ports[0]}
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: ${this.options.command && this.options.command.length > 0 ? `${this.options.command}` : `/bin/bash`}
+    labels:
+      - "bnc=hlf"
     volumes:
       - /var/run/:/host/var/run/
       - ${this.options.networkRootPath}/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
