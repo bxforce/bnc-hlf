@@ -84,7 +84,7 @@ export const UNIX_DOCKER_SOCKET = '/var/run/docker.sock';
 export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
 
 /* default file containing the whole configuration */
-export const CONFIG_DEFAULT_PATH = './config.yaml';
+export const CONFIG_DEFAULT_PATH = './tests/config.yaml';
 
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;

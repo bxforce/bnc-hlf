@@ -11,6 +11,6 @@ if [[ -z "$(docker network ls -q -f name=$DOCKER_NETWORK)" ]]; then
 fi
 
 if [[ -z "$PATH_CONFIG" ]]; then
-    PATH_CONFIG=$PWD/tests/single_machine/config.yaml
+    PATH_CONFIG=$PWD/tests/single_machine
 fi
-docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK -v /tmp:/tmp -v $PATH_CONFIG:/root/config.yaml -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf $@
+docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK -v /tmp:/tmp -v $PATH_CONFIG:/root/tests -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf $@
