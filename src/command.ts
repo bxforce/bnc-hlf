@@ -176,13 +176,22 @@ chaincodeCmd
 
 chaincodeCmd
     .command('deploy')
-    .description('deploys chaincode')
+    .description('deploy chaincode')
     .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
     .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
     .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
     .option('--upgrade', 'option used when approving to upgrade chaincode')
     .action(async (cmd) => {
       await CLI.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
+    });
+
+chaincodeCmd
+    .command('compile')
+    .description('compile chaincode')
+    .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+    .action(async (cmd) => {
+      await CLI.startFabricCli(cmd.config, cmd.confCommit, true);
     });
 
 chaincodeCmd

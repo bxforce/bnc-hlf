@@ -24,8 +24,6 @@ ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/lib/node_modules
 ENV PATH      $NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 
 ## Build bnc-hlf
-COPY scripts /root/scripts
-
 RUN apt install -y build-essential
 RUN npm install -g typescript
 

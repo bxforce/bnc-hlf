@@ -60,7 +60,7 @@ services:
       - CORE_ORDERER_TLS_ROOTCERT=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/${this.options.org.orderers[0].name}.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
       - CORE_ORDERER_ID=${this.options.org.orderers[0].name}.${this.options.org.domainName}:${this.options.org.orderers[0].options.ports[0]}
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    command: /bin/bash
+    command: ${this.options.command && this.options.command.length > 0 ? `${this.options.command}` : `/bin/bash`}
     volumes:
       - /var/run/:/host/var/run/
       - ${this.options.networkRootPath}/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/

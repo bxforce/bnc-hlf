@@ -13,3 +13,5 @@
  - [ ] check if ca container is running and fabric_ca folder and files exists
  - [ ] auto-stop container of peers and orderers if redeploy action is triggered
  - [ ] check docker container status once deployed (check if not exited) 
+
+

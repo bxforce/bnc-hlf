@@ -540,7 +540,7 @@ export class Orchestrator {
         l('Environment cleaned!');
     }
 
-    static async deployCli(configFilePath: string, commitFile: string): Promise<void> {
+    static async deployCli(configFilePath: string, commitFile: string, compile: boolean): Promise<void> {
         const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
         
         const network: Network = await Orchestrator._parse(configFilePath);
@@ -569,6 +569,7 @@ export class Orchestrator {
             cliChaincodeRootPath: config.chaincodeRootPath,
             cliScriptsRootPath: config.scriptsRootPath
         };
+        if (compile) options.command = config.compilationCommand
 
         l('Creating Peer base docker compose file');
         const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);

@@ -1,16 +1,29 @@
 #!/bin/bash
 
 DOCKER_IMAGE=bnc-hlf
-if [[ "$(docker images -q $DOCKER_IMAGE 2> /dev/null)" == "" ]]; then
+DOCKER_NETWORK=bnc_network
+
+if [[ "$(docker images -q $DOCKER_IMAGE 2> /dev/null)" == "" ]] || [[ "$BNC_FORCE_BUILD" == "true" ]]; then
     docker build -t bnc-hlf -f Dockerfile .
 fi
 
-DOCKER_NETWORK=bnc_network
 if [[ -z "$(docker network ls -q -f name=$DOCKER_NETWORK)" ]]; then 
     docker network create --driver=bridge $DOCKER_NETWORK;
 fi
 
-if [[ -z "$PATH_CONFIG" ]]; then
-    PATH_CONFIG=$PWD/tests/single_machine
+if [[ -z "$BNC_PATH_CONFIG" ]]; then
+    BNC_PATH_CONFIG=$PWD/tests/single_machine
 fi
-docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK -v /tmp:/tmp -v $PATH_CONFIG:/root/tests -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf $@
+
+docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK \
+    -v /tmp/hyperledger-fabric-network:/tmp/hyperledger-fabric-network \
+    -v $BNC_PATH_CONFIG:/root/tests \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+        bnc-hlf $@
+
+#### NOTES ####
+## Chaincode requirement: 
+# cp -r ./tests/chaincode /tmp/hyperledger-fabric-chaincode
+## Chaincode build: 
+# ./bnc chaincode cli && docker exec -it cli.org1.bnc.com /bin/bash -c "cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1"
+###############

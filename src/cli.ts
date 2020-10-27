@@ -97,8 +97,8 @@ export class CLI {
     l('[Invoke Chaincode] Not yet implemented');
   }
   
-  static async startFabricCli(deployConfigPath, commitFile) {
-    await Orchestrator.deployCli(deployConfigPath, commitFile)
+  static async startFabricCli(deployConfigPath, commitFile, compile = false) {
+    await Orchestrator.deployCli(deployConfigPath, commitFile, compile)
   }
 
   static async deployHlfServices(deployConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
