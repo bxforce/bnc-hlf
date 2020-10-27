@@ -1,0 +1,16 @@
+#!/bin/bash
+
+DOCKER_IMAGE=bnc-hlf
+if [[ "$(docker images -q $DOCKER_IMAGE 2> /dev/null)" == "" ]]; then
+    docker build -t bnc-hlf -f Dockerfile .
+fi
+
+DOCKER_NETWORK=bnc_network
+if [[ -z "$(docker network ls -q -f name=$DOCKER_NETWORK)" ]]; then 
+    docker network create --driver=bridge $DOCKER_NETWORK;
+fi
+
+if [[ -z "$PATH_CONFIG" ]]; then
+    PATH_CONFIG=$PWD/tests/single_machine/config.yaml
+fi
+docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK -v /tmp:/tmp -v $PATH_CONFIG:/root/config.yaml -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf $@

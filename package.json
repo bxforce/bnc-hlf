@@ -2,7 +2,7 @@
   "name": "bnc",
   "version": "0.0.1",
   "description": "The CLI deployment tool for Hyperledger enterprise blockchains",
-  "main": "index.js",
+  "main": "commands.js",
   "private": true,
   "cacheDirectories": [
     "node_modules"
@@ -11,10 +11,6 @@
     "bin/*",
     "dist/*",
     "docs/*",
-    "templates/*",
-    "network-objects/*",
-    "tools/*",
-    "tests/manual/templates/docker-compose.yml",
     "package.json"
   ],
   "bin": {

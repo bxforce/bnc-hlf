@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04 as npm_build
 
 ## Install docker
 RUN apt update
@@ -24,23 +24,19 @@ ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/lib/node_modules
 ENV PATH      $NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 
 ## Build bnc-hlf
+COPY scripts /root/scripts
+
 RUN apt install -y build-essential
 RUN npm install -g typescript
-COPY package.json /root/package.json
+
 COPY tsconfig.json /root/tsconfig.json
+COPY tslint.json /root/tslint.json
+COPY package.json /root/package.json
+
 WORKDIR /root
 RUN npm install
+
 COPY src /root/src
 RUN npm run build && npm link
 
-## Script
-#RUN echo "#!/bin/sh\nset -ex\n\nCONFIG=./tests/manual/demo/config.yaml\nARTIFACTS=/hyperledger-fabric-network/artifacts\n\nbnc enroll-peers -f \$CONFIG\nbnc enroll-orderers -f \$CONFIG\nbnc init --genesis -f \$CONFIG\nbnc init --configtx -f \$CONFIG\nbnc init --anchortx -f \$CONFIG\nbnc start -f \$CONFIG\nbnc channel create -f \$CONFIG -t $ARTIFACTS/mychannel.tx -n mychannel\nbnc channel join -n mychannel -p "peer0.org1.bnc.com" -f \$CONFIG\nbnc channel update -n mychannel -f \$CONFIG -t $ARTIFACTS/org1MSPanchors.tx\n" > run.sh && chmod a+x run.sh
-#CMD ["./run.sh"]
-
 ENTRYPOINT ["bnc"]
-
-# Usage:
-# docker build -t bnc-hlf -f Dockerfile .
-# docker network create --driver=bridge --subnet=172.20.0.0/16 bnc_network
-# docker run -it --rm --name bnc-hlf --network bnc_network -v /tmp:/tmp -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf bash
-## NOTES: volume mount /tmp must be the same on host and container to make VAR template_folder works (so you have to cp your config files in /tmp on host)

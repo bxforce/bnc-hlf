@@ -1,0 +1,69 @@
+
+genesis:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  consensus: "raft"
+  ordererDomain: "bnc.com"
+  channel: "mychannel"
+  ca:
+    url: "ca.orderer"
+    port: 8054
+  organisations:
+    - organisation: "org1"
+      domain_name: "bnc.com"
+      orderers:
+        - orderer: "orderer1"
+          host_name: "orderer1.bnc.com"
+          port: 7050
+      anchorPeer:
+        host_name: "peer1.org1.bnc.com"
+        port: 7051
+
+chains:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  fabric: "2.2.1"
+  tls: true
+  consensus: "raft"
+  db: "couchdb"
+  organisations:
+    - organisation: "org1"
+      orgIndex: 0
+      engineOrg: "main"
+      domain_name: "bnc.com"
+      ca:
+        name: "ca1"
+        port: 7054
+        engine_name: "host1"
+      orderers:
+        - orderer: "orderer1"
+          port: 7050
+          engine_name: "host1"
+      peers:
+        - peer: "peer1"
+          port: 7051
+          engine_name: "host1"
+
+chaincode:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  channel: "mychannel"
+  chaincode: "mycc"
+  root_path_chaincode: "/home/ubuntu/fabric-samples/chaincode/"
+  root_path_scripts: "/root/scripts"
+  path_chaincode: "abstore/go"
+  version: "1"
+  organisations:
+    - organisation: "org1"
+      domain_name: "bnc.com"
+      peers:
+        - peer: "peer1"
+          host_name: "peer1.org1.bnc.com"
+          port: 7051
+
+engines:
+  - engine: "main"
+    hosts:
+      - host: "host1"
+        type: "docker"
+        url: "localhost"
+        port: 2375
+        settings: [ "default" ]
+
