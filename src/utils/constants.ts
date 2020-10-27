@@ -68,12 +68,16 @@ export const enum HLF_WALLET_TYPE {
 
 export const CA_DEFAULT_PORT = 7054;
 
-export const ORDERER_DEFAULT_PORT = 7050;
+export const ORDERER_DEFAULT_PORT = {
+  main: 7050,
+  operations: 8443
+};
 
 export const PEER_DEFAULT_PORT = {
   event: 7051,
   event_chaincode: 7052,
-  event_hub: 7053
+  event_hub: 7053,
+  operations: 9443
 };
 
 export const DEFAULT_CA_ADMIN = {

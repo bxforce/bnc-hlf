@@ -196,7 +196,6 @@ export class Membership extends ClientHelper {
   private static async _getCATlsOptions(caTlsCertPath: string): Promise<TLSOptions> {
     const caTlsCertData = await ClientHelper.readSingleFileInDir(caTlsCertPath);
     const caRoots = Buffer.from(caTlsCertData);
-
     return {
       trustedRoots: caRoots,
       verify: false

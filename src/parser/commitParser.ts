@@ -23,7 +23,7 @@ import { BaseParser } from './base';
 import { Ca } from '../parser/model/ca';
 import { Network } from '../parser/model/network';
 import { CommitConfiguration } from '../parser/model/commitConfiguration';
-import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
+import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../utils/constants';
 import { OrdererOrganization } from '../parser/model/ordererOrganization';
 
 /**
