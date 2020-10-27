@@ -51,7 +51,7 @@ export class ConnectionProfileGenerator extends BaseGenerator {
     },
     "certificateAuthorities": {
         "${this.network.organizations[0].ca.name}.${this.network.organizations[0].name}": {
-            "url": "http://${this.network.organizations[0].ca.name}.${this.network.organizations[0].name}:${this.network.organizations[0].ca.options.port}",
+            "url": "http${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].ca.name}.${this.network.organizations[0].name}:${this.network.organizations[0].ca.options.port}",
             "caName": "${this.network.organizations[0].ca.name}.${this.network.organizations[0].name}",
             "tlsCACerts": { "path": "${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.organizations[0].name}/crypto/ca-cert.pem" },
             "httpOptions": { "verify": false }
