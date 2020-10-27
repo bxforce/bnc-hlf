@@ -20,7 +20,7 @@ genesis:
 
 chains:
   template_folder: "/tmp/hyperledger-fabric-network"
-  fabric: "2.0.0"
+  fabric: "2.2.1"
   tls: true
   consensus: "raft"
   db: "couchdb"

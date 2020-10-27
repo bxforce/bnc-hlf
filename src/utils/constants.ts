@@ -30,17 +30,10 @@ export enum ConsensusType {
   SOLO = 'solo'
 }
 
-export enum HLF_VERSION {
-  HLF_2 = '2.0.0',
-  HLF_2_1 = '2.1.0'
-}
-
-export enum EXTERNAL_HLF_VERSION {
-  EXT_HLF_2 = '0.4.18'
-}
-
-export enum HLF_CA_VERSION {
-  HLF_2= '1.4.4'
+export enum HLF_DEFAULT_VERSION {
+  FABRIC = '2.2.1',
+  THIRDPARTY = '0.4.18',
+  CA = '1.4.4'
 }
 
 export enum USER_TYPE {

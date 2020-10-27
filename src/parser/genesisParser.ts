@@ -19,7 +19,7 @@ import {Network} from '../parser/model/network';
 import {BaseParser} from './base';
 import {Orderer} from '../parser/model/orderer';
 import {Peer} from '../parser/model/peer';
-import {ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION} from '../utils/constants';
+import {ConsensusType, HLF_DEFAULT_VERSION} from '../utils/constants';
 import {Ca} from '../parser/model/ca';
 import {OrdererOrganization} from '../parser/model/ordererOrganization';
 import {Channel} from '../parser/model/channel';
@@ -92,9 +92,9 @@ export class GenesisParser extends BaseParser {
         // fill and return the network object
         const network = new Network('genesis-network', {
             networkConfigPath: template_folder,
-            hyperledgerVersion: HLF_VERSION.HLF_2,
-            hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
-            externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
+            hyperledgerVersion: HLF_DEFAULT_VERSION.FABRIC,
+            hyperledgerCAVersion: HLF_DEFAULT_VERSION.CA,
+            hyperledgerThirdpartyVersion : HLF_DEFAULT_VERSION.THIRDPARTY,
             inside: false,
             consensus: networkConsensus,
             forDeployment: false,

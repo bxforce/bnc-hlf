@@ -53,10 +53,8 @@ import getArtifactsPath = Utils.getArtifactsPath;
 import {
     BNC_NETWORK,
     DEFAULT_CA_ADMIN,
-    EXTERNAL_HLF_VERSION,
-    HLF_CA_VERSION,
+    HLF_DEFAULT_VERSION,
     HLF_CLIENT_ACCOUNT_ROLE,
-    HLF_VERSION,
     NETWORK_ROOT_PATH,
     SEQUENCE,
     USER_TYPE
@@ -278,9 +276,9 @@ export class Orchestrator {
             org: network.organizations[0],
             ips: network.ips,
             envVars: {
-                FABRIC_VERSION: HLF_VERSION.HLF_2,
-                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
-                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+                FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
             }
         };
         const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
@@ -435,9 +433,9 @@ export class Orchestrator {
             org: network.organizations[0],
             ips: network.ips,
             envVars: {
-                FABRIC_VERSION: HLF_VERSION.HLF_2,
-                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
-                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+                FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
             }
         };
 
@@ -564,9 +562,9 @@ export class Orchestrator {
             org: network.organizations[0],
             ips: network.ips,
             envVars: {
-                FABRIC_VERSION: HLF_VERSION.HLF_2,
-                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
-                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+                FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
             },
             cliChaincodeRootPath: config.chaincodeRootPath,
             cliScriptsRootPath: config.scriptsRootPath
@@ -689,9 +687,9 @@ export class Orchestrator {
             org: network.organizations[0],
             ips: network.ips,
             envVars: {
-                FABRIC_VERSION: HLF_VERSION.HLF_2,
-                FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
-                THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+                FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
             },
             cliChaincodeRootPath: chaincodeRootPath,
             cliScriptsRootPath: scriptsRootPath
@@ -829,9 +827,9 @@ export class Orchestrator {
           org: network.organizations[0],
           ips: network.ips,
           envVars: {
-              FABRIC_VERSION: HLF_VERSION.HLF_2,
-              FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
-              THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
+            FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+            FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+            THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
           }
         };
         

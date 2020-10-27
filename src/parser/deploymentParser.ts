@@ -22,7 +22,7 @@ import { Orderer } from '../parser/model/orderer';
 import { BaseParser } from './base';
 import { Ca } from '../parser/model/ca';
 import { Network } from '../parser/model/network';
-import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
+import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, HLF_DEFAULT_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
 import { OrdererOrganization } from '../parser/model/ordererOrganization';
 
 /**
@@ -67,12 +67,12 @@ export class DeploymentParser extends BaseParser {
     // build the network instance
     const { template_folder, fabric, consensus } = parsedYaml['chains'];
     const network: Network = new Network(this.fullFilePath, {
-      hyperledgerVersion: fabric as HLF_VERSION,
-      hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
-      externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
+      hyperledgerVersion: fabric != null ? fabric : HLF_DEFAULT_VERSION.FABRIC,
+      hyperledgerCAVersion: HLF_DEFAULT_VERSION.CA,
+      hyperledgerThirdpartyVersion : HLF_DEFAULT_VERSION.THIRDPARTY,
       consensus: consensus as ConsensusType,
-      inside: false,
       networkConfigPath: template_folder,
+      inside: false,
       forDeployment: true
     });
     network.organizations = organizations;

@@ -18,13 +18,13 @@ limitations under the License.
 import { Organization } from './organization';
 import { Channel } from './channel';
 import { OrdererOrganization } from './ordererOrganization';
-import { ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION } from '../../utils/constants';
+import { ConsensusType, HLF_DEFAULT_VERSION } from '../../utils/constants';
 import { e } from '../../utils/logs';
 
 export class NetworkOptions {
-  hyperledgerVersion?: HLF_VERSION;
-  hyperledgerCAVersion?: HLF_CA_VERSION;
-  externalHyperledgerVersion?: EXTERNAL_HLF_VERSION;
+  hyperledgerVersion: HLF_DEFAULT_VERSION.FABRIC;
+  hyperledgerCAVersion: HLF_DEFAULT_VERSION.CA;
+  hyperledgerThirdpartyVersion : HLF_DEFAULT_VERSION.THIRDPARTY;
   inside?: boolean = false;
   networkConfigPath?: string;
   consensus?: ConsensusType;
@@ -48,8 +48,8 @@ export class Network {
    * For example, currently we support only raft consensus protocol & fabric release 2.0 and above
    */
   validate(): boolean {
-    if(this.options.hyperledgerVersion !== HLF_VERSION.HLF_2) {
-      e(`This implementation supports currently only HLF ${HLF_VERSION.HLF_2}`);
+    if(this.options.hyperledgerVersion !== HLF_DEFAULT_VERSION.FABRIC) {
+      e(`This implementation supports currently only HLF ${HLF_DEFAULT_VERSION.FABRIC}`);
       return false;
     }
     if(this.options.consensus !== ConsensusType.RAFT) {
