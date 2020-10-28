@@ -29,13 +29,17 @@ const yaml = require('js-yaml')
 export class DockerComposeCliSingleton extends BaseGenerator {
     private static instance: DockerComposeCliSingleton;
 
-    /* docker compose content for peers */
+    // TODO: add volumes section only for actual volumes...
     contents = `
 version: '2'
 
 networks:
   ${this.options.composeNetwork}:
     external: true
+
+volumes:
+    ${this.options.cliChaincodeRootPath}:
+    ${this.options.cliScriptsRootPath}:
 
 services:
   cli.${this.options.org.fullName}:

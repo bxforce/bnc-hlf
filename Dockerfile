@@ -37,4 +37,7 @@ RUN npm install
 COPY src /root/src
 RUN npm run build && npm link
 
+COPY scripts /root/scripts
+COPY tests/single_machine/config.yaml /root/tests/config.yaml
+
 ENTRYPOINT ["bnc"]

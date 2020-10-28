@@ -21,6 +21,8 @@ fi
 docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK \
     -v /tmp/hyperledger-fabric-network:/tmp/hyperledger-fabric-network \
     -v $BNC_CONFIG_PATH:/root/tests \
+    -v volume_chaincode:/root/tests/chaincode \
+    -v volume_scripts:/root/scripts \
     -v /var/run/docker.sock:/var/run/docker.sock \
         bnc-hlf $@
 
