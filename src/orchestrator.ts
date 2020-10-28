@@ -167,6 +167,7 @@ export class Orchestrator {
      */
     static async generateConfigtx(configGenesisFilePath: string) {
         const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
@@ -198,6 +199,7 @@ export class Orchestrator {
      */
     static async generateGenesis(configGenesisFilePath: string) {
         const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         l('[genesis]: start generating genesis block...');
@@ -214,6 +216,7 @@ export class Orchestrator {
      */
     static async generateChannelConfig(configGenesisFilePath: string) {
         const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         l('[channel config]: start generating channel configuration...');
@@ -229,6 +232,7 @@ export class Orchestrator {
      */
     static async generateAnchorPeer(configGenesisFilePath: string) {
         const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         l('[anchor peer]: start generating anchor peer update...');
@@ -246,6 +250,7 @@ export class Orchestrator {
         // TODO check if files exists already for the same peers/organizations
         l('[Peer Cred]: start parsing deployment file...');
         const network = await Orchestrator._parse(deploymentConfigFilePath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
         await createFolder(path);
 
@@ -298,7 +303,7 @@ export class Orchestrator {
         l(`[Peer Cred]: start create peer crypto & certs credentials...`);
         const orgCertsGenerator = new OrgCertsGenerator(`connection-profile-ca-${network.organizations[0].name}-client.yaml`, path, network, options);
         const isGenerated = await orgCertsGenerator.buildCertificate();
-        l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
+        if (isGenerated) l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `); else e(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
     }
 
     /**
@@ -309,6 +314,7 @@ export class Orchestrator {
         // TODO check if files exists already for the same orderers/organizations
         l('[Orderer Cred]: start parsing...');
         const network = await Orchestrator._parseGenesis(genesisFilePath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
         await createFolder(path);
         l('[Orderer Cred]: parsing done!!!');
@@ -357,6 +363,7 @@ export class Orchestrator {
     static async createChannel(channelName: string, deploymentConfigPath: string): Promise<void> {
         l(`[Channel] - Request to create a new channel (${channelName})`);
         const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         const channelGenerator = new ChannelGenerator(`connection-profile-create-channel-${network.organizations[0].name}.yaml`, path, network);
@@ -376,6 +383,7 @@ export class Orchestrator {
     static async joinChannel(channelName: string, deploymentConfigPath: string): Promise<void> {
         l(`[Channel] - Request to join a new channel (${channelName})`);
         const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
@@ -393,6 +401,7 @@ export class Orchestrator {
     static async updateChannel(channelName: string, deploymentConfigPath: string): Promise<void> {
         l(`[Channel] - Request to update  a channel (${channelName})`);
         const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         const channelGenerator = new ChannelGenerator('connection-profile-channel.yaml', path, network);
@@ -412,6 +421,7 @@ export class Orchestrator {
      */
     static async deployHlfServices(configFilePath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
         const network: Network = await Orchestrator._parse(configFilePath);
+        if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
             return;
@@ -476,6 +486,7 @@ export class Orchestrator {
     static async stopHlfServices(deployConfigPath: string, deleteNetwork: boolean, deleteVolume: boolean, forceRemove: boolean): Promise<boolean> {
         try {
             const network: Network = await Orchestrator._parse(deployConfigPath);
+            if (!network) return;
 
             // loop on organization & peers && orderers
             for (const org of network.organizations) {
@@ -531,6 +542,7 @@ export class Orchestrator {
      */
     static async cleanDocker(deploymentConfigPath: string, rmi: boolean) {
         const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         const options = new NetworkCleanShOptions();
@@ -546,8 +558,9 @@ export class Orchestrator {
 
     static async deployCli(configFilePath: string, commitFile: string, compile: boolean): Promise<void> {
         const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
-        
+        if (!config) return;
         const network: Network = await Orchestrator._parse(configFilePath);
+        if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
             return;
@@ -637,6 +650,7 @@ export class Orchestrator {
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile);
         const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        if (!config) return;
         const chaincode = new Chaincode(docker,config.chaincodeName, config.version); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
@@ -665,6 +679,7 @@ export class Orchestrator {
     static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean): Promise <void> {
         let targetPeers = await this.getTargetPeers(configDeployFile, targets);
         const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        if (!config) return;
         await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath)
         await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
         await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.channelName, upgrade);
@@ -674,6 +689,7 @@ export class Orchestrator {
     private static async deployCliSingleton(name: string, configFilePath: string, targets: Peer[], version: string, chaincodeRootPath: string, scriptsRootPath: string): Promise<void> {
         l(`[Chaincode] - Request to install  a chaincode (${name})`);
         const network: Network = await Orchestrator._parse(configFilePath);
+        if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
             return;
@@ -729,8 +745,9 @@ export class Orchestrator {
     }
 
     private static async getCommitOrgNames(commitFile: string){
-        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
-        const organizations: Organization[] = conf.organizations;
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        if (!config) return;
+        const organizations: Organization[] = config.organizations;
         let listOrgs=[];
         organizations.forEach((org) => {
             listOrgs.push(org.name);
@@ -739,8 +756,9 @@ export class Orchestrator {
     }
 
     private static async getTargetCommitPeers(commitFile: string){
-        const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
-        const organizations: Organization[] = conf.organizations;
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        if (!config) return;
+        const organizations: Organization[] = config.organizations;
         let targets=''
         organizations.forEach((org) => {
             let nameOrg = org.name;
@@ -760,6 +778,7 @@ export class Orchestrator {
 
     private static async getTargetPeers(configFilePath: string, targets?: string[]) {
         const network: Network = await Orchestrator._parse(configFilePath);
+        if (!network) return;
         let targetPeers: Peer[] = [];
         if(!targets){ //load all peers
             targetPeers = network.organizations[0].peers;
@@ -778,6 +797,7 @@ export class Orchestrator {
 
     private static async loadOrgEngine(configFilePath) {
         const network: Network = await Orchestrator._parse(configFilePath);
+        if (!network) return;
         const organization: Organization = network.organizations[0];
         const engine = organization.getEngine(organization.peers[0].options.engineName);
         const docker =  new DockerEngine({socketPath: '/var/run/docker.sock'}); //{ host: engine.options.url, port: engine.options.port });
@@ -819,6 +839,7 @@ export class Orchestrator {
     */
     async validateAndParse(configFilePath: string, skipDownload?: boolean) {
         const network: Network = await Orchestrator._parse(configFilePath);
+        if (!network) return;
         l('[End] Blockchain configuration files parsed');
         
         // Generate dynamically crypto

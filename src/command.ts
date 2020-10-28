@@ -85,7 +85,7 @@ program
   .command('stop')
   .description('stop the blockchain')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
-  .option('-r, --rmi', 'remove docker containers')
+  .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await CLI.stopHlfServices(cmd.config, cmd.rmi);
   });

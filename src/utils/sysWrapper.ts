@@ -148,8 +148,7 @@ export module SysWrapper {
       try {
         const store = memFs.create();
         const editor = memFsEditor.create(store);
-
-        let file = editor.read(filePath, {raw: true});
+        let file = editor.read(filePath, {raw: false});
         if (!file) {
           rejected('Empty or not found file.');
         }

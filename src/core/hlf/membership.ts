@@ -145,13 +145,6 @@ export class Membership extends ClientHelper {
    */
   async addUser(params: UserParams, mspId: string, csrObj?: CSR): Promise<IEnrollSecretResponse | undefined> {
     try {
-      // check if the user exists
-      const userIdentity = await this.wallet.getIdentity(params.enrollmentID);
-      if (userIdentity) {
-        d(`An identity for the user (${params.enrollmentID}) already exists`);
-        return null;
-      }
-
       // check if the admin account exists
       const adminIdentity = await this.wallet.getIdentity(this.clientConfig.admin.name);
       if (!adminIdentity) {
@@ -159,7 +152,14 @@ export class Membership extends ClientHelper {
         d('Check if admin account is already enrolled');
         return null;
       }
-
+      
+      // check if the user exists
+      const userIdentity = await this.wallet.getIdentity(params.enrollmentID);
+      if (userIdentity) {
+        d(`An identity for the user (${params.enrollmentID}) already exists`);
+        return null;
+      }
+      
       // build a user object to interact with the CA
       const provider = this.wallet.getWallet().getProviderRegistry().getProvider(adminIdentity.type);
       const adminUser = await provider.getUserContext(adminIdentity, this.clientConfig.admin.name);
