@@ -32,12 +32,12 @@ import { CONFIG_DEFAULT_PATH, CHANNEL_DEFAULT_NAME } from './utils/constants';
 program
   .command('init')
   .description("creates genesis.block and configtx files for channel and anchor update")
-  .option('--genesis', 'generate genesis block')
-  .option('--configtx', 'generate channel configuration file')
-  .option('--anchortx', 'generate anchor peer update file')
-  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('--genesisBlock', 'generate genesis block')
+  .option('--configTx', 'generate channel configuration file')
+  .option('--anchorTx', 'generate anchor peer update file')
+  .option('-g, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .action(async cmd => {
-    await CLI.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+    await CLI.init(cmd.config, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
   });
 
 program
@@ -53,7 +53,7 @@ program
 program
   .command('enroll-orderers')
   .description('creates crypto material for the orderers')
-  .option('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file', CONFIG_DEFAULT_PATH)
+  .option('-g, --config <path>', 'Absolute Path to the genesis deployment  definition file', CONFIG_DEFAULT_PATH)
   .action(async (cmd: any) => {
     if (cmd) {
       await CLI.generateOrdererCredentials(cmd.config);
@@ -63,14 +63,17 @@ program
 program
   .command('generate')
   .description("creates crypto material, genesis.block and configtx files")
-  .option('--genesis', 'generate genesis block')
-  .option('--configtx', 'generate channel configuration file')
-  .option('--anchortx', 'generate anchor peer update file')
-  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('--genesisBlock', 'generate genesis block')
+  .option('--configTx', 'generate channel configuration file')
+  .option('--anchorTx', 'generate anchor peer update file')
+  .option('-f, --config <path>', 'Absolute path to the deploy deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-g, --genesis <path>', 'Absolute path to the genesis deployment definition file')
   .action(async cmd => {
     await CLI.generatePeersCredentials(cmd.config);
-    await CLI.generateOrdererCredentials(cmd.config);
-    await CLI.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+    if (cmd.genesis) {
+      await CLI.generateOrdererCredentials(cmd.genesis);
+      await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
+    }
   });
 
 program
@@ -92,7 +95,7 @@ program
 
 program
   .command('clear')
-  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
   .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await CLI.cleanNetwork(cmd.config, cmd.rmi); // if -R is not passed cmd.rmi is true
@@ -101,22 +104,23 @@ program
 program
   .command('run')
   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-g, --genesis <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
-  .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config);
-    await CLI.generateOrdererCredentials(cmd.config);
+    await CLI.generateOrdererCredentials(cmd.genesis);
     await CLI.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
     await CLI.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
     await new Promise(resolve => setTimeout(async function() {
-      await CLI.createChannel(cmd.namech, cmd.config);
+      await CLI.createChannel(cmd.namech, cmd.genesis);
       await new Promise(resolve => setTimeout(async function() {
-        await CLI.joinChannel(cmd.namech, cmd.config);
-        await CLI.updateChannel(cmd.namech, cmd.config);
-        await CLI.startFabricCli(cmd.config, cmd.confCommit, true);
-        await CLI.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
+        await CLI.joinChannel(cmd.namech, cmd.genesis);
+        await CLI.updateChannel(cmd.namech, cmd.genesis);
+        await CLI.startFabricCli(cmd.config, cmd.commit, true);
+        await CLI.deployChaincode(cmd.config, cmd.commit, cmd.list, cmd.upgrade);
       }, 5000));
     }, 5000));
   });
@@ -125,7 +129,7 @@ const channelCmd = program.command('channel');
 channelCmd
   .command('create')
   .description('create channel if it does not exist')
-  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
   //.requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .action(async cmd => {
@@ -135,7 +139,7 @@ channelCmd
 channelCmd
    .command('join')
    .description('join peers to channel')
-   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
    .action(async cmd => {
      await CLI.joinChannel(cmd.namech, cmd.config);
@@ -144,7 +148,7 @@ channelCmd
 channelCmd
     .command('update')
     .description('commit anchor update to peers on channel')
-    .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+    .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
     //.requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
     .action(async (cmd) => {
@@ -154,10 +158,11 @@ channelCmd
 channelCmd
     .command('deploy')
     .description('deploy channel')
-    .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+    .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
     .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
+    .option('--no-create', 'bypass createChannel')
     .action(async (cmd) => {
-      await CLI.createChannel(cmd.namech, cmd.config);
+      if (cmd.create) await CLI.createChannel(cmd.namech, cmd.config);
       await new Promise(resolve => setTimeout(async function() {
         await CLI.joinChannel(cmd.namech, cmd.config);
         await CLI.updateChannel(cmd.namech, cmd.config);

@@ -1,6 +1,6 @@
 chains:
-  template_folder: "/home/wassim/hyperledger-fabric-network"
-  fabric: "2.0.0"
+  template_folder: "/tmp/hyperledger-fabric-network"
+  fabric: "2.2.1"
   tls: true
   consensus: "raft"
   db: "couchdb"
@@ -18,11 +18,11 @@ chains:
           port: 10050
           engine_name: "host1"
         - orderer: "orderer4"
-          port: 11050
+          port: 10050
           engine_name: "host1"
       peers:
         - peer: "peer0"
-          port: 10051
+          port: 11051
           engine_name: "host1"
         - peer: "peer1"
           port: 11051
@@ -32,7 +32,7 @@ engines:
     hosts:
       - host: "host1"
         type: "docker"
-        url: "192.168.208.65"
+        url: "localhost"
         port: 2375
         settings: [ "default" ]
 ips:

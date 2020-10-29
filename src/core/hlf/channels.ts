@@ -88,6 +88,7 @@ export class Channels extends ClientHelper {
         d('Successfully created the channel.');
         return true;
       }
+      console.log(response);
 
       e(` Failed to create the channel ${channelName}`);
       return false;

@@ -72,28 +72,21 @@ ${this.options.org.peers
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=${peer.name}User
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${peer.name}Pwd
       # Enable operation service (prometheus metrics) ${peer.options.ports.length > 3 ? `
-      - CORE_OPERATIONS_LISTENADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[3]}
-      - CORE_METRICS_PROVIDER=prometheus`:``}
+      #- CORE_OPERATIONS_LISTENADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[3]}
+      #- CORE_METRICS_PROVIDER=prometheus`:``}
       ## Logging level
       #- CORE_LOGGING_LEVEL=INFO
       #- CORE_CHAINCODE_LOGLEVEL=INFO
     labels:
       - "bnc=hlf"
-    ports:
-      - ${peer.options.ports[0]}:${peer.options.ports[0]}
-      - ${peer.options.ports[3]}:${peer.options.ports[3]}
+    #ports:
+    #  - ${peer.options.ports[0]}:${peer.options.ports[0]}
+    #  - ${peer.options.ports[3]}:${peer.options.ports[3]}
     volumes:
       - /var/run/:/host/var/run/
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/msp:/etc/hyperledger/fabric/msp
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
-${this.options.ips && this.options.ips.length > 0 ?  `
-    extra_hosts:
-${this.options.ips
-        .map(host => `
-      - "${host.ip}"
-`).join('')}
-`: ``}
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
     networks:
@@ -108,13 +101,22 @@ ${this.options.ips
       - COUCHDB_USER=${peer.name}User
       - COUCHDB_PASSWORD=${peer.name}Pwd
     # Comment the port mapping IN ORDER to hide/expose the CouchDB service!!!!!
-    ports:
-      - ${peer.options.couchDbPort}:5984
+    #ports:
+    #  - ${peer.options.couchDbPort}:5984
     networks:
       - ${this.options.composeNetwork}
 `).join('')}
-  
   `;
+/*
+${this.options.ips && this.options.ips.length > 0 ?  `
+    extra_hosts:
+${this.options.ips
+        .map(host => `
+      - "${host.ip}"
+`).join('')}
+`: ``}
+*/
+
 
   /**
    * Constructor

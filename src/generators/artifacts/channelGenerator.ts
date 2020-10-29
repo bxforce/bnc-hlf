@@ -22,6 +22,7 @@ import { ClientConfig } from '../../core/hlf/helpers';
 import { Channels } from '../../core/hlf/channels';
 import { SysWrapper } from '../../utils/sysWrapper';
 import existsPath = SysWrapper.existsPath;
+import * as fs from 'fs';
 import { Utils } from '../../utils/helper';
 import getPropertiesPath = Utils.getPropertiesPath;
 import { X509Identity } from 'fabric-network';

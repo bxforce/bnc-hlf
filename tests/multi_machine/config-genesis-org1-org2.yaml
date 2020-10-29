@@ -1,9 +1,10 @@
 genesis:
-  template_folder: "/home/wassim/hyperledger-fabric-network"
+  template_folder: "/tmp/hyperledger-fabric-network"
   consensus: "raft"
   ordererDomain: "bnc.com"
+  channel: "mychannel"
   ca:
-    url: "192.168.208.68"
+    url: "ca.orderer"
     port: 9054
   organisations:
     - organisation: "org1"
@@ -14,10 +15,10 @@ genesis:
           port: 7050
         - orderer: "orderer1"
           host_name: "orderer1.bnc.com"
-          port: 8050
+          port: 7050
         - orderer: "orderer2"
           host_name: "orderer2.bnc.com"
-          port: 9050
+          port: 7050
       anchorPeer:
         host_name: "peer0.org1.bnc.com"
         port: 7051
@@ -26,10 +27,10 @@ genesis:
       orderers:
         - orderer: "orderer3"
           host_name: "orderer3.bnc.com"
-          port: 10050
+          port: 7050
         - orderer: "orderer4"
           host_name: "orderer4.bnc.com"
-          port: 11050
+          port: 7050
       anchorPeer:
         host_name: "peer0.org2.bnc.com"
-        port: 10051
+        port: 7051

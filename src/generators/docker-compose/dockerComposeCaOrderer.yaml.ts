@@ -55,8 +55,8 @@ services:
       - FABRIC_CA_SERVER_DEBUG=true
     labels:
       - "bnc=hlf"
-    ports:
-      - "${this.network.ordererOrganization.ca.options.port}:${this.network.ordererOrganization.ca.options.port}"
+    #ports:
+    #  - "${this.network.ordererOrganization.ca.options.port}:${this.network.ordererOrganization.ca.options.port}"
     volumes:
       - ${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}:/tmp/hyperledger/fabric-ca
     networks:

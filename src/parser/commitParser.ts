@@ -59,17 +59,15 @@ export class CommitParser extends BaseParser {
         return conf;
     }
 
-
-
     /**
      * Parse the organization section within the deployment configuration file
      * @param yamlOrganisations
      */
     private buildOrganisations(yamlOrganisations): Organization[] {
         const organizations: Organization[] = [];
-        const { template_folder, organisations } = yamlOrganisations;
+        const { template_folder, commit } = yamlOrganisations;
 
-        organisations.forEach(org => {
+        commit.forEach(org => {
             const { organisation, domain_name, peers } = org;
             const ords = [];
             // peer parsing

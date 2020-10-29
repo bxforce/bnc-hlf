@@ -54,21 +54,15 @@ ${this.options.org.orderers.map(orderer => `
       file:   base/docker-compose-base.yaml
       service: orderer-base  
     environment:
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
       # Enable operation service (prometheus metrics) ${orderer.options.ports.length > 1 ? `
-      - ORDERER_OPERATIONS_LISTENADDRESS=${orderer.fullName}:${orderer.options.ports[1]}
-      - ORDERER_METRICS_PROVIDER=prometheus`:``}
+      #- ORDERER_OPERATIONS_LISTENADDRESS=${orderer.fullName}:${orderer.options.ports[1]}
+      #- ORDERER_METRICS_PROVIDER=prometheus`:``}
       ## Logging level
       #- ORDERER_GENERAL_LOGLEVEL=INFO
       #- FABRIC_LOGGING_SPEC=INFO
     container_name: ${orderer.fullName}
-${this.options.ips && this.options.ips.length > 0 ?  `
-    extra_hosts:
-${this.options.ips
-      .map(host => `
-      - "${host.ip}"
-`).join('')}
-`: ``}
     networks:
       - ${this.options.composeNetwork}   
     volumes:
@@ -78,11 +72,21 @@ ${this.options.ips
       - ${orderer.fullName}:/var/hyperledger/production/orderer
     labels:
       - "bnc=hlf"
-    ports:
-      - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
-      - ${orderer.options.ports[1]}:${orderer.options.ports[1]}
+    #ports:
+    #  - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
+    #  - ${orderer.options.ports[1]}:${orderer.options.ports[1]}
 `).join('')}
   `;
+
+/*
+${this.options.ips && this.options.ips.length > 0 ?  `
+    extra_hosts:
+${this.options.ips
+      .map(host => `
+      - "${host.ip}"
+`).join('')}
+`: ``}
+*/
 
   /**
    * Constructor

@@ -74,7 +74,9 @@ export class GenesisParser extends BaseParser {
                         consensus,
                         domainName: orgDomain,
                         host: ordererHost,
-                        ports: [ordererPort]
+                        ports: [
+                            ordererPort
+                        ]
                     })
                 );
             }

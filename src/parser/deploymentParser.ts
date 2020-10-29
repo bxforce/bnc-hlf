@@ -142,8 +142,10 @@ export class DeploymentParser extends BaseParser {
             engineName: ordererEngineName,
             consensus,
             ports: [
-              ordererPort ?? `${index*1000+ORDERER_DEFAULT_PORT.main}`,
-              `${index*1000+ORDERER_DEFAULT_PORT.operations}`
+              `${ORDERER_DEFAULT_PORT.main}`,
+              `${ORDERER_DEFAULT_PORT.operations}`
+              /*ordererPort ?? `${index*1000+ORDERER_DEFAULT_PORT.main}`,
+              `${index*1000+ORDERER_DEFAULT_PORT.operations}`*/
             ],
             number: index
           })
@@ -153,21 +155,23 @@ export class DeploymentParser extends BaseParser {
       // peer parsing
       const parsedPeers: Peer[] = [];
       peers.forEach((pe, index) => {
-        const { peer: peerName, engine_name: peerEngineName, port: peerPort } = pe;
-
-        // TODO check if db leveldb or couchdb
-
+        const { peer: peerName, engine_name: peerEngineName, port: peerPort } = pe;         // TODO check if db leveldb or couchdb
         parsedPeers.push(
           new Peer(peerName, {
             engineName: peerEngineName,
             number: index,
             ports: [
+              `${PEER_DEFAULT_PORT.event}`,
+              `${PEER_DEFAULT_PORT.event_chaincode}`,
+              `${PEER_DEFAULT_PORT.event_hub}`,
+              `${PEER_DEFAULT_PORT.operations}`
+              /*
               peerPort ?? `${index*1000+PEER_DEFAULT_PORT.event}`,
               peerPort+1 ?? `${index*1000+PEER_DEFAULT_PORT.event_chaincode}`,
               peerPort+2 ?? `${index*1000+PEER_DEFAULT_PORT.event_hub}`,
-              `${index*1000+PEER_DEFAULT_PORT.operations}`
+              `${index*1000+PEER_DEFAULT_PORT.operations}`*/
             ],
-            couchDbPort: `${5+orgIndex}${index}84`,
+            couchDbPort: `${PEER_DEFAULT_PORT.couchdb}`, //`${5+orgIndex}${index}84`,
             couchDB: db
           })
         );

@@ -1,6 +1,6 @@
 chains:
-  template_folder: "/home/wassim/hyperledger-fabric-network"
-  fabric: "2.0.0"
+  template_folder: "/tmp/hyperledger-fabric-network"
+  fabric: "2.2.1"
   tls: true
   consensus: "raft"
   db: "couchdb"
@@ -38,7 +38,7 @@ engines:
     hosts:
       - host: "host1"
         type: "docker"
-        url: "192.168.208.68"
+        url: "localhost"
         port: 2375
         settings: [ "default" ]
 ips:

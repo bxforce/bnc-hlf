@@ -75,6 +75,11 @@ services:
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
       - ${this.options.cliChaincodeRootPath}:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
       - ${this.options.cliScriptsRootPath}:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+    networks:
+      - ${this.options.composeNetwork}
+  `;
+
+/*
 ${this.options.ips && this.options.ips.length > 0 ?  `
     extra_hosts:
 ${this.options.ips
@@ -82,9 +87,7 @@ ${this.options.ips
       - "${host.ip}"
 `).join('')}
 `: ``}
-    networks:
-      - ${this.options.composeNetwork}
-  `;
+*/
 
     /**
      * The Singleton's constructor should always be private to prevent direct

@@ -70,7 +70,8 @@ export const PEER_DEFAULT_PORT = {
   event: 7051,
   event_chaincode: 7052,
   event_hub: 7053,
-  operations: 9443
+  operations: 9443,
+  couchdb: 5984
 };
 
 export const DEFAULT_CA_ADMIN = {
