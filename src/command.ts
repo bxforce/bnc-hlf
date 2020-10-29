@@ -98,6 +98,29 @@ program
     await CLI.cleanNetwork(cmd.config, cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
+program
+  .command('run')
+  .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
+  .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
+  .option('--upgrade', 'option used when approving to upgrade chaincode')
+  .action(async (cmd: any) => {
+    await CLI.generatePeersCredentials(cmd.config);
+    await CLI.generateOrdererCredentials(cmd.config);
+    await CLI.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+    await CLI.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
+    await new Promise(resolve => setTimeout(async function() {
+      await CLI.createChannel(cmd.namech, cmd.config);
+      await new Promise(resolve => setTimeout(async function() {
+        await CLI.joinChannel(cmd.namech, cmd.config);
+        await CLI.updateChannel(cmd.namech, cmd.config);
+        await CLI.startFabricCli(cmd.config, cmd.confCommit, true);
+        await CLI.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
+      }, 5000));
+    }, 5000));
+  });
+
 const channelCmd = program.command('channel');
 channelCmd
   .command('create')
@@ -135,8 +158,10 @@ channelCmd
     .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
     .action(async (cmd) => {
       await CLI.createChannel(cmd.namech, cmd.config);
-      await CLI.joinChannel(cmd.namech, cmd.config);
-      await CLI.updateChannel(cmd.namech, cmd.config);
+      await new Promise(resolve => setTimeout(async function() {
+        await CLI.joinChannel(cmd.namech, cmd.config);
+        await CLI.updateChannel(cmd.namech, cmd.config);
+      }, 5000));
     });
 
 const chaincodeCmd = program.command('chaincode');

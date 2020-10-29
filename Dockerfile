@@ -38,6 +38,8 @@ COPY src /root/src
 RUN npm run build && npm link
 
 COPY scripts /root/scripts
+COPY tests/chaincode /root/chaincode
 COPY tests/single_machine/config.yaml /root/tests/config.yaml
+COPY tests/transact.js /root/transact.js
 
 ENTRYPOINT ["bnc"]

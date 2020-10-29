@@ -82,7 +82,9 @@
     "sudo-prompt": "^9.1.1",
     "tslib": "^1.10.0",
     "yaml": "^1.7.2",
-    "yaml-validator": "^2.2.0"
+    "yaml-validator": "^2.2.0",
+    "set-interval-async": "1.0.32",
+    "await-lock": "2.1.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^8.1.0",

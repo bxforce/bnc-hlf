@@ -39,7 +39,9 @@ networks:
 
 volumes:
     ${this.options.cliChaincodeRootPath}:
+        external: true
     ${this.options.cliScriptsRootPath}:
+        external: true
 
 services:
   cli.${this.options.org.fullName}:

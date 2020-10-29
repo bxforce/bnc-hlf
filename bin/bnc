@@ -2,6 +2,7 @@
 
 # env BNC_BUILD_PATH
 # env BNC_CONFIG_PATH
+# env BNC_ENTRYPOINT
 
 DOCKER_IMAGE=bnc-hlf
 DOCKER_NETWORK=bnc_network
@@ -18,17 +19,15 @@ if [[ -z "$BNC_CONFIG_PATH" ]]; then
     BNC_CONFIG_PATH=$PWD/tests/single_machine
 fi
 
+if [[ -z "$BNC_ENTRYPOINT" ]]; then
+    BNC_ENTRYPOINT=bnc
+fi
+
 docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK \
     -v /tmp/hyperledger-fabric-network:/tmp/hyperledger-fabric-network \
     -v $BNC_CONFIG_PATH:/root/tests \
-    -v volume_chaincode:/root/tests/chaincode \
+    -v volume_chaincode:/root/chaincode \
     -v volume_scripts:/root/scripts \
     -v /var/run/docker.sock:/var/run/docker.sock \
+    --entrypoint $BNC_ENTRYPOINT \
         bnc-hlf $@
-
-#### NOTES ####
-## Chaincode requirement: 
-# cp -r ./tests/chaincode /tmp/hyperledger-fabric-chaincode
-## Chaincode build: 
-# ./bnc chaincode cli && docker exec -it cli.org1.bnc.com /bin/bash -c "cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1"
-###############
