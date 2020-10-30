@@ -18,11 +18,11 @@ chains:
           port: 10050
           engine_name: "host1"
         - orderer: "orderer4"
-          port: 10050
+          port: 11050
           engine_name: "host1"
       peers:
         - peer: "peer0"
-          port: 11051
+          port: 10051
           engine_name: "host1"
         - peer: "peer1"
           port: 11051
@@ -35,14 +35,14 @@ engines:
         url: "localhost"
         port: 2375
         settings: [ "default" ]
-ips:
-  - ip: "peer0.org1.bnc.com:192.168.208.68"
-  - ip: "peer1.org1.bnc.com:192.168.208.68"
-  - ip: "peer2.org1.bnc.com:192.168.208.68"
-  - ip: "orderer0.bnc.com:192.168.208.68"
-  - ip: "orderer1.bnc.com:192.168.208.68"
-  - ip: "orderer2.bnc.com:192.168.208.68"
-  - ip: "peer0.org2.bnc.com:192.168.208.65"
-  - ip: "peer1.org2.bnc.com:192.168.208.65"
-  - ip: "orderer3.bnc.com:192.168.208.65"
-  - ip: "orderer4.bnc.com:192.168.208.65"
+# ips:
+#   - ip: "peer0.org1.bnc.com:192.168.208.68"
+#   - ip: "peer1.org1.bnc.com:192.168.208.68"
+#   - ip: "peer2.org1.bnc.com:192.168.208.68"
+#   - ip: "orderer0.bnc.com:192.168.208.68"
+#   - ip: "orderer1.bnc.com:192.168.208.68"
+#   - ip: "orderer2.bnc.com:192.168.208.68"
+#   - ip: "peer0.org2.bnc.com:192.168.208.65"
+#   - ip: "peer1.org2.bnc.com:192.168.208.65"
+#   - ip: "orderer3.bnc.com:192.168.208.65"
+#   - ip: "orderer4.bnc.com:192.168.208.65"

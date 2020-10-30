@@ -142,7 +142,7 @@ export class DeploymentParser extends BaseParser {
             engineName: ordererEngineName,
             consensus,
             ports: [
-              `${ORDERER_DEFAULT_PORT.main}`,
+              ordererPort ?? `${ORDERER_DEFAULT_PORT.main}`,
               `${ORDERER_DEFAULT_PORT.operations}`
               /*ordererPort ?? `${index*1000+ORDERER_DEFAULT_PORT.main}`,
               `${index*1000+ORDERER_DEFAULT_PORT.operations}`*/
@@ -161,9 +161,9 @@ export class DeploymentParser extends BaseParser {
             engineName: peerEngineName,
             number: index,
             ports: [
-              `${PEER_DEFAULT_PORT.event}`,
-              `${PEER_DEFAULT_PORT.event_chaincode}`,
-              `${PEER_DEFAULT_PORT.event_hub}`,
+              peerPort ?? `${PEER_DEFAULT_PORT.event}`,
+              peerPort+1 ?? `${PEER_DEFAULT_PORT.event_chaincode}`,
+              peerPort+2 ?? `${PEER_DEFAULT_PORT.event_hub}`,
               `${PEER_DEFAULT_PORT.operations}`
               /*
               peerPort ?? `${index*1000+PEER_DEFAULT_PORT.event}`,

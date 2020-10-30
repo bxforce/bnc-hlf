@@ -7,7 +7,7 @@ genesis:
   ca:
     url: "ca.orderer"
     port: 8054
-  commit:
+  organisations:
     - organisation: "org1"
       domain_name: "bnc.com"
       orderers:
@@ -51,7 +51,7 @@ chaincode:
   chaincode: "mycc"
   path_chaincode: "abstore/go"
   version: "1"
-  organisations:
+  commit:
     - organisation: "org1"
       domain_name: "bnc.com"
       peers:

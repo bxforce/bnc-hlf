@@ -41,6 +41,7 @@ volumes:
 ${this.options.org.peers
     .map(peer => `
   ${peer.name}.${this.options.org.fullName}:
+    #external: true
 `).join('')}
 
 networks:
@@ -72,13 +73,17 @@ ${this.options.org.peers
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=${peer.name}User
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${peer.name}Pwd
       # Enable operation service (prometheus metrics) ${peer.options.ports.length > 3 ? `
-      #- CORE_OPERATIONS_LISTENADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[3]}
-      #- CORE_METRICS_PROVIDER=prometheus`:``}
+      - CORE_OPERATIONS_LISTENADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[3]}
+      - CORE_METRICS_PROVIDER=prometheus`:``}
       ## Logging level
       #- CORE_LOGGING_LEVEL=INFO
       #- CORE_CHAINCODE_LOGLEVEL=INFO
     labels:
       - "bnc=hlf"
+${this.options.ips && this.options.ips.length > 0 ? `
+    ports:
+      - ${peer.options.ports[0]}:${peer.options.ports[0]}
+`:``}
     #ports:
     #  - ${peer.options.ports[0]}:${peer.options.ports[0]}
     #  - ${peer.options.ports[3]}:${peer.options.ports[3]}
@@ -91,6 +96,13 @@ ${this.options.org.peers
       - ${peer.name}.${this.options.org.fullName}.couchdb
     networks:
       - ${this.options.composeNetwork}
+${this.options.ips && this.options.ips.length > 0 ?  `
+    extra_hosts:
+${this.options.ips
+        .map(host => `
+      - "${host.ip}"
+`).join('')}
+`: ``}
     
   ${peer.name}.${this.options.org.fullName}.couchdb:
     container_name: ${peer.name}.${this.options.org.fullName}.couchdb
@@ -107,15 +119,6 @@ ${this.options.org.peers
       - ${this.options.composeNetwork}
 `).join('')}
   `;
-/*
-${this.options.ips && this.options.ips.length > 0 ?  `
-    extra_hosts:
-${this.options.ips
-        .map(host => `
-      - "${host.ip}"
-`).join('')}
-`: ``}
-*/
 
 
   /**

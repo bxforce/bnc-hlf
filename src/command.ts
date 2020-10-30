@@ -105,6 +105,9 @@ program
   .command('run')
   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .option('-g, --genesis <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('--genesisBlock', 'generate genesis block')
+  .option('--configTx', 'generate channel configuration file')
+  .option('--anchorTx', 'generate anchor peer update file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
@@ -112,7 +115,7 @@ program
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config);
     await CLI.generateOrdererCredentials(cmd.genesis);
-    await CLI.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+    await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
     await CLI.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
     await new Promise(resolve => setTimeout(async function() {
       await CLI.createChannel(cmd.namech, cmd.genesis);

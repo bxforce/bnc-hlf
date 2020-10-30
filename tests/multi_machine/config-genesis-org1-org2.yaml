@@ -15,10 +15,10 @@ genesis:
           port: 7050
         - orderer: "orderer1"
           host_name: "orderer1.bnc.com"
-          port: 7050
+          port: 8050
         - orderer: "orderer2"
           host_name: "orderer2.bnc.com"
-          port: 7050
+          port: 9050
       anchorPeer:
         host_name: "peer0.org1.bnc.com"
         port: 7051
@@ -27,10 +27,10 @@ genesis:
       orderers:
         - orderer: "orderer3"
           host_name: "orderer3.bnc.com"
-          port: 7050
+          port: 10050
         - orderer: "orderer4"
           host_name: "orderer4.bnc.com"
-          port: 7050
+          port: 11050
       anchorPeer:
         host_name: "peer0.org2.bnc.com"
-        port: 7051
+        port: 10051

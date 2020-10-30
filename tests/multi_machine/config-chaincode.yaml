@@ -18,4 +18,4 @@ chaincode:
       peers:
         - peer: "peer0"
           host_name: "peer0.org2.bnc.com"
-          port: 7051
+          port: 10051
