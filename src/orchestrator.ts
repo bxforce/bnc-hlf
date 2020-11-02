@@ -799,7 +799,7 @@ export class Orchestrator {
         const network: Network = await Orchestrator._parse(configFilePath);
         if (!network) return;
         const organization: Organization = network.organizations[0];
-        const engine = organization.getEngine(organization.peers[0].options.engineName);
+        //const engine = organization.getEngine(organization.peers[0].options.engineName);
         const docker =  new DockerEngine({socketPath: '/var/run/docker.sock'}); //{ host: engine.options.url, port: engine.options.port });
         return {docker, organization};
     }

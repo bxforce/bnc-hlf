@@ -6,8 +6,6 @@ chains:
   db: "couchdb"
   organisations:
     - organisation: "org2"
-      orgIndex: 1
-      engineOrg: "engineOrg2"
       domain_name: "bnc.com"
       ca:
         name: "ca2"
@@ -16,16 +14,20 @@ chains:
       orderers:
         - orderer: "orderer3"
           port: 10050
+          metrics: 10060
           engine_name: "host1"
         - orderer: "orderer4"
           port: 11050
+          metrics: 11060
           engine_name: "host1"
       peers:
         - peer: "peer0"
           port: 10051
+          metrics: 10061
           engine_name: "host1"
         - peer: "peer1"
           port: 11051
+          metrics: 11061
           engine_name: "host1"
 engines:
   - engine: "engineOrg2"
@@ -35,14 +37,14 @@ engines:
         url: "localhost"
         port: 2375
         settings: [ "default" ]
-# ips:
-#   - ip: "peer0.org1.bnc.com:192.168.208.68"
-#   - ip: "peer1.org1.bnc.com:192.168.208.68"
-#   - ip: "peer2.org1.bnc.com:192.168.208.68"
-#   - ip: "orderer0.bnc.com:192.168.208.68"
-#   - ip: "orderer1.bnc.com:192.168.208.68"
-#   - ip: "orderer2.bnc.com:192.168.208.68"
-#   - ip: "peer0.org2.bnc.com:192.168.208.65"
-#   - ip: "peer1.org2.bnc.com:192.168.208.65"
-#   - ip: "orderer3.bnc.com:192.168.208.65"
-#   - ip: "orderer4.bnc.com:192.168.208.65"
+ips:
+  - ip: "peer0.org1.bnc.com:192.168.208.111"
+  - ip: "peer1.org1.bnc.com:192.168.208.111"
+  - ip: "peer2.org1.bnc.com:192.168.208.111"
+  - ip: "orderer0.bnc.com:192.168.208.111"
+  - ip: "orderer1.bnc.com:192.168.208.111"
+  - ip: "orderer2.bnc.com:192.168.208.111"
+  - ip: "peer0.org2.bnc.com:192.168.208.93"
+  - ip: "peer1.org2.bnc.com:192.168.208.93"
+  - ip: "orderer3.bnc.com:192.168.208.93"
+  - ip: "orderer4.bnc.com:192.168.208.93"

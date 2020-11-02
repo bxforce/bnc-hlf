@@ -32,7 +32,6 @@ export class OrganizationOptions {
   fabricVersion?: string;
   tls?: boolean;
   domainName?: string;
-  engineOrgName?: string;
 }
 
 /**
@@ -47,7 +46,6 @@ export class Organization {
   orderers: Orderer[];
   users: User[];
   engines: Engine[];
-  engineOrgName: string;
   templateFolder: string;
   fabricVersion: string;
   isSecure = false;
@@ -66,7 +64,6 @@ export class Organization {
       this.orderers = options.orderers;
       this.users = options.users;
       this.engines = options.engines;
-      this.engineOrgName = options.engineOrgName;
       this.templateFolder = options.templateFolder;
       this.fabricVersion = options.fabricVersion;
       this.isSecure = options.tls;
@@ -80,7 +77,7 @@ export class Organization {
    *
    * @param forPeers
    * @param forOrderer
-   */
+  
   expandEngine(forPeers: boolean, forOrderer: boolean) {
     if(forPeers) {
       for (const peer of this.peers) {
@@ -96,6 +93,7 @@ export class Organization {
       }
     }
   }
+  */
 
   /**
    * return the peer full name
@@ -128,11 +126,7 @@ export class Organization {
     return `${peer.name}.${this.fullName}:${peer.options.ports[0]}`;
   }
 
-  /**
-   * Return the orderer name
-   * Equal to ordererName + domain name
-   * @param orderer
-   */
+  /*
   engineHost(engineName: string): string {
     const engine = this.engines.find(eng => eng.name === engineName);
     return engine ? engine.options.url : 'undefined';
@@ -149,6 +143,7 @@ export class Organization {
   getOrdererExtraHost(): Orderer[] {
     return this.orderers.filter(orderer => this.engineHost(orderer.options.engineName) !== '127.0.0.1');
   }
+  */
   
   /**
    * return the organization full name

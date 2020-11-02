@@ -36,7 +36,6 @@ export class ConfigurationValidator {
       organisations: [
         {
           organisation: 'string',
-          engineOrg: 'string',
           domain_name: 'string',
           ca: {
             name: 'string',

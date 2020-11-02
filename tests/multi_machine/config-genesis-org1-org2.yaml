@@ -1,7 +1,7 @@
 genesis:
   template_folder: "/tmp/hyperledger-fabric-network"
   consensus: "raft"
-  ordererDomain: "bnc.com"
+  orderer_domain: "bnc.com"
   channel: "mychannel"
   ca:
     url: "ca.orderer"

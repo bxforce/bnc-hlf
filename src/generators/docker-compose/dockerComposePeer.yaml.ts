@@ -73,7 +73,7 @@ ${this.options.org.peers
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=${peer.name}User
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${peer.name}Pwd
       # Enable operation service (prometheus metrics) ${peer.options.ports.length > 3 ? `
-      - CORE_OPERATIONS_LISTENADDRESS=${peer.name}.${this.options.org.fullName}:${peer.options.ports[3]}
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:${peer.options.ports[3]}
       - CORE_METRICS_PROVIDER=prometheus`:``}
       ## Logging level
       #- CORE_LOGGING_LEVEL=INFO

@@ -58,7 +58,7 @@ ${this.options.org.orderers.map(orderer => `
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_LISTENPORT=${orderer.options.ports[0]}
       # Enable operation service (prometheus metrics) ${orderer.options.ports.length > 1 ? `
-      - ORDERER_OPERATIONS_LISTENADDRESS=${orderer.fullName}:${orderer.options.ports[1]}
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:${orderer.options.ports[1]}
       - ORDERER_METRICS_PROVIDER=prometheus`:``}
       ## Logging level
       #- ORDERER_GENERAL_LOGLEVEL=INFO
