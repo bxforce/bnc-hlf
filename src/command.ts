@@ -21,8 +21,9 @@ import * as program from 'commander';
 const pkg = require('../package.json');
 
 import { CLI } from './cli';
-import { CONFIG_DEFAULT_PATH, CHANNEL_DEFAULT_NAME } from './utils/constants';
-
+import { CONFIG_DEFAULT_PATH, CHANNEL_DEFAULT_NAME, DOCKER_DELAY } from './utils/constants';
+import { Utils } from './utils/helper';
+ 
 /**
  *
  * @author Ahmed Souissi
@@ -117,15 +118,13 @@ program
     await CLI.generateOrdererCredentials(cmd.genesis);
     await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
     await CLI.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
-    await new Promise(resolve => setTimeout(async function() {
-      await CLI.createChannel(cmd.namech, cmd.genesis);
-      await new Promise(resolve => setTimeout(async function() {
-        await CLI.joinChannel(cmd.namech, cmd.genesis);
-        await CLI.updateChannel(cmd.namech, cmd.genesis);
-        await CLI.startFabricCli(cmd.config, cmd.commit, true);
-        await CLI.deployChaincode(cmd.config, cmd.commit, cmd.list, cmd.upgrade);
-      }, 5000));
-    }, 5000));
+    await Utils.delay(DOCKER_DELAY);
+    await CLI.createChannel(cmd.namech, cmd.genesis);
+    await Utils.delay(DOCKER_DELAY);
+    await CLI.joinChannel(cmd.namech, cmd.genesis);
+    await CLI.updateChannel(cmd.namech, cmd.genesis);
+    await CLI.startFabricCli(cmd.config, cmd.commit, true);
+    await CLI.deployChaincode(cmd.config, cmd.commit, cmd.list, cmd.upgrade);
   });
 
 const channelCmd = program.command('channel');
@@ -166,10 +165,9 @@ channelCmd
     .option('--no-create', 'bypass createChannel')
     .action(async (cmd) => {
       if (cmd.create) await CLI.createChannel(cmd.namech, cmd.config);
-      await new Promise(resolve => setTimeout(async function() {
-        await CLI.joinChannel(cmd.namech, cmd.config);
-        await CLI.updateChannel(cmd.namech, cmd.config);
-      }, 5000));
+      await Utils.delay(DOCKER_DELAY);
+      await CLI.joinChannel(cmd.namech, cmd.config);
+      await CLI.updateChannel(cmd.namech, cmd.config);
     });
 
 const chaincodeCmd = program.command('chaincode');

@@ -5,7 +5,7 @@ import { SysWrapper } from '../../utils/sysWrapper';
 import { e } from '../../utils/logs';
 import { Peer } from '../../parser/model/peer';
 import execContent = SysWrapper.execContent;
-import { ClientHelper } from '../../core/hlf/helpers';
+import { ClientHelper } from '../../core/hlf/client';
 import { Orderer } from '../../parser/model/orderer';
 import { CSR } from '../../utils/datatype';
 

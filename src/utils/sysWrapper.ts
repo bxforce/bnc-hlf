@@ -41,34 +41,6 @@ export module SysWrapper {
   }
 
   /**
-   * Renders to disk a file from a template
-   * @param filePath Destination path
-   * @param contents Contents in JSON format
-   * @param templatePath Location of the template
-   */
-  export function createFileFromTemplate(filePath: string, contents: any, templatePath: string): Promise<void | {}> {
-    return renderTemplateFromFile(templatePath, contents).then((compiledContents: string) => {
-      return new Promise((fulfilled, rejected) => {
-        try {
-          write(filePath, compiledContents, fulfilled);
-        } catch (ex) {
-          rejected(ex);
-        }
-      });
-    });
-  }
-
-  export function createFileRaw(filePath: string, contents: Buffer): Promise<void> {
-    return new Promise((fulfilled, rejected) => {
-      try {
-        writeBuffer(filePath, contents, fulfilled);
-      } catch (ex) {
-        rejected(ex);
-      }
-    });
-  }
-
-  /**
    * Remove based on a path.
    */
   export function removePath(filePath: string): Promise<void> {
@@ -97,66 +69,13 @@ export module SysWrapper {
       }
     });
   }
-
-  /**
-   * Execs a specified file.
-   * @param filePath Full file path
-   * @param content Optional contents to render
-   */
-  export async function execFile(filePath: string,
-                                 content?: any): Promise<void> {
-
-    if (content) {
-      let renderedFileContent = await renderTemplateFromFile(filePath, content);
-
-      return exec(
-        renderedFileContent,
-        {silent: false}
-      );
-    } else {
-      let simpleFileContent = await getFile(filePath);
-
-      if (exec(simpleFileContent,
-        {silent: false, shell: '/bin/bash'}).code !== 0) {
-        l('Found error while running script!');
-        throw new Error('Errors found in script, stopping execution');
-      }
-    }
-  }
-
+  
   export async function execContent(content: any): Promise<void> {
     if (exec(content,
       {silent: false, shell: '/bin/bash'}).code !== 0) {
       l('Found error while running script!');
       throw new Error('Errors found in script, stopping execution');
     }
-  }
-  
-  export const dockerComposeStart = template => {
-    return exec(`docker-compose -f ${template} up -d`, { silent: true });
-  };
-  export const dockerComposeStop = template => {
-    return exec(`docker-compose -f ${template} down`, { silent: true });
-  };
-  // TODO improvement -- use [execa](https://www.npmjs.com/package/execa)
-
-  /** Get a file from a path.
-   * @returns Promise<void>
-   */
-  export function getFileRaw(filePath: string): Promise<Buffer> {
-    return new Promise(async function (fulfilled, rejected) {
-      try {
-        const store = memFs.create();
-        const editor = memFsEditor.create(store);
-        let file = editor.read(filePath, {raw: false});
-        if (!file) {
-          rejected('Empty or not found file.');
-        }
-        fulfilled(file);
-      } catch (ex) {
-        rejected(ex);
-      }
-    });
   }
 
   /** Copies a file
@@ -192,35 +111,7 @@ export module SysWrapper {
       return fulfilled(fs.existsSync(folderPath));
     });
   }
-
-  /** Create a file in JSON format.
-   * @returns Promise<void>
-   */
-  export function createJSON(filePath: string, contents: any): Promise<void> {
-    return new Promise((fulfilled, rejected) => {
-      const store = memFs.create();
-      const editor = memFsEditor.create(store);
-      editor.writeJSON(filePath, contents);
-      editor.commit([], fulfilled);
-    });
-  }
-
-  /** Get a JSON from file sys.
-   * @return Promise<any> JSON object
-   */
-  export function getJSON(filePath: string): Promise<any> {
-    return new Promise((fulfilled, rejected) => {
-      try {
-        const store = memFs.create();
-        const editor = memFsEditor.create(store);
-        fulfilled(editor.readJSON(filePath));
-      } catch (ex) {
-        rejected(ex);
-      }
-    });
-  }
-
-  /** Create a folder.
+/** Create a folder.
    * @return Promise<void>
    **/
   export function createFolder(folder: string) {
@@ -264,6 +155,98 @@ export module SysWrapper {
     editor.commit([], cb);
   }
 
+  /**
+   * Renders to disk a file from a template
+   * @param filePath Destination path
+   * @param contents Contents in JSON format
+   * @param templatePath Location of the template
+   
+  export function createFileFromTemplate(filePath: string, contents: any, templatePath: string): Promise<void | {}> {
+    return renderTemplateFromFile(templatePath, contents).then((compiledContents: string) => {
+      return new Promise((fulfilled, rejected) => {
+        try {
+          write(filePath, compiledContents, fulfilled);
+        } catch (ex) {
+          rejected(ex);
+        }
+      });
+    });
+  }
+
+  export function createFileRaw(filePath: string, contents: Buffer): Promise<void> {
+    return new Promise((fulfilled, rejected) => {
+      try {
+        writeBuffer(filePath, contents, fulfilled);
+      } catch (ex) {
+        rejected(ex);
+      }
+    });
+  }
+  
+  export async function execFile(filePath: string, content?: any): Promise<void> {
+    if (content) {
+      let renderedFileContent = await renderTemplateFromFile(filePath, content);
+
+      return exec(
+        renderedFileContent,
+        {silent: false}
+      );
+    } else {
+      let simpleFileContent = await getFile(filePath);
+
+      if (exec(simpleFileContent,
+        {silent: false, shell: '/bin/bash'}).code !== 0) {
+        l('Found error while running script!');
+        throw new Error('Errors found in script, stopping execution');
+      }
+    }
+  }
+ 
+  export const dockerComposeStart = template => {
+    return exec(`docker-compose -f ${template} up -d`, { silent: true });
+  };
+  export const dockerComposeStop = template => {
+    return exec(`docker-compose -f ${template} down`, { silent: true });
+  };
+  // TODO improvement -- use [execa](https://www.npmjs.com/package/execa)
+
+  export function getFileRaw(filePath: string): Promise<Buffer> {
+    return new Promise(async function (fulfilled, rejected) {
+      try {
+        const store = memFs.create();
+        const editor = memFsEditor.create(store);
+        let file = editor.read(filePath, {raw: false});
+        if (!file) {
+          rejected('Empty or not found file.');
+        }
+        fulfilled(file);
+      } catch (ex) {
+        rejected(ex);
+      }
+    });
+  }
+
+  export function createJSON(filePath: string, contents: any): Promise<void> {
+    return new Promise((fulfilled, rejected) => {
+      const store = memFs.create();
+      const editor = memFsEditor.create(store);
+      editor.writeJSON(filePath, contents);
+      editor.commit([], fulfilled);
+    });
+  }
+
+  export function getJSON(filePath: string): Promise<any> {
+    return new Promise((fulfilled, rejected) => {
+      try {
+        const store = memFs.create();
+        const editor = memFsEditor.create(store);
+        fulfilled(editor.readJSON(filePath));
+      } catch (ex) {
+        rejected(ex);
+      }
+    });
+  }
+
   function writeBuffer(filePath: string, contents: Buffer, cb: any) {
     const store = memFs.create();
     const editor = memFsEditor.create(store);
@@ -280,4 +263,5 @@ export module SysWrapper {
       });
     });
   }
+  */
 }

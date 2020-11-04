@@ -14,14 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { exec } from 'shelljs';
 import { Peer } from '../parser/model/peer';
 import { Organization } from '../parser/model/organization';
 import { Orderer } from '../parser/model/orderer';
 import { OrdererOrganization } from '../parser/model/ordererOrganization';
 import { BNC_TOOL_NAME } from './constants';
-import * as sudo from 'sudo-prompt';
-import * as chalk from 'chalk';
 import { e } from './logs';
 
 /**
@@ -123,6 +120,10 @@ export namespace Utils {
   }
   
   /*
+  import { exec } from 'shelljs';
+  import * as sudo from 'sudo-prompt';
+  import * as chalk from 'chalk';
+  
   export function changeOwnerShipWithPassword(folder: string, password = 'wassim'): Promise<boolean> {
     const command = `echo '${password}' | sudo -kS chown -R $USER:$USER ${folder}`;
 

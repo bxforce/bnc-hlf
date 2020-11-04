@@ -16,10 +16,12 @@ limitations under the License.
 
 import * as util from 'util';
 import { ChannelRequest, Orderer, Peer } from 'fabric-client';
-import { ensureFile } from 'fs-extra';
-import * as fs from 'fs';
-import { ClientConfig, ClientHelper } from './helpers';
+import { ClientConfig, ClientHelper } from './client';
+import { SysWrapper } from '../../utils/sysWrapper';
 import { d, e, l } from '../../utils/logs';
+
+import * as fs from 'fs'; // TODO: fix 
+import { ensureFile } from 'fs-extra';
 
 /**
  * Class responsible to manage HLF channel entity. Support currently:

@@ -11,10 +11,18 @@ RUN apt install -y docker-ce
 ## Install docker-compose
 RUN curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
 
+RUN apt install -y build-essential
+
+RUN useradd -ms /bin/bash bnc
+RUN usermod -aG docker bnc
+ENV HOME /bnc
+WORKDIR $HOME
+#USER bnc
+
 ## Install node
 ENV NVM_VERSION v0.35.3
 ENV NODE_VERSION v12.16.3
-ENV NVM_DIR /root/.nvm
+ENV NVM_DIR $HOME/.nvm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash \
     && . $NVM_DIR/nvm.sh \
     && nvm install $NODE_VERSION \
@@ -24,22 +32,20 @@ ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/lib/node_modules
 ENV PATH      $NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 
 ## Build bnc-hlf
-RUN apt install -y build-essential
 RUN npm install -g typescript
 
-COPY tsconfig.json /root/tsconfig.json
-COPY tslint.json /root/tslint.json
-COPY package.json /root/package.json
-
-WORKDIR /root
+COPY tsconfig.json $HOME/tsconfig.json
+COPY tslint.json $HOME/tslint.json
+COPY package.json $HOME/package.json
+RUN mkdir src
 RUN npm install
 
-COPY src /root/src
+COPY src $HOME/src
 RUN npm run build && npm link
 
-COPY scripts /root/scripts
-COPY tests/chaincode /root/chaincode
-COPY tests/single_machine/config.yaml /root/tests/config.yaml
-COPY tests/transact.js /root/transact.js
+COPY scripts $HOME/scripts
+COPY tests/chaincode $HOME/chaincode
+COPY tests/single_machine/config.yaml $HOME/config/config.yaml
+COPY tests/transact.js $HOME/transact.js
 
 ENTRYPOINT ["bnc"]

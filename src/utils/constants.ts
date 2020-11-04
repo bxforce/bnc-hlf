@@ -85,7 +85,7 @@ export const UNIX_DOCKER_SOCKET = '/var/run/docker.sock';
 export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
 
 /* default file containing the whole configuration */
-export const CONFIG_DEFAULT_PATH = './tests/config.yaml';
+export const CONFIG_DEFAULT_PATH = '/bnc/config/config.yaml';
 
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;
@@ -93,6 +93,7 @@ export const updateTimeout = 60000;
 export const BNC_TOOL_NAME = 'BNC';
 export const BNC_NETWORK = 'bnc_network';
 export const DOCKER_CA_DELAY = 3000;
+export const DOCKER_DELAY = 5000;
 export const MAX_ENROLLMENT_COUNT = 3;
 export const ENABLE_CONTAINER_LOGGING = true;
 export const CHANNEL_RAFT_ID = 'system-channel';

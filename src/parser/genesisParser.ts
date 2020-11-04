@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import {BaseParser} from './base';
 import {Organization} from '../parser/model/organization';
 import {Network} from '../parser/model/network';
-import {BaseParser} from './base';
 import {Orderer} from '../parser/model/orderer';
 import {Peer} from '../parser/model/peer';
-import {ConsensusType, HLF_DEFAULT_VERSION} from '../utils/constants';
 import {Ca} from '../parser/model/ca';
 import {OrdererOrganization} from '../parser/model/ordererOrganization';
 import {Channel} from '../parser/model/channel';
+import {ConsensusType, HLF_DEFAULT_VERSION} from '../utils/constants';
 
 /**
  *

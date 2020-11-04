@@ -15,41 +15,39 @@ limitations under the License.
 */
 
 import {join} from 'path';
-import {d, e, l} from './utils/logs';
+import {Identity} from 'fabric-network';
 import {DeploymentParser} from './parser/deploymentParser';
 import {CommitParser} from './parser/commitParser';
-import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/utils/networkClean.sh';
-import {ConfigurationValidator} from './parser/validator/configurationValidator';
-import {DockerComposeYamlOptions} from './utils/datatype';
-import {DownloadFabricBinariesGenerator} from './generators/utils/downloadFabricBinaries';
-import {Network} from './parser/model/network';
-import {CommitConfiguration} from './parser/model/commitConfiguration';
 import {GenesisParser} from './parser/genesisParser';
-import {ConfigtxYamlGenerator} from './generators/artifacts/configtx.yaml';
-import {SysWrapper} from './utils/sysWrapper';
-import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
-import {ClientConfig} from './core/hlf/helpers';
-import {Membership, UserParams} from './core/hlf/membership';
-import {Chaincode} from'./core/hlf/chaincode';
-import {Identity} from 'fabric-network';
-import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockerComposeBase.yaml';
-import {DockerComposePeerGenerator} from './generators/docker-compose/dockerComposePeer.yaml';
-import {DockerComposeCliSingleton} from './generators/docker-compose/dockerComposeCliSingleton.yaml';
 import {Organization} from './parser/model/organization';
 import {Peer} from './parser/model/peer';
-import {DockerEngine} from './utils/dockerAgent';
-import {DockerComposeOrdererGenerator} from './generators/docker-compose/dockerComposeOrderer.yaml';
-import createFolder = SysWrapper.createFolder;
-import {DockerComposeCaOrdererGenerator} from './generators/docker-compose/dockerComposeCaOrderer.yaml';
+import {Network} from './parser/model/network';
+import {CommitConfiguration} from './parser/model/commitConfiguration';
+import {ConfigurationValidator} from './parser/validator/configurationValidator';
+import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
 import {OrdererCertsGenerator} from './generators/crypto/createOrdererCerts';
-import existsFolder = SysWrapper.existsFolder;
-import {Utils} from './utils/helper';
-import getHlfBinariesPath = Utils.getHlfBinariesPath;
-import {DockerComposeCaGenerator} from './generators/docker-compose/dockerComposeCa.yaml';
-import getDockerComposePath = Utils.getDockerComposePath;
+import {ConfigtxYamlGenerator} from './generators/artifacts/configtx.yaml';
 import {ChannelGenerator} from './generators/artifacts/channelGenerator';
 import {ConnectionProfileGenerator} from './generators/artifacts/clientGenerator';
+import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockerComposeBase.yaml';
+import {DockerComposeCaGenerator} from './generators/docker-compose/dockerComposeCa.yaml';
+import {DockerComposeCaOrdererGenerator} from './generators/docker-compose/dockerComposeCaOrderer.yaml';
+import {DockerComposePeerGenerator} from './generators/docker-compose/dockerComposePeer.yaml';
+import {DockerComposeOrdererGenerator} from './generators/docker-compose/dockerComposeOrderer.yaml';
+import {DockerComposeCliSingleton} from './generators/docker-compose/dockerComposeCliSingleton.yaml';
+import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/utils/networkClean.sh';
+import {DownloadFabricBinariesGenerator} from './generators/utils/downloadFabricBinaries';
+import {Chaincode} from'./core/hlf/chaincode';
+import {ClientConfig} from './core/hlf/client';
+import {Membership, UserParams} from './core/hlf/membership';
+import {DockerComposeYamlOptions} from './utils/datatype';
+import {d, e, l} from './utils/logs';
+import {DockerEngine} from './utils/dockerAgent';
+import {Utils} from './utils/helper';
+import getHlfBinariesPath = Utils.getHlfBinariesPath;
+import getDockerComposePath = Utils.getDockerComposePath;
 import getArtifactsPath = Utils.getArtifactsPath;
+import { SysWrapper } from './utils/sysWrapper';
 import {
     BNC_NETWORK,
     DEFAULT_CA_ADMIN,
@@ -176,7 +174,7 @@ export class Orchestrator {
 
         // Check if HLF binaries exists
         const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
-        const binariesFolderExists = await existsFolder(binariesFolderPath);
+        const binariesFolderExists = await SysWrapper.existsFolder(binariesFolderPath);
         if (!binariesFolderExists) {
             l('[channel config]: start downloading HLF binaries...');
             const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
@@ -252,11 +250,11 @@ export class Orchestrator {
         const network = await Orchestrator._parse(deploymentConfigFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
-        await createFolder(path);
+        await SysWrapper.createFolder(path);
 
         // Check if HLF binaries exists
         const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
-        const binariesFolderExists = await existsFolder(binariesFolderPath);
+        const binariesFolderExists = await SysWrapper.existsFolder(binariesFolderPath);
         if (!binariesFolderExists) {
             l('[channel config]: start downloading HLF binaries...');
             const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
@@ -316,7 +314,7 @@ export class Orchestrator {
         const network = await Orchestrator._parseGenesis(genesisFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
-        await createFolder(path);
+        await SysWrapper.createFolder(path);
         l('[Orderer Cred]: parsing done!!!');
 
         const isNetworkValid = network.validate();
@@ -431,11 +429,11 @@ export class Orchestrator {
 
         // Assign & check root path
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
-        await createFolder(path);
+        await SysWrapper.createFolder(path);
         
 
         // Auto-create docker-compose folder if not exists
-        await createFolder(getDockerComposePath(path));
+        await SysWrapper.createFolder(getDockerComposePath(path));
 
         const options: DockerComposeYamlOptions = {
             networkRootPath: path,
@@ -845,7 +843,7 @@ export class Orchestrator {
         // Generate dynamically crypto
         const homedir = require('os').homedir();
         const path = join(homedir, NETWORK_ROOT_PATH);
-        await createFolder(path);
+        await SysWrapper.createFolder(path);
         
         const options: DockerComposeYamlOptions = {
           networkRootPath: path,

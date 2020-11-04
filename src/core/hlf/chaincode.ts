@@ -16,22 +16,24 @@ limitations under the License.
 
 import * as util from 'util';
 import { ChannelRequest, Orderer } from 'fabric-client';
-import { ensureFile } from 'fs-extra';
-import * as fs from 'fs';
-import { ClientConfig, ClientHelper } from './helpers';
-import { d, e, l } from '../../utils/logs';
-import { DockerEngine } from '../../utils/dockerAgent';
 import { Peer } from '../../parser/model/peer';
+import { Network } from '../../parser/model/network';
+import { ClientConfig, ClientHelper } from './client';
 import { Orchestrator } from '../../orchestrator';
-import {Network} from '../../parser/model/network';
+import { DockerEngine } from '../../utils/dockerAgent';
+import { d, e, l } from '../../utils/logs';
 
+/**
+ * Class responsible to manage HLF chaincode
+ *
+ * @author sahar.fehri@irt-systemx.fr
+ */
 export class Chaincode {
     public container;
     public docker;
     public options;
     public name;
     public version;
-
 
     constructor(docker : DockerEngine, name: string, version: string ) {
         this.docker = docker;
@@ -80,7 +82,6 @@ export class Chaincode {
         }
     }
 
-
     async approve(sequence, channelName): Promise <boolean> {
         try {
             const cmd = ["./scripts/approve.sh"]
@@ -98,7 +99,6 @@ export class Chaincode {
             return false;
         }
     }
-
 
     async getLastSequence(channelName): Promise<string> {
         try {

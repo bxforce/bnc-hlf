@@ -16,18 +16,15 @@ limitations under the License.
 
 import { BaseGenerator } from '../base';
 import { Network } from '../../parser/model/network';
-import { Utils } from '../../utils/helper';
-import { e } from '../../utils/logs';
-import { SysWrapper } from '../../utils/sysWrapper';
 import { CHANNEL_RAFT_ID, ConsensusType, GENESIS_FILE_NAME } from '../../utils/constants';
+import { Utils } from '../../utils/helper';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
-import execContent = SysWrapper.execContent;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
-import existsPath = SysWrapper.existsPath;
-import existsFolder = SysWrapper.existsFolder;
+import { SysWrapper } from '../../utils/sysWrapper';
+import { e } from '../../utils/logs';
 
 /**
  * Class Responsible to generate ConfigTx.yaml and generate the Genesis block
@@ -241,14 +238,14 @@ fi
 
       // check if configtx.yaml exists
       const configtxPath = `${this.path}/configtx.yaml`; // TODO differentiate between different configtx of different organization
-      const genesisExist = existsPath(configtxPath);
+      const genesisExist = SysWrapper.existsPath(configtxPath);
       if(!genesisExist) {
         e('Configuration configtx.yaml does not exists, exit genesis generation task !!! ');
         return false;
       }
 
       // execute the scripts
-      await execContent(scriptContent);
+      await SysWrapper.execContent(scriptContent);
 
       return true;
     } catch (err) {
@@ -287,14 +284,14 @@ fi
 
       // check if configtx.yaml exists
       const channelTxPath = `${this.path}/${channelName}.tx`;
-      const channelExist = existsPath(channelTxPath);
+      const channelExist = SysWrapper.existsPath(channelTxPath);
       if (!channelExist) {
         e(`Configuration channel ${channelName} does not exists, exit now !!! `);
         return false;
       }
 
       // execute the scripts
-      await execContent(scriptContent);
+      await SysWrapper.execContent(scriptContent);
 
       return true;
     } catch (err) {
@@ -336,15 +333,14 @@ fi
     `;
         // check if configtx.yaml exists
         const anchorPath = `${this.path}/${anchorFile}`;
-        const anchorExist = existsPath(anchorPath);
+        const anchorExist = SysWrapper.existsPath(anchorPath);
         if (!anchorExist) {
           e(`Anchor peer update ${anchorPath} does not exists, exit now !!! `);
           return false;
         }
 
         // execute the scripts
-        await execContent(scriptContent);
-
+        await SysWrapper.execContent(scriptContent);
       }
 
       return true;
@@ -358,7 +354,7 @@ fi
     try {
       // Check org msp folder
       const mspFolder = `${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp`;
-      const mspExists = await existsFolder(mspFolder);
+      const mspExists = await SysWrapper.existsFolder(mspFolder);
       if(!mspExists) {
         e(`MSP folder not exists on: ${mspFolder}`);
         return false;
@@ -369,7 +365,7 @@ fi
         for(const org of this.network.organizations) {
           for (const orderer of org.orderers) {
             const ordCert = `${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer)}/server.crt`;
-            const certExists = await existsPath(ordCert);
+            const certExists = await SysWrapper.existsPath(ordCert);
             if(!certExists) {
               e(`Orderer SSL certs not exists on: ${ordCert}`);
               return false;

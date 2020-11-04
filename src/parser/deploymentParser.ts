@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { l } from '../utils/logs';
+import { BaseParser } from './base';
 import { Organization } from '../parser/model/organization';
 import { Engine } from '../parser/model/engine';
 import { Peer } from '../parser/model/peer';
 import { Orderer } from '../parser/model/orderer';
-import { BaseParser } from './base';
 import { Ca } from '../parser/model/ca';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
 import { Network } from '../parser/model/network';
 import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, HLF_DEFAULT_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
-import { OrdererOrganization } from '../parser/model/ordererOrganization';
+import { l } from '../utils/logs';
 
 /**
  * Parser class for the deployment configuration file

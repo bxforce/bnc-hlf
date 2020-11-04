@@ -16,7 +16,7 @@ limitations under the License.
 
 import * as FabricCAServices from 'fabric-ca-client';
 import { IEnrollmentRequest, IEnrollResponse, IRegisterRequest, TLSOptions } from 'fabric-ca-client';
-import { ClientConfig, ClientHelper } from './helpers';
+import { ClientConfig, ClientHelper } from './client';
 import { d, e } from '../../utils/logs';
 import { CSR, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/datatype';
 

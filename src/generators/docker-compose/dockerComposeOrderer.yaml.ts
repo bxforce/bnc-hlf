@@ -15,17 +15,14 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
+import { Orderer } from '../../parser/model/orderer';
+import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constants';
 import { DockerComposeYamlOptions } from '../../utils/datatype';
-import { e, l } from '../../utils/logs';
 import { DockerEngine } from '../../utils/dockerAgent';
 import { Utils } from '../../utils/helper';
 import getDockerComposePath = Utils.getDockerComposePath;
 import getArtifactsPath = Utils.getArtifactsPath;
-import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constants';
-import { Orderer } from '../../parser/model/orderer';
-
-const fs = require('fs');
-const yaml = require('js-yaml')
+import { e, l } from '../../utils/logs';
 
 /**
  * Class responsible to generate Orderer compose file

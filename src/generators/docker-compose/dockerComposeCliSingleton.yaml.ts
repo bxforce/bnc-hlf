@@ -15,17 +15,19 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { DockerComposeYamlOptions } from '../../utils/datatype';
-import { e, l } from '../../utils/logs';
-import { DockerEngine } from '../../utils/dockerAgent';
 import { Peer } from '../../parser/model/peer';
+import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
+import { DockerComposeYamlOptions } from '../../utils/datatype';
+import { DockerEngine } from '../../utils/dockerAgent';
 import { Utils } from '../../utils/helper';
 import getDockerComposePath = Utils.getDockerComposePath;
-import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
-const fs = require('fs');
-const yaml = require('js-yaml')
+import { e, l } from '../../utils/logs';
 
-
+/**
+ * Class responsible to generate fabric cli compose file
+ *
+ * @author wassim.znaidi@gmail.com
+ */
 export class DockerComposeCliSingleton extends BaseGenerator {
     private static instance: DockerComposeCliSingleton;
 

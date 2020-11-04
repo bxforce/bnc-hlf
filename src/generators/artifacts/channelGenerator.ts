@@ -14,21 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { BaseGenerator } from '../base';
-import { Network } from '../../parser/model/network';
-import { AdminCAAccount } from '../crypto/createOrgCerts';
-import { e, l } from '../../utils/logs';
-import { ClientConfig } from '../../core/hlf/helpers';
-import { Channels } from '../../core/hlf/channels';
-import { SysWrapper } from '../../utils/sysWrapper';
-import existsPath = SysWrapper.existsPath;
-import * as fs from 'fs';
-import { Utils } from '../../utils/helper';
-import getPropertiesPath = Utils.getPropertiesPath;
 import { X509Identity } from 'fabric-network';
+import { BaseGenerator } from '../base';
+import { AdminCAAccount } from '../crypto/createOrgCerts';
+import { ClientConfig } from '../../core/hlf/client';
+import { Channels } from '../../core/hlf/channels';
+import { Network } from '../../parser/model/network';
 import { User } from '../../parser/model/user';
 import { DEFAULT_CA_ADMIN } from '../../utils/constants';
+import { Utils } from '../../utils/helper';
 import getPeerMspPath = Utils.getPeerMspPath;
+import getPropertiesPath = Utils.getPropertiesPath;
+import { SysWrapper } from '../../utils/sysWrapper';
+import { e, l } from '../../utils/logs';
 
 /**
  * Class responsible to create the hyperledger fabric channel instance
@@ -98,7 +96,7 @@ orderers:
       l(`Start channel (${channelName}) creation...`);
 
       // check if channel configuration file exists
-      const configExists = await existsPath(channelConfigPath);
+      const configExists = await SysWrapper.existsPath(channelConfigPath);
       if(!configExists) {
         e(`Channel configuration file (${channelConfigPath}) does not exists`);
         return false;
@@ -178,7 +176,7 @@ orderers:
       l(`Start channel (${channelName}) update...`);
 
       // check if channel configuration file exists
-      const configExists = await existsPath(anchorConfigPath);
+      const configExists = await SysWrapper.existsPath(anchorConfigPath);
       if(!configExists) {
         e(`Channel configuration file (${anchorConfigPath}) does not exists`);
         return false;

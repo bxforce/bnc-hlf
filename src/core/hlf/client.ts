@@ -14,13 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { safeLoad } from 'js-yaml';
 import * as Client from 'fabric-client';
-import { resolve, join } from 'path';
-import { ensureDir, ensureFile, readdir, readFile } from 'fs-extra';
-import { e } from '../../utils/logs';
 import { WalletStore } from './wallet';
+import { safeLoad } from 'js-yaml';
+import { e } from '../../utils/logs';
 
+import { resolve, join } from 'path';
+import { ensureDir, ensureFile, readdir, readFile } from 'fs-extra'; // TODO: fix 
+
+/**
+ * Class responsible to manage HLF client config
+ */
 export interface ClientConfig {
   networkProfile: string|object;
   admin?: {
