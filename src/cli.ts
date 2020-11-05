@@ -53,69 +53,69 @@ export class CLI {
     l('[Init]: exit command !!!');
   }
   
-  static async generatePeersCredentials(deployConfigPath: string) {
-    await Orchestrator.generatePeersCredentials(deployConfigPath);
+  static async generatePeersCredentials(deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.generatePeersCredentials(deployConfigPath, hostsConfigPath);
   }
 
   static async generateOrdererCredentials(genesisConfigFilePath: string) {
     await Orchestrator.generateOrdererCredentials(genesisConfigFilePath);
   }
 
-  static async createChannel(channelName, deployConfigPath) {
-    await Orchestrator.createChannel(channelName, deployConfigPath);
+  static async createChannel(channelName, deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.createChannel(channelName, deployConfigPath, hostsConfigPath);
   }
 
-  static async joinChannel(channelName, deployConfigPath) {
-     await Orchestrator.joinChannel(channelName, deployConfigPath);
+  static async joinChannel(channelName, deployConfigPath: string, hostsConfigPath: string) {
+     await Orchestrator.joinChannel(channelName, deployConfigPath, hostsConfigPath);
   }
   
-  static async updateChannel(channelName, deployConfigPath) {
-    await Orchestrator.updateChannel(channelName, deployConfigPath);
+  static async updateChannel(channelName, deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.updateChannel(channelName, deployConfigPath, hostsConfigPath);
   }
 
-  static async installChaincode(name: string, deployConfigPath: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
-    await Orchestrator.installChaincode(name, deployConfigPath, version, chaincodeRootPath, chaincodePath, targets);
+  static async installChaincode(name: string, deployConfigPath: string, hostsConfigPath: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
+    await Orchestrator.installChaincode(name, version, chaincodeRootPath, chaincodePath, targets, deployConfigPath, hostsConfigPath);
   }
 
-  static async approveChaincode(filePath, name: string, version: string, channelName: string, upgrade?: boolean) {
-    await Orchestrator.approveChaincodeCli(filePath, name, version, channelName, upgrade)
+  static async approveChaincode(deployConfigPath: string, hostsConfigPath: string, name: string, version: string, channelName: string, upgrade?: boolean) {
+    await Orchestrator.approveChaincodeCli(name, version, channelName, upgrade, deployConfigPath, hostsConfigPath)
   }
 
-  static async commitChaincode(configFile, commitFile, upgrade?: boolean) {
-    await Orchestrator.commitChaincode(configFile, commitFile, upgrade)
+  static async commitChaincode(deployConfigPath: string, hostsConfigPath: string, commitFile, upgrade?: boolean) {
+    await Orchestrator.commitChaincode(upgrade, commitFile, deployConfigPath, hostsConfigPath)
   }
 
-  static async deployChaincode(deployConfigPath, commitFile, targets?: string[], upgrade?: boolean) {
-    await Orchestrator.deployChaincode(deployConfigPath, commitFile, targets, upgrade)
+  static async deployChaincode(deployConfigPath: string, hostsConfigPath: string, commitFile, targets?: string[], upgrade?: boolean) {
+    await Orchestrator.deployChaincode(targets, upgrade, commitFile, deployConfigPath, hostsConfigPath)
   }
 
-  static async upgradeChaincode() {
+  static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitFile, compile = false) {
+    await Orchestrator.deployCli(compile, commitFile, deployConfigPath, hostsConfigPath)
+  }
+
+  static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
+    await Orchestrator.deployHlfServices(deployConfigPath, hostsConfigPath, skipDownload, enablePeers, enableOrderers);
+  }
+
+  static async stopHlfServices(deployConfigPath: string, hostsConfigPath: string, forceRemove: boolean) {
+    l('Request stop command ...');
+    await Orchestrator.stopHlfServices(forceRemove, deployConfigPath, hostsConfigPath);
+    l('Blockchain stopped !!!');
+  }
+
+  static async cleanNetwork(deployConfigPath: string, hostsConfigPath: string, forceRemove: boolean) {
+    await Orchestrator.cleanDocker(forceRemove, deployConfigPath, hostsConfigPath);
+  }
+
+  /****************************************************************************/
+  
+    static async upgradeChaincode() {
     l('[Upgrade Chaincode] Not yet implemented');
   }
 
   static async invokeChaincode() {
     l('[Invoke Chaincode] Not yet implemented');
   }
-  
-  static async startFabricCli(deployConfigPath, commitFile, compile = false) {
-    await Orchestrator.deployCli(deployConfigPath, commitFile, compile)
-  }
-
-  static async deployHlfServices(deployConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
-    await Orchestrator.deployHlfServices(deployConfigPath, skipDownload, enablePeers, enableOrderers);
-  }
-
-  static async stopHlfServices(deployConfigPath: string, forceRemove: boolean) {
-    l('Request stop command ...');
-    await Orchestrator.stopHlfServices(deployConfigPath, false, false, forceRemove);
-    l('Blockchain stopped !!!');
-  }
-
-  static async cleanNetwork(deployConfigPath: string, rmi: boolean) {
-    await Orchestrator.cleanDocker(deployConfigPath, rmi);
-  }
-
-  /****************************************************************************/
   
 /*
   static async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {

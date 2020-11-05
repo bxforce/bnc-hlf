@@ -38,7 +38,7 @@ export class NetworkOptions {
 export class Network {
   organizations: Organization[] = [];
   channel: Channel;
-  ips: []; //added this for extra host ips
+  hosts: string[]; //added this for extra host section in docker-compose
   ordererOrganization?: OrdererOrganization; /* This ca will be used to generate only orderer msp */
   
   constructor(public path: string, public options: NetworkOptions) {}

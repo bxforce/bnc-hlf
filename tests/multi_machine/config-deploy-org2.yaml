@@ -10,42 +10,23 @@ chains:
       ca:
         name: "ca2"
         port: 8054
-        engine_name: "host1"
+        engine: "host2"
       orderers:
         - orderer: "orderer3"
           port: 10050
-          metrics: 10060
-          engine_name: "host1"
+          engine: "host2"
         - orderer: "orderer4"
           port: 11050
-          metrics: 11060
-          engine_name: "host1"
+          engine: "host2"
       peers:
         - peer: "peer0"
           port: 10051
-          metrics: 10061
-          engine_name: "host1"
+          engine: "host2"
         - peer: "peer1"
           port: 11051
-          metrics: 11061
-          engine_name: "host1"
+          engine: "host2"
+
 engines:
-  - engine: "engineOrg2"
-    hosts:
-      - host: "host1"
-        type: "docker"
-        url: "localhost"
-        port: 2375
-        settings: [ "default" ]
-# This section force the binding of containers port to the host machine. It is then used in /etc/hosts of each container
-ips:
-  - ip: "peer0.org1.bnc.com:192.168.208.111"
-  - ip: "peer1.org1.bnc.com:192.168.208.111"
-  - ip: "peer2.org1.bnc.com:192.168.208.111"
-  - ip: "orderer0.bnc.com:192.168.208.111"
-  - ip: "orderer1.bnc.com:192.168.208.111"
-  - ip: "orderer2.bnc.com:192.168.208.111"
-  - ip: "peer0.org2.bnc.com:192.168.208.93"
-  - ip: "peer1.org2.bnc.com:192.168.208.93"
-  - ip: "orderer3.bnc.com:192.168.208.93"
-  - ip: "orderer4.bnc.com:192.168.208.93"
+  - name: "engine2"
+    type: "docker"
+    url: "/var/run/docker.sock"

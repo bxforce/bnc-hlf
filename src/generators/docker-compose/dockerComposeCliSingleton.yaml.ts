@@ -79,11 +79,10 @@ services:
       - ${this.options.cliScriptsRootPath}:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
     networks:
       - ${this.options.composeNetwork}
-${this.options.ips && this.options.ips.length > 0 ?  `
+${this.options.hosts && this.options.hosts.length > 0 ?  `
     extra_hosts:
-${this.options.ips
-        .map(host => `
-      - "${host.ip}"
+${this.options.hosts.map(host => `
+      - "${host}"
 `).join('')}
 `: ``}
   `;

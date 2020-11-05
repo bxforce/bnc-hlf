@@ -39,18 +39,18 @@ export class ConfigurationValidator {
           domain_name: 'string',
           ca: {
             name: 'string',
-            engine_name: 'string'
+            engine: 'string'
           },
           orderers: [
             {
               orderer: 'string',
-              engine_name: 'string'
+              engine: 'string'
             }
           ],
           peers: [
             {
               peer: 'string',
-              engine_name: 'string'
+              engine: 'string'
             }
           ]
         }
@@ -58,21 +58,9 @@ export class ConfigurationValidator {
     },
     engines: [
       {
-        engine: 'string',
-        hosts: [
-          {
-            host: 'string',
-            type: 'string',
-            url: 'string',
-            port: 'number',
-            settings: ['string']
-          }
-        ]
-      }
-    ],
-    'ips?': [
-      {
-        ip: 'string'
+        name: 'string',
+        type: 'string',
+        url: 'string'
       }
     ]
   };

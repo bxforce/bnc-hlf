@@ -14,7 +14,6 @@ genesis:
         - orderer: "orderer1"
           host_name: "orderer1.bnc.com"
           port: 7050
-          #metrics: 7060
       anchorPeer:
         host_name: "peer1.org1.bnc.com"
         port: 7051
@@ -31,16 +30,17 @@ chains:
       ca:
         name: "ca1"
         port: 7054
-        engine_name: "host1"
+        engine: "host1"
       orderers:
         - orderer: "orderer1"
           port: 7050
-          engine_name: "host1"
+          #metrics: 7060
+          engine: "host1"
       peers:
         - peer: "peer1"
           port: 7051
           #metrics: 7061
-          engine_name: "host1"
+          engine: "host1"
 
 chaincode:
   template_folder: "/tmp/hyperledger-fabric-network"
@@ -60,11 +60,7 @@ chaincode:
           port: 7051
 
 engines:
-  - engine: "main"
-    hosts:
-      - host: "host1"
-        type: "docker"
-        url: "localhost"
-        port: 2375
-        settings: [ "default" ]
+  - name: "engine1"
+    type: "docker"
+    url: "/var/run/docker.sock"
 

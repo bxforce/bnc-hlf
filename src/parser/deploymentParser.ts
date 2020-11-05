@@ -54,9 +54,6 @@ export class DeploymentParser extends BaseParser {
     // Parsing engine
     //const engines: Engine[] = DeploymentParser.buildEngine(parsedYaml['engines']);
 
-    // parse IPS
-    const ips = parsedYaml['ips'];
-
     // Set engine for every organization
     /*
     organizations.map(organization => {
@@ -88,8 +85,6 @@ export class DeploymentParser extends BaseParser {
       ordererOrganization.orderers.push(...org.orderers);
     }
     network.ordererOrganization = ordererOrganization;
-    //set ips
-    network.ips = ips;
 
     return network;
   }
@@ -126,7 +121,7 @@ export class DeploymentParser extends BaseParser {
       const { organisation, domain_name, ca, orderers, peers } = org;
 
       // parse CA
-      const { name: caName, engine_name: engineName, port: caPort } = ca;
+      const { name: caName, engine: engineName, port: caPort } = ca;
       const caEntity = new Ca(caName, {
         engineName: engineName,
         port: caPort ?? CA_DEFAULT_PORT,
@@ -138,7 +133,7 @@ export class DeploymentParser extends BaseParser {
       // parse & store orderers
       const ords = [];
       orderers.forEach((ord, index) => {
-        const { orderer, engine_name: engineName, port: ordererPort, metrics: ordererMetrics } = ord;
+        const { orderer, engine: engineName, port: ordererPort, metrics: ordererMetrics } = ord;
         ords.push(
           new Orderer(orderer, {
             domainName: domain_name,
@@ -160,7 +155,7 @@ export class DeploymentParser extends BaseParser {
       // peer parsing
       const parsedPeers: Peer[] = [];
       peers.forEach((pe, index) => {
-        const { peer: peerName, engine_name: engineName, port: peerPort, metrics: peerMetrics } = pe; // TODO check if db leveldb or couchdb
+        const { peer: peerName, engine: engineName, port: peerPort, metrics: peerMetrics } = pe; // TODO check if db leveldb or couchdb
         parsedPeers.push(
           new Peer(peerName, {
             engineName: engineName,

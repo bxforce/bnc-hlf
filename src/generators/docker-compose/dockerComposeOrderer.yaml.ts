@@ -70,18 +70,17 @@ ${this.options.org.orderers.map(orderer => `
       - ${orderer.fullName}:/var/hyperledger/production/orderer
     labels:
       - "bnc=hlf"
-${this.options.ips && this.options.ips.length > 0 ? `
+${this.options.hosts && this.options.hosts.length > 0 ? `
     ports:
       - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
 `:``}
     #ports:
     #  - ${orderer.options.ports[0]}:${orderer.options.ports[0]}
     #  - ${orderer.options.ports[1]}:${orderer.options.ports[1]}
-${this.options.ips && this.options.ips.length > 0 ?  `
+${this.options.hosts && this.options.hosts.length > 0 ?  `
     extra_hosts:
-${this.options.ips
-      .map(host => `
-      - "${host.ip}"
+${this.options.hosts.map(host => `
+      - "${host}"
 `).join('')}
 `: ``}
 `).join('')}
@@ -127,7 +126,7 @@ ${this.options.ips
       l(`Starting Orderer ${serviceName}...`);
 
       //const engine = this.options.org.getEngine(orderer.options.engineName);
-      //const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+      //const docker = new DockerEngine({ host: engine.options.host, port: engine.options.port });
 
       await this.dockerEngine.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 

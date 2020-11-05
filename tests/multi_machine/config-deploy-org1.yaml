@@ -10,50 +10,29 @@ chains:
       ca:
         name: "ca1"
         port: 7054
-        engine_name: "host1"
+        engine: "host1"
       orderers:
         - orderer: "orderer0"
           port: 7050
-          metrics: 7060
-          engine_name: "host1"
+          engine: "host1"
         - orderer: "orderer1"
           port: 8050
-          metrics: 8060
-          engine_name: "host1"
+          engine: "host1"
         - orderer: "orderer2"
           port: 9050
-          metrics: 9060
-          engine_name: "host1"
+          engine: "host1"
       peers:
         - peer: "peer0"
           port: 7051
-          metrics: 7061
-          engine_name: "host1"
+          engine: "host1"
         - peer: "peer1"
           port: 8051
-          metrics: 8061
-          engine_name: "host1"
+          engine: "host1"
         - peer: "peer2"
           port: 9051
-          metrics: 9061
-          engine_name: "host1"
+          engine: "host1"
+
 engines:
-  - engine: "engineOrg1"
-    hosts:
-      - host: "host1"
-        type: "docker"
-        url: "localhost"
-        port: 2375
-        settings: [ "default" ]
-# This section force the binding of containers port to the host machine. It is then used in /etc/hosts of each container
-ips:
-  - ip: "peer0.org1.bnc.com:192.168.208.111"
-  - ip: "peer1.org1.bnc.com:192.168.208.111"
-  - ip: "peer2.org1.bnc.com:192.168.208.111"
-  - ip: "orderer0.bnc.com:192.168.208.111"
-  - ip: "orderer1.bnc.com:192.168.208.111"
-  - ip: "orderer2.bnc.com:192.168.208.111"
-  - ip: "peer0.org2.bnc.com:192.168.208.93"
-  - ip: "peer1.org2.bnc.com:192.168.208.93"
-  - ip: "orderer3.bnc.com:192.168.208.93"
-  - ip: "orderer4.bnc.com:192.168.208.93"
+  - name: "engine1"
+    type: "docker"
+    url: "/var/run/docker.sock"
