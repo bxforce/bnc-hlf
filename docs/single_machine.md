@@ -91,6 +91,7 @@ docker exec -it cli.org1.bnc.com /bin/bash -c "peer chaincode invoke -o orderer0
 ````shell script
 export VM2=TODO_IP
 ````
+Notice the section "ips" in the config, you have to update the IP of the machines.
 
 1. Generate network
 * VM1

@@ -45,6 +45,7 @@ engines:
         url: "localhost"
         port: 2375
         settings: [ "default" ]
+# This section force the binding of containers port to the host machine. It is then used in /etc/hosts of each container
 ips:
   - ip: "peer0.org1.bnc.com:192.168.208.111"
   - ip: "peer1.org1.bnc.com:192.168.208.111"

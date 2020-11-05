@@ -15,6 +15,7 @@ RUN apt install -y build-essential
 
 RUN useradd -ms /bin/bash bnc
 RUN usermod -aG docker bnc
+RUN mkdir /bnc && chown bnc:bnc /bnc
 ENV HOME /bnc
 WORKDIR $HOME
 #USER bnc
@@ -37,7 +38,7 @@ RUN npm install -g typescript
 COPY tsconfig.json $HOME/tsconfig.json
 COPY tslint.json $HOME/tslint.json
 COPY package.json $HOME/package.json
-RUN mkdir src
+RUN mkdir src && touch src/index.ts
 RUN npm install
 
 COPY src $HOME/src
