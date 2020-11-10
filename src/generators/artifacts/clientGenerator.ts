@@ -29,11 +29,24 @@ export class ConnectionProfileGenerator extends BaseGenerator {
     "version": "1.0.0",
     "client": {
         "organization": "${this.network.organizations[0].name}",
-        "connection": { "timeout": { "peer": { "endorser": "300" } } }
+        "credentialStore": { 
+            "path": "${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}",
+            "cryptoStore": { "path": "${this.network.options.networkConfigPath}/wallets/organizations/${this.network.organizations[0].fullName}" }
+        },
+        "connection": { "timeout": { "peer": { "endorser": "300" } } },
+        "BCCSP": { "security": { "enabled": true, "default": { "provider": "SW" }, "hashAlgorithm": "SHA2", "softVerify": true, "level": 256 } }
+    },
+    "channels": {
+        "${this.channel}": { 
+            "peers": {
+                ${this.network.organizations[0].peers.map(peer => `"${peer.name}.${this.network.organizations[0].fullName}": { "endorsingPeer": true, "chaincodeQuery": true, "ledgerQuery": true, "eventSource": true }`).join(',')}
+            }
+        }
     },
     "organizations": {
         "${this.network.organizations[0].name}": {
             "mspid": "${this.network.organizations[0].mspName}",
+            "cryptoPath": "${this.network.options.networkConfigPath}/organizations/peerOrganizations/${this.network.organizations[0].fullName}/users/{username}@${this.network.organizations[0].fullName}/msp",
             "peers": [ "${this.network.organizations[0].peers.map(peer => `${peer.name}.${this.network.organizations[0].fullName}`).join(', ')}" ],
             "certificateAuthorities": [ "${this.network.organizations[0].ca.name}.${this.network.organizations[0].name}" ]
         }
@@ -41,7 +54,7 @@ export class ConnectionProfileGenerator extends BaseGenerator {
     "peers": {
         ${this.network.organizations[0].peers.map(peer => `"${peer.name}.${this.network.organizations[0].fullName}": {
             "url": "grpc${this.network.organizations[0].isSecure ? 's' : ''}://${peer.name}.${this.network.organizations[0].fullName}:${peer.options.ports[0]}",
-            "tlsCACerts": { "path": "${this.network.options.networkConfigPath}/organizations/peerOrganizations/org1.bnc.com/peers/${peer.name}.${this.network.organizations[0].fullName}/msp/tlscacerts/tlsca.${this.network.organizations[0].name}.${this.network.organizations[0].domainName}-cert.pem" },
+            "tlsCACerts": { "path": "${this.network.options.networkConfigPath}/organizations/peerOrganizations/${this.network.organizations[0].fullName}/peers/${peer.name}.${this.network.organizations[0].fullName}/msp/tlscacerts/tlsca.${this.network.organizations[0].name}.${this.network.organizations[0].domainName}-cert.pem" },
             "grpcOptions": {
               "ssl-target-name-override": "${peer.name}.${this.network.organizations[0].fullName}",
               "hostnameOverride": "${peer.name}.${this.network.organizations[0].fullName}",
@@ -68,7 +81,8 @@ export class ConnectionProfileGenerator extends BaseGenerator {
    */
   constructor(filename: string,
               path: string,
-              private network: Network) {
+              private network: Network,
+              private channel: string) {
     super(filename, path);
   }
   

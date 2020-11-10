@@ -375,7 +375,7 @@ export class Orchestrator {
         const channelGenerator = new ChannelGenerator(`connection-profile-create-channel-${network.organizations[0].name}.yaml`, path, network);
         const created = await channelGenerator.setupChannel(channelName, `${getArtifactsPath(path)}/${channelName}.tx`);
 
-        const profileGenerator = new ConnectionProfileGenerator(`connection-${network.organizations[0].name}.json`, path+"/settings/", network);
+        const profileGenerator = new ConnectionProfileGenerator(`connection-${network.organizations[0].name}.json`, path+"/settings/", network, channelName);
         const created2 = await profileGenerator.createConnectionProfile()
 
         l(`[Channel] - Exit create channel request (${created && created2}) !!!`);
