@@ -369,7 +369,7 @@ export class Orchestrator {
         // Assign & check root path
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
         await createFolder(path);
-        
+
 
         // Auto-create docker-compose folder if not exists
         await createFolder(getDockerComposePath(path));
@@ -473,7 +473,9 @@ export class Orchestrator {
             const network: Network = await Orchestrator._parse(deployConfigPath);
 
             // loop on organization & peers && orderers
+            
             for (const org of network.organizations) {
+                
                 // build list of docker services/volumes to delete
                 const volumes: string[] = [];
                 const services: string[] = [];
@@ -482,6 +484,8 @@ export class Orchestrator {
                     services.push(`${peer.name}.${org.fullName}`);
                     services.push(`${peer.name}.${org.fullName}.couchdb`);
                     volumes.push(`${peer.name}.${org.fullName}`);
+                    //remove chaincode containers
+                    services.push(`dev-${peer.name}.${org.fullName}`) // FIX this
                 }
 
                 for (const orderer of org.orderers) {
@@ -491,6 +495,11 @@ export class Orchestrator {
 
                 services.push(`${org.ca.name}.${org.name}`);
                 services.push(`caOrderer.${network.ordererOrganization.name}`);
+
+                //remove all cli containers
+                services.push(`cli.${org.fullName}`)
+
+
 
                 // Now check all container within all organization engine
                 for (const engine of org.engines) {
@@ -719,8 +728,11 @@ export class Orchestrator {
         return join(homedir, NETWORK_ROOT_PATH);
     }
 
-    public async deployCliSingleton(name: string, configFilePath: string , targets: Peer[] , version: string, chaincodeRootPath:string): Promise<void> {
-        l(`[Chaincode] - Request to install  a chaincode (${name})`);
+
+    public async deployCliSingleton(configFilePath: string , commitFile, targets: Peer[] ): Promise<void> {
+        let config = await this.getChaincodeParams(commitFile);
+        l(`[Chaincode] - Request to install  a chaincode (${config.chaincodeName})`);
+
         const network: Network = await Orchestrator._parse(configFilePath);
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
@@ -744,7 +756,8 @@ export class Orchestrator {
                 FABRIC_CA_VERSION: HLF_CA_VERSION.HLF_2,
                 THIRDPARTY_VERSION: EXTERNAL_HLF_VERSION.EXT_HLF_2
             },
-            cliChaincodeRootPath: chaincodeRootPath
+            cliChaincodeRootPath: config.chaincodeRootPath,
+            cliScriptsRootPath: config.scriptsRootPath
         };
 
         l('Creating Peer base docker compose file');
@@ -758,7 +771,7 @@ export class Orchestrator {
 
         l('Creating cli container & deploy');
         const cliSingleton = DockerComposeCliSingleton.init(`docker-compose-cli-${organization.name}.yaml`, options);
-       
+
         l(`'Creating Cli container template`);
         await cliSingleton.createTemplateCli();
 
@@ -766,37 +779,41 @@ export class Orchestrator {
 
     }
 
-      public async installChaincodeCli(name: string, configFilePath: string , targets: Peer[] , version: string, chaincodePath: string): Promise<void> {
+    public async installChaincodeCli(configFilePath:string, commitFile, targets: Peer[] ): Promise<void> {
         l('[End] Blockchain configuration files parsed');
+        let config = await this.getChaincodeParams(commitFile);
         let peerTlsRootCert;
         let corePeerAdr ;
 
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
-        const chaincode = new Chaincode(docker, name, version);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
         for(let peerElm of targets){
             corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
             peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
-            await chaincode.installChaincode(corePeerAdr,peerTlsRootCert, chaincodePath);
+            await chaincode.installChaincode(corePeerAdr,peerTlsRootCert, config.chaincodePath);
         }
 
     }
 
-    public async approveChaincodeCli(configFilePath, name, version, channelName, upgrade?:boolean): Promise <void> {
+    public async approveChaincodeCli(configFilePath, commitFile, upgrade?:boolean): Promise<void> {
         l(' REQUEST to approve chaincode')
+        let config = await this.getChaincodeParams(commitFile);
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
-        const chaincode = new Chaincode(docker, name, version);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
-        if(!upgrade){
-            l(' APPROVING CHAINCODE FOR FIRST TIME DEPLOY')
-            await chaincode.approve(SEQUENCE, channelName);
-        } else {
-            //get last sequence number
-            l(' APPROVING CHAINCODE TO UPGRADE')
-            let seq = await this.getLastSequence(configFilePath, name, version,channelName);
-            let lastSequence = seq.split(':');
-            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
-            await chaincode.approve(finalSequence, channelName);
+        let seq = await this.getLastSequence(configFilePath, config.chaincodeName, config.version,config.channelName);
+        let lastSequence = seq.split(':');
+        let finalSequence;
+        if(! lastSequence[1]){
+            finalSequence = SEQUENCE
+        }else{
+            finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+        }
+        if(!config.endorsementPolicy){
+            await chaincode.approve(finalSequence, config.channelName);
+        }else{
+            await chaincode.approve(finalSequence, config.channelName, config.endorsementPolicy);
         }
 
     }
@@ -812,20 +829,19 @@ export class Orchestrator {
 
     public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean): Promise <void> {
         let targetPeers = await this.getTargetPeers(configDeployFile, targets)
+        
+        await this.deployCliSingleton(configDeployFile, commitFile, targetPeers)
+        
+        await this.installChaincodeCli(configDeployFile,commitFile, targetPeers)
 
-        let config = await this.getChaincodeParams(commitFile);
-        await this.deployCliSingleton(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodeRootPath)
-        await this.installChaincodeCli(config.chaincodeName, configDeployFile, targetPeers, config.version, config.chaincodePath)
-
-        await this.approveChaincodeCli(configDeployFile, config.chaincodeName, config.version, config.nameChannel, upgrade);
-
+        await this.approveChaincodeCli(configDeployFile, commitFile, upgrade);
         await this.commitChaincode(configDeployFile, commitFile, upgrade);
 
 
     }
 
     public async commitChaincode(configFile, commitFile, upgrade?: boolean): Promise <void> {
-       
+
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile)
         let config = await this.getChaincodeParams(commitFile);
@@ -841,30 +857,27 @@ export class Orchestrator {
         }
 
         let targets = await this.getTargetCommitPeers(commitFile)
-        if(!upgrade){
-            l(' COMMITTING CHAINCODE FOR FIRST TIME DEPLOY')
-            chaincode.checkCommitReadiness(finalArg1, targets, SEQUENCE, config.nameChannel);
+
+        let seq = await this.getLastSequence(configFile, config.chaincodeName, config.version,config.channelName);
+        let lastSequence = seq.split(':');
+        let finalSequence;
+        if(! lastSequence[1]){
+            finalSequence = SEQUENCE
+        }else{
+            finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+        }
+
+        if(!config.endorsementPolicy){
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName);
         } else {
-            //get last sequence number
-            l(' COMMITTING CHAINCODE TO UPGRADE')
-            let seq = await this.getLastSequence(configFile, config.chaincodeName, config.version,config.nameChannel);
-            let lastSequence = seq.split(':');
-            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
-            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.nameChannel);
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, config.endorsementPolicy);
         }
 
     }
 
     public async getChaincodeParams(commitFile: string){
         const conf: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
-        let chaincodeParams: any = {};
-        chaincodeParams.nameChannel = conf.channelName;
-        chaincodeParams.chaincodeName = conf.chaincodeName;
-        chaincodeParams.chaincodeRootPath = conf.chaincodeRootPath;
-        chaincodeParams.chaincodePath = conf.chaincodePath;
-        chaincodeParams.version = conf.version;
-
-        return chaincodeParams;
+        return conf;
     }
 
     public async getCommitOrgNames(commitFile: string){

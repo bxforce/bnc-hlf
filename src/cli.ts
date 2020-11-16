@@ -146,11 +146,11 @@ export class CLI {
     return channelEngine;
   }
 
-   static async joinChannel(nameChannel, nameOrg, deployConfigPath) {
-     const channelEngine = new Orchestrator();
-     await channelEngine.joinChannel(nameChannel, deployConfigPath);
-     return channelEngine;
-   }
+  static async joinChannel(nameChannel, nameOrg, deployConfigPath) {
+    const channelEngine = new Orchestrator();
+    await channelEngine.joinChannel(nameChannel, deployConfigPath);
+    return channelEngine;
+  }
   //
   static async updateChannel(anchortx, namech, deployConfigPath) {
     const channelEngine = new Orchestrator();
@@ -159,17 +159,17 @@ export class CLI {
   }
 
   //Chaincode commands
-  static async installChaincode(name: string, deployPath: string  , version: string, chaincodeRootPath: string, chaincodePath: string,  targets?: string[]) {
+  static async installChaincode(deployPath: string, commitFile, targets?: string[]) {
     const chaincodeEngine = new Orchestrator();
-    let targetPeers = await chaincodeEngine.getTargetPeers(deployPath, targets)
-    await chaincodeEngine.deployCliSingleton(name, deployPath, targetPeers, version, chaincodeRootPath)
-    await chaincodeEngine.installChaincodeCli(name, deployPath, targetPeers, version, chaincodePath)
+    let targetPeers = await chaincodeEngine.getTargetPeers(deployPath, targets);
+    await chaincodeEngine.deployCliSingleton(deployPath,commitFile, targetPeers);
+    await chaincodeEngine.installChaincodeCli(deployPath, commitFile, targetPeers);
     return chaincodeEngine;
   }
 
-  static async approveChaincode(configFile, name, version, channelName, upgrade?: boolean) {
+  static async approveChaincode(configFile,commitFile, upgrade?: boolean) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.approveChaincodeCli(configFile, name, version, channelName, upgrade);
+    await chaincodeEngine.approveChaincodeCli(configFile, commitFile, upgrade);
     return  chaincodeEngine;
   }
 

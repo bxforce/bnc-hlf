@@ -33,6 +33,7 @@ export class DockerComposeYamlOptions {
     THIRDPARTY_VERSION?: string;
   };
   cliChaincodeRootPath?: string;
+  cliScriptsRootPath?: string;
 }
 
 export class CSR {

@@ -24,8 +24,10 @@ export class commitOptions {
     channelName: string;
     chaincodeName: string;
     chaincodeRootPath: string;
+    scriptsRootPath: string;
     chaincodePath: string;
     version: string;
+    endorsementPolicy?: string;
 }
 
 
@@ -40,13 +42,19 @@ export class CommitConfiguration {
                 public channelName: string,
                 public chaincodeName: string,
                 public chaincodeRootPath: string,
+                public scriptsRootPath: string,
                 public chaincodePath: string,
-                public version: string) {
+                public version: string,
+                public endorsementPolicy?: string) {
         this.channelName= channelName;
         this.chaincodeName= chaincodeName;
         this.chaincodeRootPath= chaincodeRootPath;
         this.chaincodePath= chaincodePath;
+        this.scriptsRootPath= scriptsRootPath;
         this.version= version;
+        if(endorsementPolicy){
+            this.endorsementPolicy = endorsementPolicy;
+        }
 
     }
 

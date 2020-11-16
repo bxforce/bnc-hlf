@@ -6,8 +6,8 @@ PACKAGE_ID=$(</opt/gopath/src/github.com/hyperledger/fabric/peer/"package_${CC_N
 
 echo "$PACKAGE_ID"
 echo "$SEQUENCE"
+CC_LEVEL_POLICY=""
 
-#CHANNEL_NAME=mychannel
 
 verifyResult() {
   if [ $1 -ne 0 ]; then
@@ -17,23 +17,26 @@ verifyResult() {
   fi
 }
 
+
 approve() {
-  set -x
-  peer lifecycle chaincode approveformyorg --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT >&log.txt
-  set +x
+  if [[ -z "${ENDORSEMENT}" ]]; then
+    peer lifecycle chaincode approveformyorg --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT >&log.txt
+  else
+    echo "______________________Updating endorsement policy___________________"
+    peer lifecycle chaincode approveformyorg --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --signature-policy "${ENDORSEMENT}" >&log.txt
+  fi
   cat log.txt
   verifyResult $res "Chaincode definition approved on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME' failed"
   echo "===================== Chaincode definition approved on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME' ===================== "
   echo
 }
 
+
 checkApprovedForMyOrg() {
     echo
     echo
-
-    echo "##########################checkCommitReadiness####################"
+    echo "#######################checkCommitReadiness####################"
     echo "$@"
-
     echo "===================== Checking the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME'... ===================== "
 
     local rc=1
@@ -44,7 +47,11 @@ checkApprovedForMyOrg() {
       sleep 1
       echo "Attempting to check the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS, Retry after 1 seconds."
       set -x
-      peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --output json >&log.txt
+      if [[ -z "${ENDORSEMENT}" ]]; then
+          peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --output json >&log.txt
+      else
+          peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --signature-policy "${ENDORSEMENT}" --output json >&log.txt
+      fi
       res=$?
       set +x
       let rc=0
@@ -64,11 +71,10 @@ checkApprovedForMyOrg() {
     else
       echo " PROCEED TO APPROVE"
       echo
-
     fi
-
-
 }
+
+
 
 checkApprovedForMyOrg "\"$CORE_PEER_LOCALMSPID\": true"
 approve
