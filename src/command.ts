@@ -89,8 +89,8 @@ const tasks = {
     return await CLI.commitChaincode(configFile, commitFile, upgrade)
   },
 
-  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean) {
-    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade)
+  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean) {
+    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy)
   },
 
   async upgradeChaincode() {
@@ -297,9 +297,11 @@ chaincodeCmd
     .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
     .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
     .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .option('--policy', 'option used to update chaincode level policy')
     .action(async (cmd) => {
-      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
+      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade, cmd.policy);
     });
+
 /*
 program
   .command('new')

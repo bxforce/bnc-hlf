@@ -179,9 +179,9 @@ export class CLI {
     return  chaincodeEngine;
   }
 
-  static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean){
+  static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?: boolean){
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade)
+    await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy)
     return  chaincodeEngine;
   }
 }

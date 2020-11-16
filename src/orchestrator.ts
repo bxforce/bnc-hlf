@@ -796,7 +796,7 @@ export class Orchestrator {
 
     }
 
-    public async approveChaincodeCli(configFilePath, commitFile, upgrade?:boolean): Promise<void> {
+    public async approveChaincodeCli(configFilePath, commitFile, upgrade?:boolean, policy?:boolean): Promise<void> {
         l(' REQUEST to approve chaincode')
         let config = await this.getChaincodeParams(commitFile);
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
@@ -810,9 +810,13 @@ export class Orchestrator {
         }else{
             finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
         }
-        if(!config.endorsementPolicy){
+        if(!policy){
             await chaincode.approve(finalSequence, config.channelName);
         }else{
+            if(! config.endorsementPolicy){
+                e('NO POLICY WAS DEFINED');
+                return
+            }
             await chaincode.approve(finalSequence, config.channelName, config.endorsementPolicy);
         }
 
@@ -827,20 +831,26 @@ export class Orchestrator {
         return seq;
     }
 
-    public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean): Promise <void> {
-        let targetPeers = await this.getTargetPeers(configDeployFile, targets)
-        
-        await this.deployCliSingleton(configDeployFile, commitFile, targetPeers)
-        
-        await this.installChaincodeCli(configDeployFile,commitFile, targetPeers)
+    public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean): Promise <void> {
+        if(policy){
+            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade, policy);
+            await this.commitChaincode(configDeployFile, commitFile, upgrade, policy);
+        }else {
+            let targetPeers = await this.getTargetPeers(configDeployFile, targets)
 
-        await this.approveChaincodeCli(configDeployFile, commitFile, upgrade);
-        await this.commitChaincode(configDeployFile, commitFile, upgrade);
+            await this.deployCliSingleton(configDeployFile, commitFile, targetPeers)
+
+            await this.installChaincodeCli(configDeployFile,commitFile, targetPeers)
+
+            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade);
+            await this.commitChaincode(configDeployFile, commitFile, upgrade);
+        }
+
 
 
     }
 
-    public async commitChaincode(configFile, commitFile, upgrade?: boolean): Promise <void> {
+    public async commitChaincode(configFile, commitFile, upgrade?: boolean,  policy?:boolean): Promise <void> {
 
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFile)
@@ -867,9 +877,13 @@ export class Orchestrator {
             finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
         }
 
-        if(!config.endorsementPolicy){
+        if(!policy){
             chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName);
         } else {
+            if(! config.endorsementPolicy){
+                e('NO POLICY DEFINED');
+                return
+            }
             chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, config.endorsementPolicy);
         }
 
