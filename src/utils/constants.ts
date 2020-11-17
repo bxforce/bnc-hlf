@@ -99,3 +99,4 @@ export const ENABLE_CONTAINER_LOGGING = true;
 export const CHANNEL_RAFT_ID = 'system-channel';
 export const CHANNEL_DEFAULT_NAME = 'mychannel';
 export const SEQUENCE = 1;
+export const BLOCK_SIZE = 50;

@@ -20,6 +20,7 @@ const ADMIN_PWD = 'adminpw';
 const USER_ID = 'appUser';
 const USER_DPT = 'org1.department1';
 const MAX_CPT = 1;
+const BATCH_SIZE = 50;
 
 var enrollAdmin = async (caClient, wallet, orgMspId, adminUserId, adminUserPasswd) => {
 	try {
@@ -59,7 +60,7 @@ var registerAndEnrollUser = async (caClient, wallet, orgMspId, adminUserId, user
 	}
 };
 
-async function invokeTx() {
+async function invokeTx(reset) {
 	try {
 		// build an in memory object with the network configuration (also known as a connection profile)
 		const fileExists = fs.existsSync(PATH_NETWORK);
@@ -75,6 +76,9 @@ async function invokeTx() {
 		console.log(`Built a CA Client named ${caInfo.caName}`);
 
 		// setup the wallet to hold the credentials of the application user
+		const walletExists = fs.existsSync(PATH_WALLET);
+		if (walletExists && reset) { fs.rmdirSync(PATH_WALLET, { recursive: true }); console.log(`Removed old wallet at ${PATH_WALLET}`); }
+		
 		const wallet = await Wallets.newFileSystemWallet(PATH_WALLET); // wallet = await Wallets.newInMemoryWallet();
 		console.log(`Built a file system wallet at ${PATH_WALLET}`);
 
@@ -87,6 +91,45 @@ async function invokeTx() {
 		// Create a new gateway instance for interacting with the fabric network.
 		const gateway = new Gateway();
 
+		// transaction step
+		const step = async function(contract, a, b) {
+		    // we use different variables names in order to avoid concurrency access error on world state
+		    console.log("initing " + a + " and " + b);
+			await contract.submitTransaction("init", a, "50", b, "2");
+			
+			// we randomize tx strategy
+			var random_boolean = Math.random() <= 0.5;
+			if (random_boolean) {
+				console.log('moving some data from ' + a + " to " + b);
+		        await contract.submitTransaction("invoke", a, b, "10");
+			}
+		};
+		
+		try {
+		    // Create a new gateway instance for interacting with the fabric network.
+			await gateway.connect(network, { wallet, identity: USER_ID, discovery: { enabled: true, asLocalhost: false } });
+			// Get the contract from the network.
+			const contract = (await gateway.getNetwork(CHANNEL)).getContract(CHAINCODE);
+
+			var date;
+			var interactions = [];
+			while(true) {
+				// we randomize batch size
+				var size = Math.floor(Math.random() * (BATCH_SIZE - 1)) + 1;
+				for(var i = 0; i < size; i++){
+				    date = Date.now();
+				    var promises = step(contract, "a_" + date + "_" + i, "b_" + date + "_" + i);
+				    interactions.push(promises);
+				}
+			    await Promise.all(interactions);
+			    console.log("batch done");
+			    interactions = [];
+			}
+		} finally {
+			gateway.disconnect();
+		}
+		
+		/*
 		try {
 			// setup the gateway instance
 			await gateway.connect(network, { wallet, identity: USER_ID, discovery: { enabled: true, asLocalhost: false } });
@@ -115,6 +158,8 @@ async function invokeTx() {
 		} finally {
 			gateway.disconnect();
 		}
+		*/
+		
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
 	}
@@ -127,7 +172,7 @@ switch (args[0]) {
 //    registerUser()
 //    break;
 case 'invoke':
-    invokeTx();
+    invokeTx(false);
     break;
 default:
     console.log('CLI parser error');

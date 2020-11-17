@@ -16,7 +16,7 @@ limitations under the License.
 
 import { BaseGenerator } from '../base';
 import { Network } from '../../parser/model/network';
-import { CHANNEL_RAFT_ID, ConsensusType, GENESIS_FILE_NAME } from '../../utils/constants';
+import { CHANNEL_RAFT_ID, ConsensusType, GENESIS_FILE_NAME, BLOCK_SIZE } from '../../utils/constants';
 import { Utils } from '../../utils/helper';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererTlsPath = Utils.getOrdererTlsPath;
@@ -119,7 +119,7 @@ ${org.orderers.map((ord, i) => `
 `).join('')}     
     BatchTimeout: 2s
     BatchSize:
-        MaxMessageCount: 10
+        MaxMessageCount: ${BLOCK_SIZE}
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
     EtcdRaft:
