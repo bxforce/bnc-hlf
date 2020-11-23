@@ -31,7 +31,6 @@ export class NetworkCleanShGenerator extends BaseGenerator {
   contents = `#!/bin/bash
 docker rm -f $(docker ps -aq -f label=bnc) 
 docker rm -f $(docker ps -a | awk '{ print $1,$2 }' | grep dev-peer | awk '{print $1 }') $(docker ps -a | awk '{ print $1,$2 }' | grep couchdb | awk '{print $1 }')
-docker rm -f cli.org1.bnc.com
 docker volume prune -f
 ${this.options.removeImages ? `docker rmi -f $(docker images | grep dev-peer | awk '{print $3}') || true` : ``}
 mv ${this.options.path}/fabric-binaries /tmp/; 

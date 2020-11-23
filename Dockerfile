@@ -47,6 +47,7 @@ RUN npm run build && npm link
 COPY scripts $HOME/scripts
 COPY tests/chaincode $HOME/chaincode
 COPY tests/single_machine/config.yaml $HOME/config/config.yaml
+COPY tests/single_machine/config-hosts.yaml $HOME/config/config-hosts.yaml
 COPY tests/transact.js $HOME/transact.js
 
 ENTRYPOINT ["bnc"]

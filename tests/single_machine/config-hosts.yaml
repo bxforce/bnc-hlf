@@ -1,0 +1,8 @@
+
+# This section force the binding of containers port to the host machine. It is then used in /etc/hosts of each container
+hosts: 
+  default:
+    ip: "127.0.0.1" # this config has no meaning, it just to force the port mapping (we choose localhost to add an /etc/hosts rule without impact)
+    targets:
+      - "localhost"
+
