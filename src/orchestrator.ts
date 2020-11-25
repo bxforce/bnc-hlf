@@ -796,6 +796,16 @@ export class Orchestrator {
 
     }
 
+    public async isInstalled(configFilePath, commitFile){
+        let config = await this.getChaincodeParams(commitFile);
+        const {docker, organization} = await this.loadOrgEngine(configFilePath)
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version);
+        await chaincode.init(organization.fullName);
+        
+        let res = await chaincode.isInstalled();
+        return res;
+    }
+
     public async approveChaincodeCli(configFilePath, commitFile, upgrade?:boolean, policy?:boolean): Promise<void> {
         l(' REQUEST to approve chaincode')
         let config = await this.getChaincodeParams(commitFile);
@@ -832,22 +842,19 @@ export class Orchestrator {
     }
 
     public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean): Promise <void> {
-        if(policy){
+        let targetPeers = await this.getTargetPeers(configDeployFile, targets)
+        await this.deployCliSingleton(configDeployFile, commitFile, targetPeers)
+        let res = await this.isInstalled(configDeployFile, commitFile)
+        if(res == "false"){
+            await this.installChaincodeCli(configDeployFile,commitFile, targetPeers)
             await this.approveChaincodeCli(configDeployFile, commitFile, upgrade, policy);
             await this.commitChaincode(configDeployFile, commitFile, upgrade, policy);
-        }else {
-            let targetPeers = await this.getTargetPeers(configDeployFile, targets)
 
-            await this.deployCliSingleton(configDeployFile, commitFile, targetPeers)
+        }else{
+            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade, policy);
+            await this.commitChaincode(configDeployFile, commitFile, upgrade, policy);
 
-            await this.installChaincodeCli(configDeployFile,commitFile, targetPeers)
-
-            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade);
-            await this.commitChaincode(configDeployFile, commitFile, upgrade);
         }
-
-
-
     }
 
     public async commitChaincode(configFile, commitFile, upgrade?: boolean,  policy?:boolean): Promise <void> {

@@ -83,6 +83,20 @@ export class Chaincode {
         }
     }
 
+    async isInstalled(): Promise <string> {
+        try {
+            //if this file does not exist means the chaincode is not installed and u can't proceed to approve
+            let fileName=`package_${this.name}_${this.version}.txt`
+            const cmd = ['sh', '-c', `test -f ${fileName} && echo "true" || echo "false"`]
+            let res = await this.executeCommand(cmd);
+            return res.toString().replace(/\W/g, '');
+        } catch(err) {
+            e(err);
+
+        }
+
+    }
+
 
     async approve(sequence, channelName, endorsement?): Promise <boolean> {
         try {
