@@ -59,6 +59,7 @@ import {DockerComposeCaGenerator} from './generators/docker-compose/dockerCompos
 import getDockerComposePath = Utils.getDockerComposePath;
 import {ChannelGenerator} from './generators/artifacts/channel-mgmt';
 import getArtifactsPath = Utils.getArtifactsPath;
+import {orgConfigYaml} from './generators/orgConfig.yaml';
 
 /**
  * Main tools orchestrator
@@ -964,6 +965,43 @@ export class Orchestrator {
         const engine = organization.getEngine(organization.peers[0].options.engineName);
         const docker =  new DockerEngine({socketPath: '/var/run/docker.sock'});
         return {docker, organization};
+    }
+
+    async generateNewOrgDefinition(configFilePath: string){
+        l('Validate input configuration file');
+        const network: Network = await Orchestrator._parse(configFilePath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        l('[End] Blockchain configuration files parsed');
+        //we will generate new configtx.yaml using orgConfigYaml and not configtxYaml because the new org yaml file struct is different from
+        //the one in configtxYaml also the orderer generation will be handled later
+        const configTxOrg = new orgConfigYaml('configtx.yaml', path, network, organization);
+        await configTxOrg.save()
+        console.log('generated')
+        //generate new org definition
+        await configTxOrg.generateDefinition();
+        await configTxOrg.generateAnchorDefinition();
+    }
+
+    async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, deploymentConfigPath, nameChannel) {
+        const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        try{
+            await channelGenerator.generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, nameChannel)
+        }catch(err){
+            e('ERROR generating new channel DEF')
+            console.log(err)
+            return ;
+        }
     }
 
 }

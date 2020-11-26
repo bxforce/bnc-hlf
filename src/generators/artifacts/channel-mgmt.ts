@@ -21,6 +21,7 @@ import { e, l } from '../../utils/logs';
 import { ClientConfig } from '../../core/hlf/helpers';
 import { Channels } from '../../core/hlf/channels';
 import { SysWrapper } from '../../utils/sysWrapper';
+import { Configtxlator } from '../../utils/configtxlator';
 import existsPath = SysWrapper.existsPath;
 import { Utils } from '../../utils/utils';
 import getPropertiesPath = Utils.getPropertiesPath;
@@ -28,6 +29,9 @@ import { X509Identity } from 'fabric-network';
 import { User } from '../../models/user';
 import { DEFAULT_CA_ADMIN } from '../../utils/constants';
 import getPeerMspPath = Utils.getPeerMspPath;
+import getHlfBinariesPath = Utils.getHlfBinariesPath;
+import { readFile } from 'fs-extra';
+import getArtifactsPath = Utils.getArtifactsPath;
 
 /**
  * Class responsible to create the hyperledger fabric channel instance
@@ -210,6 +214,100 @@ orderers:
     } catch (err) {
       e(err);
       return false;
+    }
+  }
+
+
+  async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, nameChannel) {
+    l(`Fetching latest channel definition on  (${nameChannel}) !!!`);
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    try{
+      let envelope = await channelClient.getLatestChannelConfigFromOrderer(nameChannel, this.network.organizations[0].mspName);
+      const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
+      console.log(configtxlator.names.initialPB)
+      await configtxlator.createInitialConfigPb(envelope);
+      await configtxlator.fromBinaryToJson(configtxlator.names.initialPB, configtxlator.names.initialJSON, 'common.Config')
+      
+      let original = await configtxlator.getFile(configtxlator.names.initialJSON);
+      let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
+
+      let newOrgDefinition = await readFile(orgDefinitionPath, 'utf-8');
+      let newOrgAnchorDefinition = await readFile(anchorDefPAth, 'utf-8');
+
+      let newOrgJsonDef = JSON.parse(newOrgDefinition);
+      let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition)
+
+      let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+      console.log(newOrgMSP)
+
+      modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
+
+      let AnchorPeers = newOrgAnchorJson;
+      console.log(AnchorPeers)
+
+      let target = modified.channel_group.groups.Application.groups.org3MSP.values;
+      // console.log("target",target)
+      let startAdded = {AnchorPeers, ...target}
+      modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
+      //save modified.json FILE
+      await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
+      //convert it to modified.pb
+      await configtxlator.fromJSONTOPB(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, 'common.Config')
+
+      //calculate delta between config.pb and modified.pb
+      await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, nameChannel);
+
+      //convert the delta.pb to json
+      await configtxlator.fromBinaryToJson(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, 'common.ConfigUpdate')
+      //get the delta json file to add the header
+
+      let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
+
+      let config_update_as_envelope_json = {
+        "payload": {
+          "header": {
+            "channel_header": {
+              "channel_id": nameChannel,
+              "type": 2
+            }
+          },
+          "data": {
+            "config_update": deltaJSON
+          }
+        }
+      }
+      //save the new delta.json
+      await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
+      await configtxlator.fromJSONTOPB(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope')
+      //copy the final delta pb under artifacts
+      console.log(`${getArtifactsPath(this.network.options.networkConfigPath)}/config_update_as_envelope_pb`)
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getArtifactsPath(this.network.options.networkConfigPath)}/${configtxlator.names.finalPB}`)
+    
+    
+      /*console.log('envelopee', envelope)
+      let data = envelope.config.toBuffer();
+      fs.writeFileSync('config.pb', data);
+      // await this.saveNewContent()
+      //manage files during this section
+      //use configtxlator
+      console.log('USING configtxlator to change it to JSON format so we can modify it')
+      await this._convertFromPBTOJSON('./config.pb', 'common.Config')
+
+       */
+    }catch (err) {
+      console.log(err);
+      e("ERROR generating new channel DEF")
+      return err;
     }
   }
 

@@ -64,4 +64,5 @@ export abstract class BaseGenerator {
   save() {
     return SysWrapper.createFile(this.filePath, this.contents);
   }
+  
 }

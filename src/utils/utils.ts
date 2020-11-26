@@ -163,4 +163,8 @@ export namespace Utils {
   export function getPropertiesPath(rootPath: string): string {
     return `${rootPath}/settings`;
   }
+
+  export function getPeerOrganizations(rootPath: string, fullName: string): string {
+    return `${rootPath}/organizations/peerOrganizations/${fullName}`;
+  }
 }

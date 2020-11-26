@@ -184,4 +184,16 @@ export class CLI {
     await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy)
     return  chaincodeEngine;
   }
+
+  static async generateNewOrgDefinition(configDeployFile) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateNewOrgDefinition(configDeployFile);
+    return  orchEngine;
+  }
+
+  static async generateCustomChannelDef(orgDefinition, anchorDefinition, configDeployFile, nameChannel) {
+    const orchEngine = new Orchestrator();
+    await orchEngine.generateCustomChannelDef(orgDefinition, anchorDefinition, configDeployFile, nameChannel);
+    return  orchEngine;
+  }
 }

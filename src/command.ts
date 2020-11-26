@@ -169,6 +169,12 @@ const tasks = {
   },
   async updateChannel(anchortx, namech, deploymentConfigFilePath) {
     return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath);
+  },
+  async generateNewOrgDefinition(configDeployFilePath: string) {
+    return await CLI.generateNewOrgDefinition(configDeployFilePath);
+  },
+  async generateCustomChannelDef(orgDefinition, anchorDefinition, configDeployFilePath, nameChannel) {
+    return await CLI.generateCustomChannelDef(orgDefinition, anchorDefinition, configDeployFilePath, nameChannel);
   }
 };
 
@@ -222,6 +228,15 @@ program
       await tasks.stop(cmd.config, cmd.rmi);
     });
 
+program
+    .command('generate-org-definition')
+    .description('generates new org definiton to be added to channel')
+    .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+    .action(async cmd => {
+        console.log(cmd.namech)
+        await tasks.generateNewOrgDefinition(cmd.config);
+    });
+
 const channelCmd = program.command('channel');
 channelCmd
     .command('create')
@@ -250,6 +265,17 @@ channelCmd
     .requiredOption('-n, --namech <channel-name>', 'name of the channel')
     .action(async (cmd) => {
       await tasks.updateChannel(cmd.anchortx, cmd.namech, cmd.config);
+    });
+
+channelCmd
+    .command('generate-custom-definition')
+    .description('generates a sign able channel definition')
+    .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
+    .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
+    .requiredOption('-f, --config <path>', 'Absolute path to the config deployment  file')
+    .requiredOption('-n, --namech <path>', 'name channel')
+    .action(async (cmd) => {
+        await tasks.generateCustomChannelDef(cmd.orgdef, cmd.anchordef, cmd.config, cmd.namech);
     });
 
 
