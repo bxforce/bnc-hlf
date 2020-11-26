@@ -18,7 +18,6 @@ queryCommitted() {
     echo "Attempting to Query committed status on $CORE_PEER_ADDRESS, Retry after $DELAY seconds."
     set -x
     peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name $CC_NAME >&log.txt
-    #tail -n +2 log.txt > log.tmp && mv log.tmp log.txt #### added this to remove first line
     res=$?
     set +x
 		test $res -eq 0 && VALUE=$(cat log.txt | grep -o '^Version: [0-9], Sequence: [0-9], Endorsement Plugin: escc, Validation Plugin: vscc')
@@ -54,7 +53,11 @@ checkCommitReadiness() {
       sleep $DELAY
       echo "Attempting to check the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS, Retry after $DELAY seconds."
       set -x
-      peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --output json >&log.txt
+      if [[ -z "${ENDORSEMENT}" ]]; then
+        peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --output json >&log.txt
+      else
+        peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --signature-policy "${ENDORSEMENT}" --output json >&log.txt
+      fi
       res=$?
       set +x
       let rc=0
@@ -81,7 +84,11 @@ checkCommitReadiness() {
 
 commit() {
   set -x
-  peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE  ${peerTargets} >&log.txt
+  if [[ -z "${ENDORSEMENT}" ]]; then
+      peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE  ${peerTargets} >&log.txt
+  else
+      peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --signature-policy "${ENDORSEMENT}"  ${peerTargets} >&log.txt
+  fi
   res=$?
   set +x
   cat log.txt

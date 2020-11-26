@@ -77,20 +77,20 @@ const tasks = {
     return await CLI.deleteIdentity(id, caInfo, walletDirectoryName, ccpPath);
   },
 
-  async installChaincode(name: string, confPath: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
-    return await CLI.installChaincode(name, confPath, version, chaincodeRootPath, chaincodePath, targets);
+  async installChaincode(confPath: string, commitFile: string, targets?: string[]) {
+    return await CLI.installChaincode(confPath, commitFile, targets);
   },
 
-  async approveChaincode(filePath, name: string, version: string, channelName: string, upgrade?: boolean) {
-    return await CLI.approveChaincode(filePath, name, version, channelName, upgrade)
+  async approveChaincode(filePath, commitFile, upgrade?: boolean) {
+    return await CLI.approveChaincode(filePath, commitFile, upgrade)
   },
 
   async commitChaincode(configFile, commitFile, upgrade?: boolean) {
     return await CLI.commitChaincode(configFile, commitFile, upgrade)
   },
 
-  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean) {
-    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade)
+  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean) {
+    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy)
   },
 
   async upgradeChaincode() {
@@ -164,9 +164,9 @@ const tasks = {
     return await CLI.createChannel(channelName, channeltxPath, deploymentConfigFilePath);
   },
 
-   async joinChannel(nameChannel, nameOrg, deploymentConfigFilePath) {
-     return await CLI.joinChannel(nameChannel, nameOrg, deploymentConfigFilePath);
-   },
+  async joinChannel(nameChannel, nameOrg, deploymentConfigFilePath) {
+    return await CLI.joinChannel(nameChannel, nameOrg, deploymentConfigFilePath);
+  },
   async updateChannel(anchortx, namech, deploymentConfigFilePath) {
     return await CLI.updateChannel(anchortx, namech, deploymentConfigFilePath);
   }
@@ -175,72 +175,72 @@ const tasks = {
 // --> start official commands
 
 program
-  .command('init')
+    .command('init')
     .description("creates genesis.block and configtx files for channel and anchor update")
-  .option('--genesis', 'generate genesis block')
-  .option('--configtx', 'generate channel configuration file')
-  .option('--anchortx', 'generate anchor peer update file')
-  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
-  .action(async cmd => {
-    await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
-  });
+    .option('--genesis', 'generate genesis block')
+    .option('--configtx', 'generate channel configuration file')
+    .option('--anchortx', 'generate anchor peer update file')
+    .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+    .action(async cmd => {
+      await tasks.init(cmd.config, cmd.genesis, cmd.configtx, cmd.anchortx);
+    });
 
 program
-  .command('enroll-peers')
-  .description('creates crypto material for the peers')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.generatePeersCredentials(cmd.config);
-    }
-  });
+    .command('enroll-peers')
+    .description('creates crypto material for the peers')
+    .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+    .action(async (cmd: any) => {
+      if (cmd) {
+        await tasks.generatePeersCredentials(cmd.config);
+      }
+    });
 
 program
-  .command('enroll-orderers')
-  .description('creates crypto material for the orderers')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file')
-  .action(async (cmd: any) => {
-    if (cmd) {
-      await tasks.generateOrdererCredentials(cmd.config);
-    }
-  });
+    .command('enroll-orderers')
+    .description('creates crypto material for the orderers')
+    .requiredOption('-f, --config <path>', 'Absolute Path to the genesis deployment  definition file')
+    .action(async (cmd: any) => {
+      if (cmd) {
+        await tasks.generateOrdererCredentials(cmd.config);
+      }
+    });
 
 program
-  .command('start')
-  .description('create/start network')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .action(async cmd => {
-    await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
-  });
+    .command('start')
+    .description('create/start network')
+    .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+    .action(async cmd => {
+      await tasks.deployHlfServices(cmd.config, !!cmd.skipDownload, true, true);
+    });
 
 program
-  .command('stop')
-  .description('stop the blockchain')
-  .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
-  .option('-r, --rmi', 'remove docker containers')
-  .action(async (cmd: any) => {
-    await tasks.stop(cmd.config, cmd.rmi);
-  });
+    .command('stop')
+    .description('stop the blockchain')
+    .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
+    .option('-r, --rmi', 'remove docker containers')
+    .action(async (cmd: any) => {
+      await tasks.stop(cmd.config, cmd.rmi);
+    });
 
 const channelCmd = program.command('channel');
 channelCmd
-  .command('create')
-  .description('create channel if it does not exist')
-  .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
-  .requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
-  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-  .action(async cmd => {
-    await tasks.createChannel(cmd.namech, cmd.channelTx, cmd.config);
-  });
+    .command('create')
+    .description('create channel if it does not exist')
+    .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
+    .requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
+    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+    .action(async cmd => {
+      await tasks.createChannel(cmd.namech, cmd.channelTx, cmd.config);
+    });
 
 channelCmd
-   .command('join')
-   .description('join peers to channel')
+    .command('join')
+    .description('join peers to channel')
     .requiredOption('-f, --config <path>', 'Absolute path to the genesis deployment definition file')
-   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-   .action(async cmd => {
-     await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.config);
-   });
+    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+    .action(async cmd => {
+      await tasks.joinChannel(cmd.namech, cmd.nameorg, cmd.config);
+    });
 
 channelCmd
     .command('update')
@@ -262,13 +262,10 @@ chaincodeCmd
     .command('install')
     .description('install chaincode')
     .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
-    .requiredOption('-cRootPath, --chroot <path>', 'path to chaincode root')
-    .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
-    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
-    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+    .requiredOption('-c, --commit <path>', 'Absolute path to the commitFile')
     .option('-p, --list <items>', 'comma separated list', commaSeparatedList)
     .action(async (cmd) => {
-      await tasks.installChaincode(cmd.namech, cmd.config, cmd.vch, cmd.chroot, cmd.ch, cmd.list);
+      await tasks.installChaincode(cmd.config, cmd.commit , cmd.list);
     });
 
 
@@ -276,12 +273,10 @@ chaincodeCmd
     .command('approve')
     .description('approve chaincode')
     .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
-    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
-    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+    .requiredOption('-c, --commit <path>', 'Absolute path to the commit file')
     .option('--upgrade', 'option used when approving to upgrade chaincode')
-    .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
     .action(async (cmd) => {
-      await tasks.approveChaincode(cmd.config, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade);
+      await tasks.approveChaincode(cmd.config, cmd.commit, cmd.upgrade);
     });
 
 chaincodeCmd
@@ -302,9 +297,11 @@ chaincodeCmd
     .requiredOption('-c, --confCommit <path>', 'Absolute path to the commit config')
     .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
     .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .option('--policy', 'option used to update chaincode level policy')
     .action(async (cmd) => {
-      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade);
+      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade, cmd.policy);
     });
+
 /*
 program
   .command('new')
@@ -352,11 +349,11 @@ program
  */
 
 program
-  .command('clean')
-  .option('-R, --no-rmi', 'Do not remove docker images')
-  .action(async (cmd: any) => {
-    await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
-  });
+    .command('clean')
+    .option('-R, --no-rmi', 'Do not remove docker images')
+    .action(async (cmd: any) => {
+      await tasks.cleanNetwork(cmd.rmi); // if -R is not passed cmd.rmi is true
+    });
 /*
 program
   .command('enroll <type> <id> <secret> <affiliation> <mspID> [args...]')
