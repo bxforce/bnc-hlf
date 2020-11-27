@@ -236,7 +236,8 @@ orderers:
       const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
       console.log(configtxlator.names.initialPB)
       await configtxlator.createInitialConfigPb(envelope);
-      await configtxlator.fromBinaryToJson(configtxlator.names.initialPB, configtxlator.names.initialJSON, 'common.Config')
+     // await configtxlator.fromBinaryToJson(configtxlator.names.initialPB, configtxlator.names.initialJSON, 'common.Config')
+      await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, 'common.Config', 'proto_decode')
       
       let original = await configtxlator.getFile(configtxlator.names.initialJSON);
       let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
@@ -262,13 +263,15 @@ orderers:
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
-      await configtxlator.fromJSONTOPB(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, 'common.Config')
+    //  await configtxlator.fromJSONTOPB(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, 'common.Config')
+      await configtxlator.convert(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, 'common.Config', 'proto_encode')
 
       //calculate delta between config.pb and modified.pb
       await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, nameChannel);
 
       //convert the delta.pb to json
-      await configtxlator.fromBinaryToJson(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, 'common.ConfigUpdate')
+   //   await configtxlator.fromBinaryToJson(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, 'common.ConfigUpdate')
+      await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, 'common.ConfigUpdate', 'proto_decode')
       //get the delta json file to add the header
 
       let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
@@ -288,11 +291,12 @@ orderers:
       }
       //save the new delta.json
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
-      await configtxlator.fromJSONTOPB(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope')
+     // await configtxlator.fromJSONTOPB(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope')
+      await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope', 'proto_encode')
       //copy the final delta pb under artifacts
       console.log(`${getArtifactsPath(this.network.options.networkConfigPath)}/config_update_as_envelope_pb`)
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getArtifactsPath(this.network.options.networkConfigPath)}/${configtxlator.names.finalPB}`)
-    
+      await configtxlator.clean();
     
       /*console.log('envelopee', envelope)
       let data = envelope.config.toBuffer();

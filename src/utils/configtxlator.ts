@@ -24,6 +24,7 @@ import { SysWrapper } from './sysWrapper';
 import createFile = SysWrapper.createFile;
 import execContent = SysWrapper.execContent;
 import copyFile = SysWrapper.copyFile;
+import removePath = SysWrapper.removePath;
 import { readFile } from 'fs-extra';
 
 
@@ -51,9 +52,20 @@ export class Configtxlator {
         this.networkConfPath = networkConfPath;
 
     }
-
-    async fromBinaryToJson(from, to, type) {
-        l('Starting conversion from binary to JSON')
+    
+    async convert(from, to, type, convert_type){
+        let cmd = `configtxlator ${convert_type} --input ${this.tempPath}/${from} --type ${type}   > ${this.tempPath}/${to}  `
+        try{
+            await this.executeCMD(cmd);
+            
+        }catch(err){
+            e('error converting')
+            return err
+        }
+    }
+    
+    async executeCMD(cmd){
+        l('Starting conversion')
         const scriptContent = `
 export PATH=${this.hlfBinaries}:${this.networkConfPath}:$PATH
 export FABRIC_CFG_PATH=${this.networkConfPath}  
@@ -65,7 +77,7 @@ if [ "$?" -ne 0 ]; then
 fi
 
 set -x
-configtxlator proto_decode --input ${this.tempPath}/${from} --type ${type}   > ${this.tempPath}/${to}  
+${cmd}
 res=$?
 echo res
 set +x
@@ -120,39 +132,6 @@ fi
     }
 
 
-    async fromJSONTOPB(from, to, type) { //TODO make proto_encode an argument and have one function for conversion
-        l('Starting conversion from JSON to binary')
-        const scriptContent = `
-export PATH=${this.hlfBinaries}:${this.networkConfPath}:$PATH
-export FABRIC_CFG_PATH=${this.networkConfPath}  
-
-which configtxlator
-if [ "$?" -ne 0 ]; then
-  echo "configtxlator tool not found. exiting"
-  exit 1
-fi
-
-set -x
-configtxlator proto_encode --input ${this.tempPath}/${from} --type ${type}   > ${this.tempPath}/${to}  
-res=$?
-echo res
-set +x
-if [ $res -ne 0 ]; then
-  echo "Failed to generate json config..."
-  exit 1
-fi
-
-    `;
-
-        try {
-            await execContent(scriptContent);
-            return true;
-        } catch (err) {
-            e(err);
-            return false;
-        }
-    }
-
     async getFile(file){
         let myFile =  await readFile(`${this.tempPath}/${file}`, 'utf-8');
         return JSON.parse((myFile))
@@ -171,6 +150,21 @@ fi
         //save this file in tmp to be used later to convert it to JSON
         // save config.json under /tmp
         await createFile(`${this.tempPath}/${TMPFILENAMES.initialPB}`, data);
+    }
+
+    async clean() {
+        try{
+            await removePath(`${this.tempPath}/${TMPFILENAMES.initialPB}`)
+            await removePath(`${this.tempPath}/${TMPFILENAMES.initialJSON}`)
+            await removePath(`${this.tempPath}/${TMPFILENAMES.modifiedJSON}`)
+            await removePath(`${this.tempPath}/${TMPFILENAMES.modifiedPB}`)
+            await removePath(`${this.tempPath}/${TMPFILENAMES.deltaJSON}`)
+            await removePath(`${this.tempPath}/${TMPFILENAMES.deltaPB}`)
+        }catch(err){
+            e('error removing tmp files')
+           return err
+        }
+
     }
 
     
