@@ -81,16 +81,16 @@ const tasks = {
     return await CLI.installChaincode(confPath, commitFile, targets);
   },
 
-  async approveChaincode(filePath, commitFile, upgrade?: boolean) {
-    return await CLI.approveChaincode(filePath, commitFile, upgrade)
+  async approveChaincode(filePath, commitFile, upgrade?: boolean, policy?:boolean, force?: boolean) {
+    return await CLI.approveChaincode(filePath, commitFile, upgrade, policy, force)
   },
 
   async commitChaincode(configFile, commitFile, upgrade?: boolean) {
     return await CLI.commitChaincode(configFile, commitFile, upgrade)
   },
 
-  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean) {
-    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy)
+  async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean, forceNew?: boolean) {
+    return await CLI.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy, forceNew)
   },
 
   async upgradeChaincode() {
@@ -175,7 +175,13 @@ const tasks = {
   },
   async generateCustomChannelDef(orgDefinition, anchorDefinition, configDeployFilePath, nameChannel) {
     return await CLI.generateCustomChannelDef(orgDefinition, anchorDefinition, configDeployFilePath, nameChannel);
-  }
+  },
+  async signCustomChannelDef(configDeployFile, nameChannel, configChannelPath) {
+   return await CLI.signCustomChannelDef(configDeployFile, nameChannel, configChannelPath)
+  },
+    async submitCustomChannelDef(channelDef, signatures, configDeployFile, nameChannel){
+      return await CLI.submitCustomChannelDef(channelDef, signatures, configDeployFile, nameChannel);
+    }
 };
 
 // --> start official commands
@@ -278,6 +284,27 @@ channelCmd
         await tasks.generateCustomChannelDef(cmd.orgdef, cmd.anchordef, cmd.config, cmd.namech);
     });
 
+channelCmd
+    .command('sign-custom-definition')
+    .description('generates a sign able channel definition')
+    .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
+    .requiredOption('-f, --config <path>', 'Absolute path to the config deployment  file')
+    .requiredOption('-n, --namech <path>', 'name channel')
+    .action(async (cmd) => {
+        await tasks.signCustomChannelDef(cmd.config, cmd.namech, cmd.channeldef);
+    });
+
+channelCmd
+    .command('submit-custom-definition')
+    .description('submits a sign able channel definition')
+    .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
+    .requiredOption('-s, --sigs <update-path>', 'path to the signatures folder')
+    .requiredOption('-f, --config <path>', 'Absolute path to the config deployment  file')
+    .requiredOption('-n, --namech <path>', 'name channel')
+    .action(async (cmd) => {
+        await tasks.submitCustomChannelDef(cmd.channeldef, cmd.sigs, cmd.config, cmd.namech);
+    });
+
 
 function commaSeparatedList(value, dummyPrevious) {
   return value.split(',');
@@ -301,8 +328,10 @@ chaincodeCmd
     .requiredOption('-f, --config <path>', 'Absolute path to the chaincode')
     .requiredOption('-c, --commit <path>', 'Absolute path to the commit file')
     .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .option('--policy', 'option to force approving chaincode for first time')
+    .option('--force', 'option to force approving chaincode for first time')
     .action(async (cmd) => {
-      await tasks.approveChaincode(cmd.config, cmd.commit, cmd.upgrade);
+      await tasks.approveChaincode(cmd.config, cmd.commit, cmd.upgrade, cmd.policy, cmd.force);
     });
 
 chaincodeCmd
@@ -324,8 +353,9 @@ chaincodeCmd
     .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', commaSeparatedList)
     .option('--upgrade', 'option used when approving to upgrade chaincode')
     .option('--policy', 'option used to update chaincode level policy')
+    .option('--force', 'option used to update chaincode level policy')
     .action(async (cmd) => {
-      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade, cmd.policy);
+      await tasks.deployChaincode(cmd.config, cmd.confCommit, cmd.list, cmd.upgrade, cmd.policy, cmd.force);
     });
 
 /*

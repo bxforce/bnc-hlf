@@ -171,4 +171,8 @@ export namespace Utils {
   export function getNewOrgRequestPath(rootPath: string, channelName: string): string {
     return `${rootPath}/artifacts/${channelName}/requestNewOrg`;
   }
+
+  export function getNewOrgRequestSignaturesPath(rootPath: string, channelName: string): string {
+    return `${rootPath}/artifacts/${channelName}/requestNewOrg/signatures`;
+  }
 }

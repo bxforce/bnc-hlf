@@ -50,16 +50,23 @@ import {Peer} from './models/peer';
 import {DockerEngine} from './agents/docker-agent';
 import {DockerComposeOrdererGenerator} from './generators/docker-compose/dockercomposeorderer.yaml';
 import createFolder = SysWrapper.createFolder;
+import createFile = SysWrapper.createFile;
+import getJSON = SysWrapper.getJSON;
+import createFileRaw = SysWrapper.createFileRaw;
+import getFileRaw = SysWrapper.getFileRaw;
+import enumFilesInFolder = SysWrapper.enumFilesInFolder;
 import {DockerComposeCaOrdererGenerator} from './generators/docker-compose/dockerComposeCaOrderer.yaml';
 import {OrdererCertsGenerator} from './generators/crypto/createOrdererCerts';
 import existsFolder = SysWrapper.existsFolder;
 import {Utils} from './utils/utils';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
+import getNewOrgRequestSignaturesPath = Utils.getNewOrgRequestSignaturesPath;
 import {DockerComposeCaGenerator} from './generators/docker-compose/dockerComposeCa.yaml';
 import getDockerComposePath = Utils.getDockerComposePath;
 import {ChannelGenerator} from './generators/artifacts/channel-mgmt';
 import getArtifactsPath = Utils.getArtifactsPath;
 import {orgConfigYaml} from './generators/orgConfig.yaml';
+var ByteBuffer = require("bytebuffer");
 
 /**
  * Main tools orchestrator
@@ -807,7 +814,7 @@ export class Orchestrator {
         return res;
     }
 
-    public async approveChaincodeCli(configFilePath, commitFile, upgrade?:boolean, policy?:boolean): Promise<void> {
+    public async approveChaincodeCli(configFilePath, commitFile, upgrade?:boolean, policy?:boolean, forceNew?: boolean): Promise<void> {
         l(' REQUEST to approve chaincode')
         let config = await this.getChaincodeParams(commitFile);
         const {docker, organization} = await this.loadOrgEngine(configFilePath)
@@ -816,10 +823,14 @@ export class Orchestrator {
         let seq = await this.getLastSequence(configFilePath, config.chaincodeName, config.version,config.channelName);
         let lastSequence = seq.split(':');
         let finalSequence;
-        if(! lastSequence[1]){
+        if(! lastSequence[1] ){
             finalSequence = SEQUENCE
         }else{
-            finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+            if(forceNew){
+                finalSequence = SEQUENCE
+            } else {
+                finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+            }
         }
         if(!policy){
             await chaincode.approve(finalSequence, config.channelName);
@@ -842,17 +853,17 @@ export class Orchestrator {
         return seq;
     }
 
-    public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean): Promise <void> {
+    public async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?:boolean, forceNew?: boolean): Promise <void> {
         let targetPeers = await this.getTargetPeers(configDeployFile, targets)
         await this.deployCliSingleton(configDeployFile, commitFile, targetPeers)
         let res = await this.isInstalled(configDeployFile, commitFile)
         if(res == "false"){
             await this.installChaincodeCli(configDeployFile,commitFile, targetPeers)
-            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade, policy);
+            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade, policy, forceNew);
             await this.commitChaincode(configDeployFile, commitFile, upgrade, policy);
 
         }else{
-            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade, policy);
+            await this.approveChaincodeCli(configDeployFile, commitFile, upgrade, policy, forceNew);
             await this.commitChaincode(configDeployFile, commitFile, upgrade, policy);
 
         }
@@ -981,7 +992,6 @@ export class Orchestrator {
         //the one in configtxYaml also the orderer generation will be handled later
         const configTxOrg = new orgConfigYaml('configtx.yaml', path, network, organization);
         await configTxOrg.save()
-        console.log('generated')
         //generate new org definition
         await configTxOrg.generateDefinition();
         await configTxOrg.generateAnchorDefinition();
@@ -1004,4 +1014,58 @@ export class Orchestrator {
         }
     }
 
+    async signCustomChannelDef(deploymentConfigPath, nameChannel, configChannelPath){
+        const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        console.log('before sig',network.organizations[0].name )
+        try{
+            const signature = await channelGenerator.signConfig(configChannelPath);
+            console.log('signature', signature)
+            //save the sig to a file
+            var bufSig = Buffer.from(JSON.stringify(signature));
+            let pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, nameChannel)}/${network.organizations[0].name}_sign.json`
+            await createFile(pathSig, JSON.stringify(signature));
+        }catch(err) {
+            e('error signing channel definition')
+            console.log(err)
+            return ;
+        }
+
+    }
+
+    async submitCustomChannelDef(channelDef, signaturesFolder, deploymentConfigPath, nameChannel) {
+        const network: Network = await Orchestrator._parse(deploymentConfigPath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        //construct table of signatures
+        let allSignatures=[];
+        console.log(signaturesFolder)
+        let sigFiles = await enumFilesInFolder(signaturesFolder)
+        console.log(sigFiles)
+        for(let myFile of sigFiles){
+            let tmp =  await getJSON(`${signaturesFolder}/${myFile}`);
+            let signature_header_buff = tmp.signature_header.buffer;
+            let signature_buff = tmp.signature.buffer;
+
+           // let buffer_sig_header = ByteBuffer.wrap(signature_header_buff.getBytes("UTF-8"));
+            let test1 =  ByteBuffer.wrap(signature_header_buff.data);
+            let test2 =  ByteBuffer.wrap(signature_buff.data);
+
+            let final_OBJ = {
+                signature_header:test1,
+                signature: test2
+            }
+            allSignatures.push(final_OBJ)
+        }
+        try{
+            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, nameChannel);
+        }catch(err){
+            e('ERROR submitting channel def')
+            console.log(err)
+            return ;
+        }
+    }
 }

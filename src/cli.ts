@@ -167,9 +167,9 @@ export class CLI {
     return chaincodeEngine;
   }
 
-  static async approveChaincode(configFile,commitFile, upgrade?: boolean) {
+  static async approveChaincode(configFile,commitFile, upgrade?: boolean, policy?:boolean, forceNew?: boolean) {
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.approveChaincodeCli(configFile, commitFile, upgrade);
+    await chaincodeEngine.approveChaincodeCli(configFile, commitFile, upgrade, policy, forceNew);
     return  chaincodeEngine;
   }
 
@@ -179,9 +179,9 @@ export class CLI {
     return  chaincodeEngine;
   }
 
-  static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?: boolean){
+  static async deployChaincode(configDeployFile, commitFile, targets?: string[], upgrade?: boolean, policy?: boolean, forceNew?:boolean){
     const chaincodeEngine = new Orchestrator();
-    await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy)
+    await chaincodeEngine.deployChaincode(configDeployFile, commitFile, targets, upgrade, policy, forceNew)
     return  chaincodeEngine;
   }
 
@@ -196,4 +196,17 @@ export class CLI {
     await orchEngine.generateCustomChannelDef(orgDefinition, anchorDefinition, configDeployFile, nameChannel);
     return  orchEngine;
   }
+
+  static async signCustomChannelDef(configDeployFile, nameChannel, configChannelPath){
+    const orchEngine = new Orchestrator();
+    await orchEngine.signCustomChannelDef(configDeployFile, nameChannel, configChannelPath);
+    return  orchEngine;
+  }
+
+  static async submitCustomChannelDef(channelDef, signatures, configDeployFile, nameChannel){
+    const orchEngine = new Orchestrator();
+    await orchEngine.submitCustomChannelDef(channelDef, signatures, configDeployFile, nameChannel);
+    return  orchEngine;
+  }
+
 }

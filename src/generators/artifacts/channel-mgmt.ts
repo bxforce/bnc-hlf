@@ -250,15 +250,12 @@ orderers:
       let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition)
 
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-      console.log(newOrgMSP)
 
       modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
 
       let AnchorPeers = newOrgAnchorJson;
-      console.log(AnchorPeers)
 
       let target = modified.channel_group.groups.Application.groups.org3MSP.values;
-      // console.log("target",target)
       let startAdded = {AnchorPeers, ...target}
       modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
       //save modified.json FILE
@@ -271,7 +268,6 @@ orderers:
       await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, nameChannel);
 
       //convert the delta.pb to json
-   //   await configtxlator.fromBinaryToJson(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, 'common.ConfigUpdate')
       await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, 'common.ConfigUpdate', 'proto_decode')
       //get the delta json file to add the header
 
@@ -292,26 +288,67 @@ orderers:
       }
       //save the new delta.json
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
-     // await configtxlator.fromJSONTOPB(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope')
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope', 'proto_encode')
       //copy the final delta pb under artifacts
       console.log(`${getArtifactsPath(this.network.options.networkConfigPath)}/config_update_as_envelope_pb`)
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, nameChannel)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
-    
-      /*console.log('envelopee', envelope)
-      let data = envelope.config.toBuffer();
-      fs.writeFileSync('config.pb', data);
-      // await this.saveNewContent()
-      //manage files during this section
-      //use configtxlator
-      console.log('USING configtxlator to change it to JSON format so we can modify it')
-      await this._convertFromPBTOJSON('./config.pb', 'common.Config')
 
-       */
     }catch (err) {
       console.log(err);
       e("ERROR generating new channel DEF")
+      return err;
+    }
+  }
+
+  async signConfig(config){
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    // load the admin user into the client
+    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    console.log("loaded ADMIN", adminLoaded)
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    try{
+      let sig= await channelClient.signConfig(config);
+      return sig
+    }catch(err){
+      console.log(err)
+      return err;
+    }
+  }
+
+  async submitChannelUpdate(config, sigs, nameChannel){
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    // load the admin user into the client
+    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    try{
+      //return signature
+      let isSubmitted = await channelClient.submitChannelUpdate(config, sigs, nameChannel, this.network.organizations[0].mspName);
+      if(!isSubmitted) {
+        e(`Error channel update !!!`);
+        return
+      }
+
+      l(`Channel  updated successfully !!!`);
+
+    }catch(err){
+      console.log(err)
       return err;
     }
   }
