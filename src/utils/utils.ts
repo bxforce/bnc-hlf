@@ -167,4 +167,8 @@ export namespace Utils {
   export function getPeerOrganizations(rootPath: string, fullName: string): string {
     return `${rootPath}/organizations/peerOrganizations/${fullName}`;
   }
+
+  export function getNewOrgRequestPath(rootPath: string, channelName: string): string {
+    return `${rootPath}/artifacts/${channelName}/requestNewOrg`;
+  }
 }

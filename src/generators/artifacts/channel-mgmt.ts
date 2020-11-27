@@ -32,6 +32,7 @@ import getPeerMspPath = Utils.getPeerMspPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { readFile } from 'fs-extra';
 import getArtifactsPath = Utils.getArtifactsPath;
+import getNewOrgRequestPath = Utils.getNewOrgRequestPath;
 
 /**
  * Class responsible to create the hyperledger fabric channel instance
@@ -295,7 +296,7 @@ orderers:
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope', 'proto_encode')
       //copy the final delta pb under artifacts
       console.log(`${getArtifactsPath(this.network.options.networkConfigPath)}/config_update_as_envelope_pb`)
-      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getArtifactsPath(this.network.options.networkConfigPath)}/${configtxlator.names.finalPB}`)
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, nameChannel)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
     
       /*console.log('envelopee', envelope)
