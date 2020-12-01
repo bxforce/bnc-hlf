@@ -1022,7 +1022,6 @@ export class Orchestrator {
         console.log('before sig',network.organizations[0].name )
         try{
             const signature = await channelGenerator.signConfig(configChannelPath);
-            console.log('signature', signature)
             //save the sig to a file
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, nameChannel)}/${network.organizations[0].name}_sign.json`
@@ -1050,15 +1049,14 @@ export class Orchestrator {
             let signature_header_buff = tmp.signature_header.buffer;
             let signature_buff = tmp.signature.buffer;
 
-           // let buffer_sig_header = ByteBuffer.wrap(signature_header_buff.getBytes("UTF-8"));
-            let test1 =  ByteBuffer.wrap(signature_header_buff.data);
-            let test2 =  ByteBuffer.wrap(signature_buff.data);
+            let sig_header_wrapped =  ByteBuffer.wrap(signature_header_buff.data);
+            let sig_wraped =  ByteBuffer.wrap(signature_buff.data);
 
-            let final_OBJ = {
-                signature_header:test1,
-                signature: test2
+            let sig_obj_wrapped = {
+                signature_header:sig_header_wrapped,
+                signature: sig_wraped
             }
-            allSignatures.push(final_OBJ)
+            allSignatures.push(sig_obj_wrapped)
         }
         try{
             await channelGenerator.submitChannelUpdate(channelDef, allSignatures, nameChannel);

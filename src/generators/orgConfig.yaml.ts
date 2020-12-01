@@ -73,53 +73,7 @@ Organizations:
     constructor(filename: string, path: string, private network: Network, private org: Organization) {
         super(filename, getPeerOrganizations(path, org.fullName));
     }
-
-
-    async generateNewOrgDefinition(): Promise<boolean> {
-        try{
-            const jsonFile = `${this.org.name}.json`;
-            console.log(this.path)
-            console.log(this.network.options.networkConfigPath)
-
-            const scriptContent = `
-export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
-export FABRIC_CFG_PATH=${this.network.options.networkConfigPath}  
-
-which configtxgen
-if [ "$?" -ne 0 ]; then
-  echo "configtxgen tool not found. exiting"
-  exit 1
-fi    
-  
-
-configtxgen --configPath ${this.path} -printOrg ${this.org.mspName}  > ${this.path}/${jsonFile}
-res=$?
-
-if [ $res -ne 0 ]; then
-  echo "Failed to generate json definition for ${this.org.mspName}..."
-  exit 1
-fi
-    `;
-
-            // check if configtx.yaml exists
-            const jsonPath = `${this.path}/${jsonFile}`;
-            const jsonExist = existsPath(jsonPath);
-            if (!jsonExist) {
-                e(`Anchor peer update ${jsonPath} does not exists, exit now !!! `);
-                return false;
-            }
-
-            // execute the scripts
-            await execContent(scriptContent);
-
-            return true;
-
-        }catch(err){
-            e(err);
-            return false;
-        }
-    }
-
+    
     async generateDefinition(): Promise<boolean> {
         try{
             const jsonFile = `${this.org.name}.json`;
