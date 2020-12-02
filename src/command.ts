@@ -239,7 +239,6 @@ program
     .description('generates new org definiton to be added to channel')
     .requiredOption('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file')
     .action(async cmd => {
-        console.log(cmd.namech)
         await tasks.generateNewOrgDefinition(cmd.config);
     });
 
@@ -274,7 +273,7 @@ channelCmd
     });
 
 channelCmd
-    .command('generate-custom-definition')
+    .command('generate-definition')
     .description('generates a sign able channel definition')
     .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
     .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
@@ -285,7 +284,7 @@ channelCmd
     });
 
 channelCmd
-    .command('sign-custom-definition')
+    .command('sign-definition')
     .description('generates a sign able channel definition')
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
     .requiredOption('-f, --config <path>', 'Absolute path to the config deployment  file')
@@ -295,7 +294,7 @@ channelCmd
     });
 
 channelCmd
-    .command('submit-custom-definition')
+    .command('submit-definition')
     .description('submits a sign able channel definition')
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
     .requiredOption('-s, --sigs <update-path>', 'path to the signatures folder')

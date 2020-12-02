@@ -77,8 +77,6 @@ Organizations:
     async generateDefinition(): Promise<boolean> {
         try{
             const jsonFile = `${this.org.name}.json`;
-            console.log(this.path)
-            console.log(this.network.options.networkConfigPath)
             const artifactsPath = getArtifactsPath(this.network.options.networkConfigPath)
 
             const scriptContent = `

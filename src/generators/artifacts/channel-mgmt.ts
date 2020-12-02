@@ -237,7 +237,6 @@ orderers:
     try{
       let envelope = await channelClient.getLatestChannelConfigFromOrderer(nameChannel, this.network.organizations[0].mspName);
       const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
-      console.log(configtxlator.names.initialPB)
       await configtxlator.createInitialConfigPb(envelope);
      // await configtxlator.fromBinaryToJson(configtxlator.names.initialPB, configtxlator.names.initialJSON, 'common.Config')
       await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, 'common.Config', 'proto_decode')
@@ -292,12 +291,11 @@ orderers:
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, 'common.Envelope', 'proto_encode')
       //copy the final delta pb under artifacts
-      console.log(`${getArtifactsPath(this.network.options.networkConfigPath)}/config_update_as_envelope_pb`)
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, nameChannel)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
 
     }catch (err) {
-      console.log(err);
+      e(err);
       e("ERROR generating new channel DEF")
       return err;
     }
@@ -308,10 +306,8 @@ orderers:
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
     await channelClient.init();
-
     // load the admin user into the client
     const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
-    console.log("loaded ADMIN", adminLoaded)
     if(!adminLoaded) {
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
       return false;
@@ -321,7 +317,7 @@ orderers:
       let sig= await channelClient.signConfig(config);
       return sig
     }catch(err){
-      console.log(err)
+      e(err)
       return err;
     }
   }
@@ -350,7 +346,6 @@ orderers:
       l(`Channel  updated successfully !!!`);
 
     }catch(err){
-      console.log(err)
       return err;
     }
   }

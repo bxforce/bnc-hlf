@@ -9,13 +9,7 @@ echo "$SEQUENCE"
 CC_LEVEL_POLICY=""
 
 
-verifyResult() {
-  if [ $1 -ne 0 ]; then
-    echo "!!!!!!!!!!!!!!! "$2" !!!!!!!!!!!!!!!!"
-    echo
-    exit 1
-  fi
-}
+
 
 
 approve() {
@@ -26,9 +20,18 @@ approve() {
     peer lifecycle chaincode approveformyorg --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --signature-policy "${ENDORSEMENT}" >&log.txt
   fi
   cat log.txt
+  res=$?
   verifyResult $res "Chaincode definition approved on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME' failed"
   echo "===================== Chaincode definition approved on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME' ===================== "
   echo
+}
+
+verifyResult() {
+  if [ $1 -ne 0 ]; then
+    echo "!!!!!!!!!!!!!!! "$2" !!!!!!!!!!!!!!!!"
+    echo
+    exit 1
+  fi
 }
 
 
@@ -76,5 +79,5 @@ checkApprovedForMyOrg() {
 
 
 
-checkApprovedForMyOrg "\"$CORE_PEER_LOCALMSPID\": true"
+#checkApprovedForMyOrg "\"$CORE_PEER_LOCALMSPID\": true"
 approve

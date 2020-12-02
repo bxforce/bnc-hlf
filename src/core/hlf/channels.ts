@@ -271,7 +271,6 @@ export class Channels extends ClientHelper {
       var envelope = await channel.getChannelConfigFromOrderer();
       return envelope;
     }catch(err){
-      console.log(err)
       e('Error converting Binary to Json');
       return err;
     }
@@ -318,7 +317,6 @@ export class Channels extends ClientHelper {
       return signature;
     }catch (err) {
       e('error signing')
-      console.log(err)
       return err;
     }
 
@@ -339,14 +337,9 @@ export class Channels extends ClientHelper {
       }
 
       let request;
-      console.log('orderer', this.orderers[0])
-      console.log(configUpdatePath)
       var envelope = fs.readFileSync(configUpdatePath);
       // extract the channel config bytes from the envelope to be signed
-      console.log(envelope)
       var channelConfig = this.client.extractChannelConfig(envelope);
-      console.log("here! !!!!")
-      console.log('orderer', this.orderers[0])
       request= {
         orderer: this.orderers[0],
         config: channelConfig,

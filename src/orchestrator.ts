@@ -827,7 +827,7 @@ export class Orchestrator {
             finalSequence = SEQUENCE
         }else{
             if(forceNew){
-                finalSequence = SEQUENCE
+                finalSequence = parseInt(lastSequence[1].trim(), 10);
             } else {
                 finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
             }
@@ -1009,7 +1009,7 @@ export class Orchestrator {
             await channelGenerator.generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, nameChannel)
         }catch(err){
             e('ERROR generating new channel DEF')
-            console.log(err)
+             e(err)
             return ;
         }
     }
@@ -1019,7 +1019,6 @@ export class Orchestrator {
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
 
         const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
-        console.log('before sig',network.organizations[0].name )
         try{
             const signature = await channelGenerator.signConfig(configChannelPath);
             //save the sig to a file
@@ -1028,7 +1027,7 @@ export class Orchestrator {
             await createFile(pathSig, JSON.stringify(signature));
         }catch(err) {
             e('error signing channel definition')
-            console.log(err)
+             e(err)
             return ;
         }
 
@@ -1041,9 +1040,7 @@ export class Orchestrator {
         const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
         //construct table of signatures
         let allSignatures=[];
-        console.log(signaturesFolder)
         let sigFiles = await enumFilesInFolder(signaturesFolder)
-        console.log(sigFiles)
         for(let myFile of sigFiles){
             let tmp =  await getJSON(`${signaturesFolder}/${myFile}`);
             let signature_header_buff = tmp.signature_header.buffer;
@@ -1062,7 +1059,7 @@ export class Orchestrator {
             await channelGenerator.submitChannelUpdate(channelDef, allSignatures, nameChannel);
         }catch(err){
             e('ERROR submitting channel def')
-            console.log(err)
+             e(err)
             return ;
         }
     }
