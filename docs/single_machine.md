@@ -16,6 +16,11 @@ Here an other command to remove an hyperledger fabric network.
 ./bin/bnc clear
 ````
 
+Here is a command to test transactions (5tx every 10s):
+````shell script
+docker run -d --name transact --network bnc_network -v /tmp:/tmp -v /var/run/docker.sock:/var/run/docker.sock --entrypoint node bnc-hlf transact.js invoke 5 10
+````
+
 To enable bnc-hlf docker image rebuild at every call:
 ````shell script
 export BNC_BUILD_PATH=$PWD

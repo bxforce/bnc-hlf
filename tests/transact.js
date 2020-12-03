@@ -21,6 +21,7 @@ const USER_ID = 'appUser';
 const USER_DPT = 'org1.department1';
 const MAX_CPT = 1;
 const BATCH_SIZE = 50;
+const WAIT_TIME = 0;
 
 var enrollAdmin = async (caClient, wallet, orgMspId, adminUserId, adminUserPasswd) => {
 	try {
@@ -60,7 +61,7 @@ var registerAndEnrollUser = async (caClient, wallet, orgMspId, adminUserId, user
 	}
 };
 
-async function invokeTx(reset) {
+async function invokeTx(reset, batch_size, wait_time) {
 	try {
 		// build an in memory object with the network configuration (also known as a connection profile)
 		const fileExists = fs.existsSync(PATH_NETWORK);
@@ -92,6 +93,7 @@ async function invokeTx(reset) {
 		const gateway = new Gateway();
 
 		// transaction step
+		function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 		const step = async function(contract, a, b) {
 		    // we use different variables names in order to avoid concurrency access error on world state
 		    console.log("initing " + a + " and " + b);
@@ -115,7 +117,7 @@ async function invokeTx(reset) {
 			var interactions = [];
 			while(true) {
 				// we randomize batch size
-				var size = Math.floor(Math.random() * (BATCH_SIZE - 1)) + 1;
+				var size = Math.floor(Math.random() * (batch_size - 1)) + 1;
 				for(var i = 0; i < size; i++){
 				    date = Date.now();
 				    var promises = step(contract, "a_" + date + "_" + i, "b_" + date + "_" + i);
@@ -123,6 +125,7 @@ async function invokeTx(reset) {
 				}
 			    await Promise.all(interactions);
 			    console.log("batch done");
+			    await delay(wait_time * 1000);
 			    interactions = [];
 			}
 		} finally {
@@ -172,7 +175,7 @@ switch (args[0]) {
 //    registerUser()
 //    break;
 case 'invoke':
-    invokeTx(false);
+    invokeTx(false, args[1] ? args[1] : BATCH_SIZE, args[2] ? args[2] : WAIT_TIME);
     break;
 default:
     console.log('CLI parser error');
