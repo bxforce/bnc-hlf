@@ -38,14 +38,25 @@ enum TMPFILENAMES {
     finalPB = "config_update_as_envelope_pb.pb"
 }
 
+enum PROTOBUFTYPE {
+    config = "common.Config",
+    update = "common.ConfigUpdate",
+    envelope= "common.Envelope"
+}
+
+enum CONVERTTYPE {
+    encode = "proto_encode",
+    decode = "proto_decode"
+}
+
 export class Configtxlator {
     
     public tempPath = "/tmp";
     public hlfBinaries;
     public networkConfPath;
     public names =  TMPFILENAMES;
-
-
+    public protobufType = PROTOBUFTYPE;
+    public convertType = CONVERTTYPE;
 
     constructor(hlfBinaries, networkConfPath) {
         this.hlfBinaries= hlfBinaries;
