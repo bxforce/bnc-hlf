@@ -154,10 +154,11 @@ export class Chaincode {
 
         return new Promise(async (resolve, reject) => {
             return await exec.start(async (err, stream) => {
+                console.log(err);
                 if (err) return reject();
                 let message = '';
                 stream.on('data', data => message += data.toString());
-                console.log('Data:', message)
+                console.log('Data:', message);
                 stream.on('end', () => resolve(message));
             });
         });

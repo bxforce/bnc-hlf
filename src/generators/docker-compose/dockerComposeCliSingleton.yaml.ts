@@ -145,7 +145,7 @@ ${this.options.ips
             l(`Starting CLI ${serviceName}...`);
 
             const engine = this.options.org.getEngine(peer.options.engineName);
-            this.docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+            this.docker = new DockerEngine({socketPath: '/var/run/docker.sock'});
             this.container = await this.docker.getContainer(`cli.${this.options.org.fullName}`)
             await this.docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 

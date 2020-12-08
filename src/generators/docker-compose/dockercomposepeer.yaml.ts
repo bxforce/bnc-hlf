@@ -142,7 +142,7 @@ ${this.options.ips
       l(`Starting Peer ${serviceName}...`);
 
       const engine = this.options.org.getEngine(peer.options.engineName);
-      const docker = new DockerEngine({ host: engine.options.url, port: engine.options.port });
+      const docker = new DockerEngine({socketPath: '/var/run/docker.sock'});
 
       await docker.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
 
