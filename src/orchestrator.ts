@@ -962,7 +962,7 @@ export class Orchestrator {
         const network: Network = await Orchestrator._parse(configFilePath);
         const organization: Organization = network.organizations[0];
         const engine = organization.getEngine(organization.peers[0].options.engineName);
-        const docker =  new DockerEngine({ host: engine.options.url, port: engine.options.port });
+        const docker =  new DockerEngine({socketPath: '/var/run/docker.sock'});
         return {docker, organization};
     }
 
