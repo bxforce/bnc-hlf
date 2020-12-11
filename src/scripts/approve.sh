@@ -55,7 +55,7 @@ checkApprovedForMyOrg() {
       res=$?
       set +x
       let rc=0
-      echo " seee what it isss"
+
       echo "$@"
       for var in "$@"
       do
@@ -76,5 +76,5 @@ checkApprovedForMyOrg() {
 
 
 
-checkApprovedForMyOrg "\"$CORE_PEER_LOCALMSPID\": true"
+#checkApprovedForMyOrg "\"$CORE_PEER_LOCALMSPID\": true"
 approve
