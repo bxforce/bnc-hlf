@@ -26,12 +26,12 @@ export class commitOptions {
     compilationCommand: string;
     chaincodePath: string;
     version: string;
+    endorsementPolicy?: string;
 }
 
 export class CommitConfiguration {
     organizations: Organization[] = [];
     ordererOrganization?: OrdererOrganization; /* This ca will be used to generate only orderer msp */
-    
     constructor(public path: string,
                 public channelName: string,
                 public chaincodeName: string,
@@ -39,7 +39,8 @@ export class CommitConfiguration {
                 public scriptsRootPath: string,
                 public compilationCommand: string,
                 public chaincodePath: string,
-                public version: string) {
+                public version: string,
+                public endorsementPolicy?: string) {
         this.channelName = channelName;
         this.chaincodeName = chaincodeName;
         this.chaincodeRootPath = chaincodeRootPath;
@@ -47,5 +48,6 @@ export class CommitConfiguration {
         this.compilationCommand = compilationCommand,
         this.chaincodePath = chaincodePath;
         this.version = version;
+        this.endorsementPolicy = endorsementPolicy;
     }
 }

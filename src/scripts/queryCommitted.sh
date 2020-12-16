@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+
+
 queryCommitted() {
 
 	peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name $CC_NAME >&query.txt

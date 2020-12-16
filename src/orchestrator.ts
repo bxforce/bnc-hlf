@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+var ByteBuffer = require("bytebuffer");
 import {join} from 'path';
 import {Identity} from 'fabric-network';
 import {DeploymentParser} from './parser/deploymentParser';
@@ -27,8 +28,9 @@ import {CommitConfiguration} from './parser/model/commitConfiguration';
 import {ConfigurationValidator} from './parser/validator/configurationValidator';
 import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
 import {OrdererCertsGenerator} from './generators/crypto/createOrdererCerts';
-import {ConfigtxYamlGenerator} from './generators/artifacts/configtx.yaml';
 import {ChannelGenerator} from './generators/artifacts/channelGenerator';
+import {OrgGenerator} from './generators/artifacts/orgGenerator';
+import {ConfigtxYamlGenerator} from './generators/artifacts/configtxGenerator';
 import {ConnectionProfileGenerator} from './generators/artifacts/clientGenerator';
 import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockerComposeBase.yaml';
 import {DockerComposeCaGenerator} from './generators/docker-compose/dockerComposeCa.yaml';
@@ -48,6 +50,7 @@ import {Utils} from './utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getDockerComposePath = Utils.getDockerComposePath;
 import getArtifactsPath = Utils.getArtifactsPath;
+import getNewOrgRequestSignaturesPath = Utils.getNewOrgRequestSignaturesPath;
 import { SysWrapper } from './utils/sysWrapper';
 import {
     BNC_NETWORK,
@@ -439,7 +442,6 @@ export class Orchestrator {
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
         await SysWrapper.createFolder(path);
         
-
         // Auto-create docker-compose folder if not exists
         await SysWrapper.createFolder(getDockerComposePath(path));
 
@@ -496,6 +498,7 @@ export class Orchestrator {
 
             // loop on organization & peers && orderers
             for (const org of network.organizations) {
+                
                 // build list of docker services/volumes to delete
                 const volumes: string[] = [];
                 const services: string[] = [];
@@ -504,6 +507,9 @@ export class Orchestrator {
                     services.push(`${peer.name}.${org.fullName}`);
                     services.push(`${peer.name}.${org.fullName}.couchdb`);
                     volumes.push(`${peer.name}.${org.fullName}`);
+                    
+                    //remove chaincode containers
+                    services.push(`dev-${peer.name}.${org.fullName}`) // FIX this
                 }
                 
                 for (const orderer of org.orderers) {
@@ -514,7 +520,10 @@ export class Orchestrator {
                 services.push(`${org.ca.name}.${org.name}`);
                 
                 services.push(`${network.ordererOrganization.caName}`);
-                
+
+                //remove all cli containers
+                services.push(`cli.${org.fullName}`)
+
                 // Now check all container within all organization engine
                 for (const engine of org.engines) {
                     const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
@@ -562,8 +571,9 @@ export class Orchestrator {
         l('Environment cleaned!');
     }
 
-    static async deployCli(compile: boolean, commitFile: string, deploymentConfigPath: string, hostsConfigPath: string): Promise<void> {
-        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+
+    static async deployCli(compile: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
@@ -574,7 +584,6 @@ export class Orchestrator {
         const organization: Organization = network.organizations[0];
         //peer0 of org1
         const peer: Peer = network.organizations[0].peers[0];
-
 
         // Assign & check root path
         const path = network.options.networkConfigPath ?? this._getDefaultPath();
@@ -611,88 +620,120 @@ export class Orchestrator {
 
         await cliSingleton.startCli()
     }
-    
-    static async installChaincode(name: string, version: string, chaincodeRootPath, chaincodePath, targets: string[], deploymentConfigPath: string, hostsConfigPath: string): Promise<void> {
+
+    static async installChaincode(name: string, version: string, chaincodeRootPath, chaincodePath, targets: string[], deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         let targetPeers = await this.getTargetPeers(targets, deploymentConfigPath, hostsConfigPath)
-        await Orchestrator.deployCliSingleton(name, targetPeers, version, chaincodeRootPath, chaincodeRootPath, deploymentConfigPath, hostsConfigPath)
-        await Orchestrator.installChaincodeCli(name, targetPeers, version, chaincodePath, deploymentConfigPath, hostsConfigPath)
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
+        if (!config) return;
+        await Orchestrator.deployCliSingleton(name, targetPeers, version, config.chaincodeRootPath, config.scriptsRootPath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
+        await Orchestrator.installChaincodeCli(name, targetPeers, version, chaincodePath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
     }
     
-    static async installChaincodeCli(name: string, targets: Peer[], version: string, chaincodePath: string, deploymentConfigPath: string, hostsConfigPath: string): Promise<void> {
+    static async installChaincodeCli(name: string, targets: Peer[], version: string, chaincodePath: string,  deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         l('[End] Blockchain configuration files parsed');
-        let peerTlsRootCert;
-        let corePeerAdr ;
-
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath); // TODO: fix choose between config and command variables
+        if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, name, version);
+        const chaincode = new Chaincode(docker, name, version); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
         for(let peerElm of targets){
-            corePeerAdr= `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
-            peerTlsRootCert= `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
-            await chaincode.installChaincode(corePeerAdr,peerTlsRootCert, chaincodePath);
+            let corePeerAdr = `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
+            let peerTlsRootCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
+            await chaincode.installChaincode(corePeerAdr, peerTlsRootCert, config.chaincodePath);
         }
     }
-
-    static async approveChaincodeCli(name, version, channelName, upgrade:boolean, deploymentConfigPath: string, hostsConfigPath: string): Promise <void> {
+    
+    static async approveChaincodeCli(name, version, channelName, upgrade: boolean, policy: boolean, forceNew: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         l(' REQUEST to approve chaincode')
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
+        if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, name, version);
+        const chaincode = new Chaincode(docker, name, version); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
-        if(!upgrade){
-            l(' APPROVING CHAINCODE FOR FIRST TIME DEPLOY')
-            await chaincode.approve(SEQUENCE, channelName);
-        } else {
-            //get last sequence number
-            l(' APPROVING CHAINCODE TO UPGRADE')
-            let seq = await this.getLastSequence(name, version, channelName, deploymentConfigPath, hostsConfigPath);
-            let lastSequence = seq.split(':');
-            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
-            await chaincode.approve(finalSequence, channelName);
+        let seq = await this.getLastSequence(name, version, channelName, deploymentConfigPath, hostsConfigPath);
+        let lastSequence = seq.split(':');
+        let finalSequence;
+        if(! lastSequence[1] ){
+            finalSequence = SEQUENCE
+        }else{
+            if(forceNew){
+                finalSequence = parseInt(lastSequence[1].trim(), 10);
+            } else {
+                finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+            }
         }
-
+        if(!policy){
+            await chaincode.approve(finalSequence, config.channelName);
+        }else{
+            if(! config.endorsementPolicy){
+                e('NO POLICY WAS DEFINED');
+                return
+            }
+            await chaincode.approve(finalSequence, config.channelName, config.endorsementPolicy);
+        }
     }
-
-    static async commitChaincode(upgrade: boolean, commitFile: string, deploymentConfigPath: string, hostsConfigPath: string): Promise <void> {
+    
+    static async commitChaincode(upgrade: boolean, policy: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise <void> {
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath);
-        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const chaincode = new Chaincode(docker,config.chaincodeName, config.version); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
         let finalArg1= "";
-        let allOrgs = await this.getCommitOrgNames(commitFile);
+        let allOrgs = await this.getCommitOrgNames(commitConfigPath);
         for(let org of allOrgs){
             let mspName = org+"MSP";
             finalArg1+= `\"${mspName}\": true`
             finalArg1 += ";"
         }
 
-        let targets = await this.getTargetCommitPeers(commitFile)
-        if(!upgrade){
-            l(' COMMITTING CHAINCODE FOR FIRST TIME DEPLOY')
-            chaincode.checkCommitReadiness(finalArg1, targets, SEQUENCE, config.channelName);
-        } else {
-            //get last sequence number
-            l(' COMMITTING CHAINCODE TO UPGRADE')
-            let seq = await this.getLastSequence(config.chaincodeName, config.version,config.channelName, deploymentConfigPath, hostsConfigPath);
-            let lastSequence = seq.split(':');
-            let finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+        let targets = await this.getTargetCommitPeers(commitConfigPath)
+
+        let seq = await this.getLastSequence(config.chaincodeName, config.version, config.channelName, deploymentConfigPath, hostsConfigPath);
+        let lastSequence = seq.split(':');
+        let finalSequence;
+        if(! lastSequence[1]){
+            finalSequence = SEQUENCE
+        }else{
+            finalSequence = parseInt(lastSequence[1].trim(), 10) + 1;
+        }
+
+        if(!policy){
             chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName);
+        } else {
+            if(! config.endorsementPolicy){
+                e('NO POLICY DEFINED');
+                return
+            }
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, config.endorsementPolicy);
         }
     }
 
-    static async deployChaincode(targets: string[], upgrade: boolean, commitFile: string, deploymentConfigPath: string, hostsConfigPath: string): Promise <void> {
-        let targetPeers = await this.getTargetPeers(targets, deploymentConfigPath, hostsConfigPath);
-        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+    static async deployChaincode(targets: string[], upgrade: boolean, policy: boolean, forceNew: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise <void> {
+        let targetPeers = await this.getTargetPeers(targets, deploymentConfigPath, hostsConfigPath)
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        await this.deployCliSingleton(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deploymentConfigPath, hostsConfigPath)
-        await this.installChaincodeCli(config.chaincodeName, targetPeers, config.version, config.chaincodePath, deploymentConfigPath, hostsConfigPath)
-        await this.approveChaincodeCli(config.chaincodeName, config.version, config.channelName, upgrade, deploymentConfigPath, hostsConfigPath);
-        await this.commitChaincode(upgrade, commitFile, deploymentConfigPath, hostsConfigPath);
+        await this.deployCliSingleton(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
+        // test if is installed
+        const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version);
+        await chaincode.init(organization.fullName);
+        let res = await chaincode.isInstalled();
+        if (res == "false") {
+            await this.installChaincodeCli(config.chaincodeName, targetPeers, config.version, config.chaincodePath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
+            await this.approveChaincodeCli(config.chaincodeName, config.version, config.channelName, upgrade, policy, forceNew, deploymentConfigPath, hostsConfigPath, commitConfigPath);
+            await this.commitChaincode(upgrade, policy, deploymentConfigPath, hostsConfigPath, commitConfigPath);
+        } else {
+            await this.approveChaincodeCli(config.chaincodeName, config.version, config.channelName, upgrade, policy, forceNew, deploymentConfigPath, hostsConfigPath, commitConfigPath);
+            await this.commitChaincode(upgrade, policy, deploymentConfigPath, hostsConfigPath, commitConfigPath);
+        }
     }
-    
-    private static async deployCliSingleton(name: string, targets: Peer[], version: string, chaincodeRootPath: string, scriptsRootPath: string, deploymentConfigPath: string, hostsConfigPath: string): Promise<void> {
+
+    private static async deployCliSingleton(name: string, targets: Peer[], version: string, chaincodeRootPath: string, scriptsRootPath: string, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
+        //let config = await this.getChaincodeParams(commitConfigPath);
+        //l(`[Chaincode] - Request to install  a chaincode (${config.chaincodeName})`); // config.chaincodeRootPath, config.scriptsRootPath
         l(`[Chaincode] - Request to install  a chaincode (${name})`);
         const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
@@ -738,8 +779,94 @@ export class Orchestrator {
         await cliSingleton.createTemplateCli();
 
         await cliSingleton.startCli() // targets[0]
-
     }
+    
+    
+    static async generateNewOrgDefinition(deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        l('Validate input configuration file');
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        l('[End] Blockchain configuration files parsed');
+        //we will generate new configtx.yaml using orgConfigYaml and not configtxYaml because the new org yaml file struct is different from
+        //the one in configtxYaml also the orderer generation will be handled later
+        const configTxOrg = new OrgGenerator('configtx.yaml', path, network, organization);
+        await configTxOrg.save()
+        //generate new org definition
+        await configTxOrg.generateDefinition();
+        await configTxOrg.generateAnchorDefinition();
+    }
+
+    static async generateCustomChannelDef(orgDefinition, anchorDefinition, channelName, deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        try{
+            await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, channelName)
+        }catch(err){
+            e('ERROR generating new channel DEF')
+             e(err)
+            return ;
+        }
+    }
+
+    static async signCustomChannelDef(channelDef, channelName, deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        try{
+            const signature = await channelGenerator.signConfig(channelDef);
+            //save the sig to a file
+            var bufSig = Buffer.from(JSON.stringify(signature));
+            let pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, channelName)}/${network.organizations[0].name}_sign.json`
+            await SysWrapper.createFile(pathSig, JSON.stringify(signature));
+        }catch(err) {
+            e('error signing channel definition')
+             e(err)
+            return ;
+        }
+    }
+
+    static async submitCustomChannelDef(channelDef, signaturesFolder, channelName, deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+
+        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        
+        let allSignatures=[];
+        let sigFiles = await SysWrapper.enumFilesInFolder(signaturesFolder)
+        for(let myFile of sigFiles){
+            let tmp =  await SysWrapper.getJSON(`${signaturesFolder}/${myFile}`);
+            let signature_header_buff = tmp.signature_header.buffer;
+            let signature_buff = tmp.signature.buffer;
+
+            let sig_header_wrapped =  ByteBuffer.wrap(signature_header_buff.data);
+            let sig_wraped =  ByteBuffer.wrap(signature_buff.data);
+
+            let sig_obj_wrapped = {
+                signature_header:sig_header_wrapped,
+                signature: sig_wraped
+            }
+            allSignatures.push(sig_obj_wrapped)
+        }
+        try{
+            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, channelName);
+        }catch(err){
+            e('ERROR submitting channel def')
+             e(err)
+            return ;
+        }
+    }
+    
     
     private static async getLastSequence(name, version, channelName, configFilePath, hostsConfigPath) {
         l(' REQUEST to approve chaincode')
@@ -750,8 +877,8 @@ export class Orchestrator {
         return seq;
     }
 
-    private static async getCommitOrgNames(commitFile: string){
-        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+    private static async getCommitOrgNames(commitConfigPath: string){
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const organizations: Organization[] = config.organizations;
         let listOrgs=[];
@@ -761,8 +888,8 @@ export class Orchestrator {
         return listOrgs;
     }
 
-    private static async getTargetCommitPeers(commitFile: string){
-        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitFile);
+    private static async getTargetCommitPeers(commitConfigPath: string){
+        const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const organizations: Organization[] = config.organizations;
         let targets=''
@@ -829,14 +956,14 @@ export class Orchestrator {
         l('Validate input configuration file');
         const validator = new ConfigurationValidator();
         const isValid = validator.isValidDeployment(configFilePath);
-
+    
         l('Start parsing the blockchain configuration file');
         let configParse = new DeploymentParser(configFilePath);
         const organizations = await configParse.parse();
 
         l('Finishing parsing the blockchain configuration file');
     }
-    
+   
     /**
     * Parse & validate the input configuration deployment file.
     * Once done, start the CA and create all credentials for peers, orderer, admin & users

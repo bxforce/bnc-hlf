@@ -7,6 +7,7 @@ chaincode:
   channel: "mychannel"
   chaincode: "mycc"
   version: "1"
+  endorsementPolicy: "OR ('org1MSP.peer','org2MSP.peer')"
   commit:
     - organisation: "org1"
       domain_name: "bnc.com"

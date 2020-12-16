@@ -176,3 +176,74 @@ sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./
 ## DEMO FOR CHAINCODE UPGRADE COMMANDS
 
 add the flag --upgrade in the approve/commit and modify your version
+
+## DEMO FOR ADD NEW ORG
+
+For this demo we suppose we already have a deployed network of two orgs on two different machines.
+
+Start by enrolling org3 peers and starting the containers.
+
+Note: For the new org orderers you should precise orderers that are already part of the network.
+
+Have a look at the sample file tests/manual/wassim/config-deploy-org3.yaml
+
+ ````shell script
+sudo bnc enroll-peers -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+
+ ````shell script
+sudo bnc start -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+
+1 - Org3 will generate the org definition and the anchor definition: 
+ ````shell script
+sudo bnc generate-org-definition -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+COPY both files org3.json and org3Anchor.json under artifacts from machine org3 to machine org1
+
+2- On machine org1 do :
+ ````shell script
+sudo bnc channel generate-definition -o ../hyperledger-fabric-network/artifacts/org3.json -a ../hyperledger-fabric-network/artifacts/org3Anchor.json -f ./tests/manual/wassim/config-deploy-org1.yaml -n mychannel
+````
+Now under artifacts of machine of org1 you will have a new folder : artifacts /mychannel/requestNewOrg/config_update_as_envelope_pv.pb
+Copy folder mychannel to all orgs that will sign config_update_as_envelope_pv.pb
+In our case : COPY mychannel folder under artifacts in machine org2
+
+3- In machine org2 do :
+ ````shell script
+sudo bnc channel sign-definition -f ./tests/manual/wassim/config-deploy-org2.yaml -n mychannel -c ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/config_update_as_envelope_pb.pb
+````
+
+Now under artifacts/mychannel/requestNewOrg/signatures u will have the sig of org2.
+Copy the folder signatures put it in the machine of org1 under artifacts/mychannel/requestNewOrg
+
+4- Now in machine org1:
+
+ ````shell script
+sudo bnc channel sign-definition -f ./tests/manual/wassim/config-deploy-org1.yaml -n mychannel -c ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/config_update_as_envelope_pb.pb
+````
+5 - Now under signatures on machine org1 you have both signatures , so u can submit channel update from org1: 
+ ````shell script
+sudo bnc channel submit-definition -c ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/config_update_as_envelope_pb.pb -s ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/signatures -f ./tests/manual/wassim/config-deploy-org1.yaml -n mychannel
+ 
+````
+
+copy /hyperledger-fabric-network/organizations/ordererOrganizations/bnc.com/tlsca from org1 to org3
+copy orderer4 folder from org1 to org3
+
+6- Now org3 needs to join the channel. Do the following in machine org3:
+
+ ````shell script
+sudo bnc channel join -n mychannel -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+7 - in order to start using chaincode org3 needs to first install it.
+On machine org3 do :
+
+ ````shell script
+sudo bnc chaincode install -f ./tests/manual/wassim/config-deploy-org3.yaml -c ./tests/manual/wassim/config-chaincode.yaml
+````
+
+8- Finally approve the chaincode : 
+ ````shell script
+sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org3.yaml -c ./tests/manual/wassim/config-chaincode.yaml --force
+````

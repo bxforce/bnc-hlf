@@ -133,6 +133,17 @@ program
     await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade);
   });
 
+
+program
+    .command('generate-org-definition')
+    .description('generates new org definiton to be added to channel')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .action(async cmd => {
+        await CLI.generateNewOrgDefinition(cmd.config, cmd.hosts);
+    });
+
+
 const channelCmd = program.command('channel');
 channelCmd
   .command('create')
@@ -146,110 +157,154 @@ channelCmd
   });
 
 channelCmd
-   .command('join')
-   .description('join peers to channel')
-   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
-   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
-   .action(async cmd => {
-     await CLI.joinChannel(cmd.namech, cmd.config, cmd.hosts);
-   });
+  .command('join')
+  .description('join peers to channel')
+  .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+  .action(async cmd => {
+    await CLI.joinChannel(cmd.namech, cmd.config, cmd.hosts);
+  });
 
 channelCmd
-    .command('update')
-    .description('commit anchor update to peers on channel')
-    .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+  .command('update')
+  .description('commit anchor update to peers on channel')
+  .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  //.requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
+  .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+  .action(async (cmd) => {
+    await CLI.updateChannel(cmd.namech, cmd.config, cmd.hosts);
+  });
+
+channelCmd
+  .command('deploy')
+  .description('deploy channel')
+  .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
+  .option('--no-create', 'bypass createChannel')
+  .action(async (cmd) => {
+    if (cmd.create) await CLI.createChannel(cmd.namech, cmd.config, cmd.hosts);
+    await Utils.delay(DOCKER_DELAY);
+    await CLI.joinChannel(cmd.namech, cmd.config, cmd.hosts);
+    await CLI.updateChannel(cmd.namech, cmd.config, cmd.hosts);
+  });
+
+
+channelCmd
+    .command('generate-definition')
+    .description('generates a sign able channel definition')
+    .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    //.requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
-    .requiredOption('-n, --namech <channel-name>', 'name of the channel')
+    .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
+    .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
+    .requiredOption('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-      await CLI.updateChannel(cmd.namech, cmd.config, cmd.hosts);
+        await CLI.generateCustomChannelDef(cmd.orgdef, cmd.anchordef, cmd.namech, cmd.config, cmd.hosts);
     });
 
 channelCmd
-    .command('deploy')
-    .description('deploy channel')
-    .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+    .command('sign-definition')
+    .description('generates a sign able channel definition')
+    .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
-    .option('--no-create', 'bypass createChannel')
+    .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
+    .requiredOption('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-      if (cmd.create) await CLI.createChannel(cmd.namech, cmd.config, cmd.hosts);
-      await Utils.delay(DOCKER_DELAY);
-      await CLI.joinChannel(cmd.namech, cmd.config, cmd.hosts);
-      await CLI.updateChannel(cmd.namech, cmd.config, cmd.hosts);
+        await CLI.signCustomChannelDef(cmd.channeldef, cmd.namech, cmd.config, cmd.hosts);
     });
+
+channelCmd
+    .command('submit-definition')
+    .description('submits a sign able channel definition')
+    .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
+    .requiredOption('-s, --sigs <update-path>', 'path to the signatures folder')
+    .requiredOption('-n, --namech <path>', 'name channel')
+    .action(async (cmd) => {
+        await CLI.submitCustomChannelDef(cmd.channeldef, cmd.sigs, cmd.namech, cmd.config, cmd.hosts);
+    });
+
 
 const chaincodeCmd = program.command('chaincode');
 chaincodeCmd
-    .command('install')
-    .description('install chaincode')
-    .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .requiredOption('-cRootPath, --chroot <path>', 'path to chaincode root')
-    .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
-    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
-    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
-    .option('-p, --list <items>', 'comma separated list', x => { x.split(','); })
-    .action(async (cmd) => {
-      await CLI.installChaincode(cmd.namech, cmd.config, cmd.hosts, cmd.vch, cmd.chroot, cmd.ch, cmd.list);
-    });
+  .command('install')
+  .description('install chaincode')
+  .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
+  .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+  .requiredOption('-cRootPath, --chroot <path>', 'path to chaincode root')
+  .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
+  .option('-p, --list <items>', 'comma separated list', x => { x.split(','); })
+  .action(async (cmd) => {
+    await CLI.installChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.namech, cmd.vch, cmd.chroot, cmd.ch, cmd.list);
+  });
 
 chaincodeCmd
-    .command('approve')
-    .description('approve chaincode')
-    .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
-    .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
-    .option('--upgrade', 'option used when approving to upgrade chaincode')
-    .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
-    .action(async (cmd) => {
-      await CLI.approveChaincode(cmd.config, cmd.hosts, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade);
-    });
+  .command('approve')
+  .description('approve chaincode')
+  .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
+  .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
+  .option('--upgrade', 'option used when approving to upgrade chaincode')
+  .option('--policy', 'option to force approving chaincode for first time')
+  .option('--force', 'option to force approving chaincode for first time')
+  .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
+  .action(async (cmd) => {
+    await CLI.approveChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade, cmd.policy, cmd.force);
+  });
 
 chaincodeCmd
-    .command('commit')
-    .description('commit chaincode')
-    .option('-f, --config <path>', 'Absolute path to the config deploy file', CONFIG_DEFAULT_PATH)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-    .option('--upgrade', 'option used when approving to upgrade chaincode')
-    .action(async (cmd) => {
-      await CLI.commitChaincode(cmd.config, cmd.hosts, cmd.confCommit, cmd.upgrade);
-    });
+  .command('commit')
+  .description('commit chaincode')
+  .option('-f, --config <path>', 'Absolute path to the config deploy file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .option('--upgrade', 'option used when approving to upgrade chaincode')
+  .option('--policy', 'option to force approving chaincode for first time')
+  .action(async (cmd) => {
+    await CLI.commitChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.upgrade, cmd.policy);
+  });
 
 chaincodeCmd
-    .command('deploy')
-    .description('deploy chaincode')
-    .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-    .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
-    .option('--upgrade', 'option used when approving to upgrade chaincode')
-    .action(async (cmd) => {
-      await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.confCommit, cmd.list, cmd.upgrade);
-    });
+  .command('deploy')
+  .description('deploy chaincode')
+  .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
+  .option('--upgrade', 'option used when approving to upgrade chaincode')
+  .option('--policy', 'option used to update chaincode level policy')
+  .option('--force', 'option used to update chaincode level policy')
+  .action(async (cmd) => {
+    await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.force);
+  });
 
 chaincodeCmd
-    .command('compile')
-    .description('compile chaincode')
-    .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-    .action(async (cmd) => {
-      await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.confCommit, true);
-    });
+  .command('compile')
+  .description('compile chaincode')
+  .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .action(async (cmd) => {
+    await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit, true);
+  });
 
 chaincodeCmd
-    .command('cli')
-    .description('start fabric cli')
-    .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-c, --confCommit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-    .action(async (cmd) => {
-      await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.confCommit);
-    });
+  .command('cli')
+  .description('start fabric cli')
+  .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .action(async (cmd) => {
+    await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit);
+  });
 
 program.version(pkg.version);
 program.parse(process.argv);

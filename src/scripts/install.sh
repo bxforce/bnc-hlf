@@ -3,6 +3,7 @@
 #source install.sh
 set -e
 
+
 packageChaincode() {
   set -x
   peer lifecycle chaincode package "$CC_NAME.tar.gz" --path "$CC_ROOT_PATH/$CC_PATH" --lang golang --label "$CC_NAME"_"$VERSION" >&log.txt

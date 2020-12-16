@@ -25,6 +25,10 @@ import { DEFAULT_CA_ADMIN } from '../../utils/constants';
 import { Utils } from '../../utils/helper';
 import getPeerMspPath = Utils.getPeerMspPath;
 import getPropertiesPath = Utils.getPropertiesPath;
+import getHlfBinariesPath = Utils.getHlfBinariesPath;
+import getNewOrgRequestPath = Utils.getNewOrgRequestPath;
+import { Configtxlator } from '../../utils/configtxlator';
+
 import { SysWrapper } from '../../utils/sysWrapper';
 import { e, l } from '../../utils/logs';
 
@@ -198,7 +202,9 @@ orderers:
       }
 
       // update the provided channel
-      const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath);
+       let sig= await channelClient.signConfig(anchorConfigPath);
+      const isUpdated = await channelClient.submitChannelUpdate(anchorConfigPath, [sig], channelName, this.network.organizations[0].mspName);
+    //  const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath);
       if(!isUpdated) {
         e(`Error channel (${channelName}) update !!!`);
         return false;
@@ -209,6 +215,134 @@ orderers:
     } catch (err) {
       e(err);
       return false;
+    }
+  }
+
+
+  async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, nameChannel){
+    l(`Fetching latest channel definition on  (${nameChannel}) !!!`);
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    try{
+      let envelope = await channelClient.getLatestChannelConfigFromOrderer(nameChannel, this.network.organizations[0].mspName);
+      const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
+      await configtxlator.createInitialConfigPb(envelope);
+      await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
+      
+      let original = await configtxlator.getFile(configtxlator.names.initialJSON);
+      let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
+
+      let newOrgDefinition = await SysWrapper.readFile(orgDefinitionPath);
+      let newOrgAnchorDefinition = await SysWrapper.readFile(anchorDefPAth);
+
+      let newOrgJsonDef = JSON.parse(newOrgDefinition);
+      let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition)
+
+      let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+
+      modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
+
+      let AnchorPeers = newOrgAnchorJson;
+
+      let target = modified.channel_group.groups.Application.groups.org3MSP.values;
+      let startAdded = {AnchorPeers, ...target}
+      modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
+      //save modified.json FILE
+      await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
+      //convert it to modified.pb
+      await configtxlator.convert(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, configtxlator.protobufType.config, configtxlator.convertType.encode)
+
+      //calculate delta between config.pb and modified.pb
+      await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, nameChannel);
+
+      //convert the delta.pb to json
+      await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, configtxlator.protobufType.update, configtxlator.convertType.decode)
+      //get the delta json file to add the header
+
+      let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
+
+      let config_update_as_envelope_json = {
+        "payload": {
+          "header": {
+            "channel_header": {
+              "channel_id": nameChannel,
+              "type": 2
+            }
+          },
+          "data": {
+            "config_update": deltaJSON
+          }
+        }
+      }
+      //save the new delta.json
+      await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
+      await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
+      //copy the final delta pb under artifacts
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, nameChannel)}/${configtxlator.names.finalPB}`)
+      await configtxlator.clean();
+
+    }catch (err) {
+      e(err);
+      e("ERROR generating new channel DEF")
+      return err;
+    }
+  }
+
+  async signConfig(config){
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+    // load the admin user into the client
+    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    try{
+      let sig= await channelClient.signConfig(config);
+      return sig
+    }catch(err){
+      e(err)
+      return err;
+    }
+  }
+
+  async submitChannelUpdate(config, sigs, nameChannel){
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    // load the admin user into the client
+    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    try{
+      //return signature
+      let isSubmitted = await channelClient.submitChannelUpdate(config, sigs, nameChannel, this.network.organizations[0].mspName);
+      if(!isSubmitted) {
+        e(`Error channel update !!!`);
+        return
+      }
+
+      l(`Channel  updated successfully !!!`);
+
+    }catch(err){
+      return err;
     }
   }
 

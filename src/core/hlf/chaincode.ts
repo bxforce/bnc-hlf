@@ -45,7 +45,7 @@ export class Chaincode {
         this.container = await this.docker.getContainer(`cli.${name}`)
     }
 
-    async checkCommitReadiness(arg, targets, sequence, nameChannel): Promise <boolean> {
+    async checkCommitReadiness(arg, targets, sequence, nameChannel, endorsement?): Promise <boolean> {
         try {
             const cmd = ['./scripts/commit.sh', `${arg}`, `${targets}`]
             let envArray = [
@@ -54,6 +54,9 @@ export class Chaincode {
                 `VERSION=${this.version}`,
                 `CHANNEL_NAME=${nameChannel}`
             ]
+            if(endorsement){
+                envArray.push(`ENDORSEMENT=${endorsement}`)
+            }
             let res = await this.executeCommand(cmd, envArray);
             console.log(res)
             return true;
@@ -82,7 +85,19 @@ export class Chaincode {
         }
     }
 
-    async approve(sequence, channelName): Promise <boolean> {
+    async isInstalled(): Promise <string> {
+        try {
+            //if this file does not exist means the chaincode is not installed and u can't proceed to approve
+            let fileName=`package_${this.name}_${this.version}.txt`
+            const cmd = ['sh', '-c', `test -f ${fileName} && echo "true" || echo "false"`]
+            let res = await this.executeCommand(cmd);
+            return res.toString().replace(/\W/g, '');
+        } catch(err) {
+            e(err);
+        }
+    }
+
+    async approve(sequence, channelName, endorsement?): Promise <boolean> {
         try {
             const cmd = ["./scripts/approve.sh"]
             let envArray = [
@@ -91,6 +106,9 @@ export class Chaincode {
                 `VERSION=${this.version}`,
                 `CHANNEL_NAME=${channelName}`
             ]
+            if(endorsement){
+               envArray.push(`ENDORSEMENT=${endorsement}`)
+            }
             let res = await this.executeCommand(cmd, envArray);
             console.log(res)
             return true;
@@ -134,10 +152,11 @@ export class Chaincode {
 
         return new Promise(async (resolve, reject) => {
             return await exec.start(async (err, stream) => {
+                console.log(err);
                 if (err) return reject();
                 let message = '';
                 stream.on('data', data => message += data.toString());
-                console.log('Data:', message)
+                console.log('Data:', message);
                 stream.on('end', () => resolve(message));
             });
         });

@@ -155,6 +155,30 @@ export module SysWrapper {
     editor.commit([], cb);
   }
 
+  export function readFile(filePath: string): Promise<string> {
+    return fs.readFile(filePath, 'utf-8');
+  }
+  
+  export function enumFilesInFolder(folder: string): Promise<string[]> {
+    return new Promise((fulfilled, rejected) => {
+      fs.readdir(folder, (err, files) => {
+        fulfilled(files);
+      });
+    });
+  }
+
+  export function getJSON(filePath: string): Promise<any> {
+    return new Promise((fulfilled, rejected) => {
+      try {
+        const store = memFs.create();
+        const editor = memFsEditor.create(store);
+        fulfilled(editor.readJSON(filePath));
+      } catch (ex) {
+        rejected(ex);
+      }
+    });
+  }
+
   /**
    * Renders to disk a file from a template
    * @param filePath Destination path
@@ -235,18 +259,6 @@ export module SysWrapper {
     });
   }
 
-  export function getJSON(filePath: string): Promise<any> {
-    return new Promise((fulfilled, rejected) => {
-      try {
-        const store = memFs.create();
-        const editor = memFsEditor.create(store);
-        fulfilled(editor.readJSON(filePath));
-      } catch (ex) {
-        rejected(ex);
-      }
-    });
-  }
-
   function writeBuffer(filePath: string, contents: Buffer, cb: any) {
     const store = memFs.create();
     const editor = memFsEditor.create(store);
@@ -255,13 +267,6 @@ export module SysWrapper {
       contents);
     editor.commit([], cb);
   }
-
-  export function enumFilesInFolder(folder: string): Promise<string[]> {
-    return new Promise((fulfilled, rejected) => {
-      fs.readdir(folder, (err, files) => {
-        fulfilled(files);
-      });
-    });
-  }
+  
   */
 }

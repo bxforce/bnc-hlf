@@ -1,0 +1,26 @@
+chains:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  fabric: "2.2.1"
+  tls: true
+  consensus: "raft"
+  db: "couchdb"
+  organisations:
+    - organisation: "org3"
+      domain_name: "bnc.com"
+      ca:
+        name: "ca3"
+        port: 9054
+        engine_name: "host1"
+      orderers:
+        - orderer: "orderer5"
+          port: 12050
+          engine: "host1"
+      peers:
+        - peer: "peer0"
+          port: 12051
+          engine: "host1"
+
+engines:
+  - name: "engine1"
+    type: "docker"
+    url: "/var/run/docker.sock"

@@ -258,6 +258,27 @@ export class Channels extends ClientHelper {
 
   }
 
+  async getLatestChannelConfigFromOrderer(channelName, orgMspId: string) {
+
+    let channel = this.client.newChannel(channelName);
+    channel.addOrderer(this.orderers[0]);
+    for(const peer of this.peers) {
+      channel.addPeer(peer, orgMspId);
+    }
+
+    if (!channel) {
+      e('Error retrieving the channel instance');
+      return
+    }
+    try{
+      var envelope = await channel.getChannelConfigFromOrderer();
+      return envelope;
+    }catch(err){
+      e('Error converting Binary to Json');
+      return err;
+    }
+  }
+
   /**
    * Load the list of orderer from the config file
    */
@@ -286,6 +307,114 @@ export class Channels extends ClientHelper {
         this.orderers.push(orderer);
       }
     }
+  }
+
+  async signConfig(configUpdatePath) {
+    try{
+
+      var envelope = fs.readFileSync(configUpdatePath);
+      // extract the channel config bytes from the envelope to be signed
+      var channelConfig = this.client.extractChannelConfig(envelope);
+
+      let signature = this.client.signChannelConfig(channelConfig);
+      return signature;
+    }catch (err) {
+      e('error signing')
+      return err;
+    }
+
+  }
+
+  async submitChannelUpdate (configUpdatePath, sigs, channelName, orgMspId): Promise<boolean> {
+    var error_message = null;
+    try {
+      let channel = this.client.newChannel(channelName);
+      channel.addOrderer(this.orderers[0]);
+      for(const peer of this.peers) {
+        channel.addPeer(peer, orgMspId);
+      }
+
+      if (!channel) {
+        e('Error retrieving the channel instance');
+        return false;
+      }
+
+      let request;
+      var envelope = fs.readFileSync(configUpdatePath);
+      // extract the channel config bytes from the envelope to be signed
+      var channelConfig = this.client.extractChannelConfig(envelope);
+      request= {
+        orderer: this.orderers[0],
+        config: channelConfig,
+        signatures: sigs,
+        name: channelName,
+        txId: this.client.newTransactionID(true) // get an admin based transactionID
+      };
+    
+      var promises = [];
+      let event_hubs = channel.getChannelEventHubsForOrg();
+      d(`found %s eventhubs for this organization : ${event_hubs.length}`);
+      //we need to contruct array correspondant of the array of peer names
+
+      event_hubs.forEach((eh) => {
+        let anchorUpdateEventPromise = new Promise((resolve, reject) => {
+          d('anchorUpdateEventPromise - setting up event');
+          const event_timeout = setTimeout(() => {
+            let message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
+            e(message);
+            eh.disconnect();
+          }, 60000);
+          eh.registerBlockEvent((block) => {
+                l(`The config update has been committed on peer , ${eh.getPeerAddr()}`);
+                clearTimeout(event_timeout);
+                resolve();
+              }, (err) => {
+                clearTimeout(event_timeout);
+                e(err);
+                reject(err);
+              },
+              {unregister: true, disconnect: true}
+          );
+          eh.connect();
+        });
+        promises.push(anchorUpdateEventPromise);
+      });
+
+      var sendPromise = this.client.updateChannel(request);
+      // put the send to the orderer last so that the events get registered and
+      // are ready for the orderering and committing
+      promises.push(sendPromise);
+      let results = await Promise.all(promises);
+      d(util.format('Update Channel R E S P O N S E : %j', results));
+      let response = results.pop(); //  orderer results are last in the results
+
+      if (response) {
+        if (response.status === 'SUCCESS') {
+          l(`Successfully update anchor peers to the channel', ${channelName}`);
+        } else {
+          error_message = util.format('Failed to update anchor peers to the channel %s with status: %s reason: %s', channelName, response.status, response.info);
+          e(error_message);
+        }
+      } else {
+        error_message = util.format('Failed to update anchor peers to the channel %s', channelName);
+        e(error_message);
+      }
+    } catch (error) {
+      e(`Failed to update anchor peers due to error:   ${error}`);
+      error_message = error.toString();
+    }
+
+    if (!error_message) {
+      l(util.format(
+          'Successfully update anchor peers in organization %s to the channel \'%s\'',
+          channelName));
+      return true;
+    } else {
+      let message = util.format('Failed to update anchor peers. cause:%s',error_message);
+      e(message);
+      return false;
+    }
+
   }
 
   /**

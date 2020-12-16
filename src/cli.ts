@@ -73,24 +73,26 @@ export class CLI {
     await Orchestrator.updateChannel(channelName, deployConfigPath, hostsConfigPath);
   }
 
-  static async installChaincode(name: string, deployConfigPath: string, hostsConfigPath: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
-    await Orchestrator.installChaincode(name, version, chaincodeRootPath, chaincodePath, targets, deployConfigPath, hostsConfigPath);
+
+  static async installChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, name: string, version: string, chaincodeRootPath, chaincodePath, targets?: string[]) {
+    await Orchestrator.installChaincode(name, version, chaincodeRootPath, chaincodePath, targets, deployConfigPath, hostsConfigPath, commitConfigPath);
   }
 
-  static async approveChaincode(deployConfigPath: string, hostsConfigPath: string, name: string, version: string, channelName: string, upgrade?: boolean) {
-    await Orchestrator.approveChaincodeCli(name, version, channelName, upgrade, deployConfigPath, hostsConfigPath)
+  static async approveChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, name: string, version: string, channelName: string, upgrade: boolean, policy: boolean, forceNew: boolean) {
+    await Orchestrator.approveChaincodeCli(name, version, channelName, upgrade, policy, forceNew, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
-  static async commitChaincode(deployConfigPath: string, hostsConfigPath: string, commitFile, upgrade?: boolean) {
-    await Orchestrator.commitChaincode(upgrade, commitFile, deployConfigPath, hostsConfigPath)
+  static async commitChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean) {
+    await Orchestrator.commitChaincode(upgrade, policy, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
-  static async deployChaincode(deployConfigPath: string, hostsConfigPath: string, commitFile, targets?: string[], upgrade?: boolean) {
-    await Orchestrator.deployChaincode(targets, upgrade, commitFile, deployConfigPath, hostsConfigPath)
+  static async deployChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, targets?: string[], upgrade?: boolean, policy?: boolean, forceNew?:boolean) {
+    await Orchestrator.deployChaincode(targets, upgrade, policy, forceNew, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
-  static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitFile, compile = false) {
-    await Orchestrator.deployCli(compile, commitFile, deployConfigPath, hostsConfigPath)
+
+  static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, compile = false) {
+    await Orchestrator.deployCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
   static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
@@ -106,10 +108,27 @@ export class CLI {
   static async cleanNetwork(deployConfigPath: string, hostsConfigPath: string, forceRemove: boolean) {
     await Orchestrator.cleanDocker(forceRemove, deployConfigPath, hostsConfigPath);
   }
+  
+  
+  static async generateNewOrgDefinition(deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath);
+  }
+
+  static async generateCustomChannelDef(orgDefinition, anchorDefinition, channelName: string, deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.generateCustomChannelDef(orgDefinition, anchorDefinition, channelName, deployConfigPath, hostsConfigPath);
+  }
+
+  static async signCustomChannelDef(channelDef, channelName, deployConfigPath: string, hostsConfigPath: string){
+    await Orchestrator.signCustomChannelDef(channelDef, channelName, deployConfigPath, hostsConfigPath);
+  }
+
+  static async submitCustomChannelDef(channelDef, signatures, channelName: string, deployConfigPath: string, hostsConfigPath: string){
+    await Orchestrator.submitCustomChannelDef(channelDef, signatures, channelName, deployConfigPath, hostsConfigPath);
+  }
 
   /****************************************************************************/
-  
-    static async upgradeChaincode() {
+
+  static async upgradeChaincode() {
     l('[Upgrade Chaincode] Not yet implemented');
   }
 
