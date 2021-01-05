@@ -634,7 +634,7 @@ export class Orchestrator {
         const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath); // TODO: fix choose between config and command variables
         if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, name, version); // new Chaincode(docker, config.chaincodeName, config.version);
+        const chaincode = new Chaincode(docker, name, version, config.scriptsPath); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
         for(let peerElm of targets){
             let corePeerAdr = `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
@@ -648,9 +648,9 @@ export class Orchestrator {
         const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, name, version); // new Chaincode(docker, config.chaincodeName, config.version);
+        const chaincode = new Chaincode(docker, name, version, config.scriptsPath); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
-        let seq = await this.getLastSequence(name, version, channelName, deploymentConfigPath, hostsConfigPath);
+        let seq = await this.getLastSequence(name, version, config.scriptsPath, channelName, deploymentConfigPath, hostsConfigPath);
         let lastSequence = seq.split(':');
         let finalSequence;
         if(! lastSequence[1] ){
@@ -678,7 +678,7 @@ export class Orchestrator {
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath);
         const config: CommitConfiguration = await Orchestrator._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        const chaincode = new Chaincode(docker,config.chaincodeName, config.version); // TODO add those args in command line
+        const chaincode = new Chaincode(docker,config.chaincodeName, config.version, config.scriptsPath); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
         let finalArg1= "";
@@ -691,7 +691,7 @@ export class Orchestrator {
 
         let targets = await this.getTargetCommitPeers(commitConfigPath)
 
-        let seq = await this.getLastSequence(config.chaincodeName, config.version, config.channelName, deploymentConfigPath, hostsConfigPath);
+        let seq = await this.getLastSequence(config.chaincodeName, config.version, config.scriptsPath, config.channelName, deploymentConfigPath, hostsConfigPath);
         let lastSequence = seq.split(':');
         let finalSequence;
         if(! lastSequence[1]){
@@ -718,7 +718,7 @@ export class Orchestrator {
         await this.deployCliSingleton(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
         // test if is installed
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, config.chaincodeName, config.version);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, config.scriptsPath);
         await chaincode.init(organization.fullName);
         let res = await chaincode.isInstalled();
         if (res == "false") {
@@ -868,10 +868,10 @@ export class Orchestrator {
     }
     
     
-    private static async getLastSequence(name, version, channelName, configFilePath, hostsConfigPath) {
+    private static async getLastSequence(name, version, scriptsPath, channelName, configFilePath, hostsConfigPath) {
         l(' REQUEST to approve chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFilePath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, name, version);
+        const chaincode = new Chaincode(docker, name, version, scriptsPath);
         await chaincode.init(organization.fullName);
         let seq =  await chaincode.getLastSequence(channelName);
         return seq;

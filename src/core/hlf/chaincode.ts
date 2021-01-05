@@ -34,11 +34,13 @@ export class Chaincode {
     public options;
     public name;
     public version;
+    public scriptsPath;
 
-    constructor(docker : DockerEngine, name: string, version: string ) {
+    constructor(docker : DockerEngine, name: string, version: string, scriptsPath: string) {
         this.docker = docker;
         this.name = name;
         this.version = version;
+        this.scriptsPath = scriptsPath;
     }
 
     async init(name) {
@@ -47,7 +49,7 @@ export class Chaincode {
 
     async checkCommitReadiness(arg, targets, sequence, nameChannel, endorsement?): Promise <boolean> {
         try {
-            const cmd = ['./scripts/commit.sh', `${arg}`, `${targets}`]
+            const cmd = [this.scriptsPath+'commit.sh', `${arg}`, `${targets}`]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -68,7 +70,7 @@ export class Chaincode {
 
     async installChaincode(v1,v2, path): Promise <boolean> {
         try {
-            const cmd = ["./scripts/install.sh"]
+            const cmd = [this.scriptsPath+"install.sh"]
             let envArray = [
                 `CORE_PEER_ADDRESS=${v1}`,
                 `CORE_PEER_TLS_ROOTCERT_FILE=${v2}`,
@@ -99,7 +101,7 @@ export class Chaincode {
 
     async approve(sequence, channelName, endorsement?): Promise <boolean> {
         try {
-            const cmd = ["./scripts/approve.sh"]
+            const cmd = [this.scriptsPath+"approve.sh"]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -120,7 +122,7 @@ export class Chaincode {
 
     async getLastSequence(channelName): Promise<string> {
         try {
-            const cmd = ["./scripts/queryCommitted.sh"]
+            const cmd = [this.scriptsPath+"queryCommitted.sh"]
             let envArray = [
                 `CC_NAME=${this.name}`,
                 `VERSION=${this.version}`,
