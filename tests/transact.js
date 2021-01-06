@@ -100,7 +100,7 @@ async function init(reset, network, path_wallet, ca_name, msp, admin_id, admin_p
 async function invokeTx(reset, batch_size, wait_time) {
 	try {
 		var network = getNetwork(PATH_NETWORK)
-		var wallet = await init(reset, network, PATH_WALLET, CA_NAME, MSP, ADMIN_ID, USER_ID, USER_DPT);
+		var wallet = await init(reset, network, PATH_WALLET, CA_NAME, MSP, ADMIN_ID, ADMIN_PWD, USER_ID, USER_DPT);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		const gateway = new Gateway();
