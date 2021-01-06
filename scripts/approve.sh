@@ -19,10 +19,10 @@ verifyResult() {
 
 approve() {
   if [[ -z "${ENDORSEMENT}" ]]; then
-    peer lifecycle chaincode approveformyorg --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT >&log.txt
+    peer lifecycle chaincode approveformyorg -o $CORE_ORDERER_ID --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT >&log.txt
   else
     echo "______________________Updating endorsement policy___________________"
-    peer lifecycle chaincode approveformyorg --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --signature-policy "${ENDORSEMENT}" >&log.txt
+    peer lifecycle chaincode approveformyorg -o $CORE_ORDERER_ID --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --signature-policy "${ENDORSEMENT}" >&log.txt
   fi
   cat log.txt
   res=$?
