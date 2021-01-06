@@ -47,7 +47,7 @@ export class ConnectionProfileGenerator extends BaseGenerator {
         "${this.network.organizations[0].name}": {
             "mspid": "${this.network.organizations[0].mspName}",
             "cryptoPath": "${this.network.options.networkConfigPath}/organizations/peerOrganizations/${this.network.organizations[0].fullName}/users/{username}@${this.network.organizations[0].fullName}/msp",
-            "peers": [ "${this.network.organizations[0].peers.map(peer => `${peer.name}.${this.network.organizations[0].fullName}`).join(', ')}" ],
+            "peers": [ ${this.network.organizations[0].peers.map(peer => `"${peer.name}.${this.network.organizations[0].fullName}"`).join(', ')} ],
             "certificateAuthorities": [ "${this.network.organizations[0].ca.name}.${this.network.organizations[0].name}" ]
         }
     },

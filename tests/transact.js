@@ -10,15 +10,16 @@ const AwaitLock = require('await-lock');
 const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
 
 const PATH_WALLET =  '/tmp/wallet';
-const PATH_NETWORK = "/tmp/hyperledger-fabric-network/settings/connection-org1.json"
-const CHANNEL = 'mychannel';
-const CHAINCODE = 'mycc';
+const PATH_NETWORK = '/tmp/hyperledger-fabric-network/settings/connection-org1.json';
+const CA_NAME = 'ca1.org1'
 const MSP = 'org1MSP';
-const CA = 'ca1.org1'
 const ADMIN_ID = 'admin';
 const ADMIN_PWD = 'adminpw';
 const USER_ID = 'appUser';
 const USER_DPT = 'org1.department1';
+
+const CHANNEL = 'mychannel';
+const CHAINCODE = 'mycc';
 const MAX_CPT = 1;
 const BATCH_SIZE = 50;
 const WAIT_TIME = 0;
@@ -51,7 +52,9 @@ var registerAndEnrollUser = async (caClient, wallet, orgMspId, adminUserId, user
 		const adminUser = await provider.getUserContext(adminIdentity, adminUserId);
 		// Register the user, enroll the user, and import the new identity into the wallet.
 		// if affiliation is specified by client, the affiliation value must be configured in CA
-		const secret = await caClient.register({ affiliation: affiliation, enrollmentID: userId, role: 'client' }, adminUser);
+		var query = { enrollmentID: userId, role: 'client' }
+		if (affiliation) query[affiliation] = affiliation;
+		const secret = await caClient.register(query, adminUser);
 		const enrollment = await caClient.enroll({ enrollmentID: userId, enrollmentSecret: secret });
 		const x509Identity = { credentials: { certificate: enrollment.certificate, privateKey: enrollment.key.toBytes(), }, mspId: orgMspId, type: 'X.509', };
 		await wallet.put(userId, x509Identity);
@@ -61,33 +64,43 @@ var registerAndEnrollUser = async (caClient, wallet, orgMspId, adminUserId, user
 	}
 };
 
+function getNetwork(path_network) {
+	// build an in memory object with the network configuration (also known as a connection profile)
+	const fileExists = fs.existsSync(path_network);
+	if (!fileExists) { throw new Error(`no such file or directory: ${path_network}`); }
+	const contents = fs.readFileSync(path_network, 'utf8');
+	let network = JSON.parse(contents);
+	console.log(`Loaded the network configuration located at ${path_network}`);
+	return network;
+}
+
+async function init(reset, network, path_wallet, ca_name, msp, admin_id, admin_pwd, user_id, user_dpt) {
+	// build an instance of the fabric ca services client based on the information in the network configuration
+	const caInfo = network.certificateAuthorities[ca_name];
+	const caTLSCACerts = caInfo.tlsCACerts.path;
+	const caClient = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
+	console.log(`Built a CA Client named ${caInfo.caName}`);
+
+	// setup the wallet to hold the credentials of the application user
+	const walletExists = fs.existsSync(path_wallet);
+	if (walletExists && reset) { fs.rmdirSync(path_wallet, { recursive: true }); console.log(`Removed old wallet at ${path_wallet}`); }
+	
+	const wallet = await Wallets.newFileSystemWallet(path_wallet); // wallet = await Wallets.newInMemoryWallet();
+	console.log(`Built a file system wallet at ${path_wallet}`);
+
+	// in a real application this would be done on an administrative flow, and only once
+	await enrollAdmin(caClient, wallet, msp, admin_id, admin_pwd);
+
+	// in a real application this would be done only when a new user was required to be added and would be part of an administrative flow
+	await registerAndEnrollUser(caClient, wallet, msp, admin_id, user_id, user_dpt);
+	
+	return wallet;
+};
+
 async function invokeTx(reset, batch_size, wait_time) {
 	try {
-		// build an in memory object with the network configuration (also known as a connection profile)
-		const fileExists = fs.existsSync(PATH_NETWORK);
-		if (!fileExists) { throw new Error(`no such file or directory: ${PATH_NETWORK}`); }
-		const contents = fs.readFileSync(PATH_NETWORK, 'utf8');
-		let network = JSON.parse(contents);
-		console.log(`Loaded the network configuration located at ${PATH_NETWORK}`);
-
-		// build an instance of the fabric ca services client based on the information in the network configuration
-		const caInfo = network.certificateAuthorities[CA];
-		const caTLSCACerts = caInfo.tlsCACerts.path;
-		const caClient = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
-		console.log(`Built a CA Client named ${caInfo.caName}`);
-
-		// setup the wallet to hold the credentials of the application user
-		const walletExists = fs.existsSync(PATH_WALLET);
-		if (walletExists && reset) { fs.rmdirSync(PATH_WALLET, { recursive: true }); console.log(`Removed old wallet at ${PATH_WALLET}`); }
-		
-		const wallet = await Wallets.newFileSystemWallet(PATH_WALLET); // wallet = await Wallets.newInMemoryWallet();
-		console.log(`Built a file system wallet at ${PATH_WALLET}`);
-
-		// in a real application this would be done on an administrative flow, and only once
-		await enrollAdmin(caClient, wallet, MSP, ADMIN_ID, ADMIN_PWD);
-
-		// in a real application this would be done only when a new user was required to be added and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, MSP, ADMIN_ID, USER_ID, USER_DPT);
+		var network = getNetwork(PATH_NETWORK)
+		var wallet = await init(reset, network, PATH_WALLET, CA_NAME, MSP, ADMIN_ID, USER_ID, USER_DPT);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		const gateway = new Gateway();
@@ -171,9 +184,9 @@ async function invokeTx(reset, batch_size, wait_time) {
 
 var args = process.argv.slice(2);
 switch (args[0]) {
-//case 'register':
-//    registerUser()
-//    break;
+case 'register':
+    init(false, getNetwork(args[1] ? args[1] : PATH_NETWORK), args[2] ? args[2] : PATH_WALLET, args[3] ? args[3] : CA_NAME, args[4] ? args[4] : MSP, args[5] ? args[5] : ADMIN_ID, args[6] ? args[6] : ADMIN_PWD, args[6] ? args[6] : USER_ID, args[7]);
+    break;
 case 'invoke':
     invokeTx(false, args[1] ? args[1] : BATCH_SIZE, args[2] ? args[2] : WAIT_TIME);
     break;
