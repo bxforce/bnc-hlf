@@ -127,8 +127,8 @@ program
     await Utils.delay(DOCKER_DELAY);
     await CLI.createChannel(cmd.namech, cmd.config, cmd.hosts);
     await Utils.delay(DOCKER_DELAY);
-    await CLI.joinChannel(cmd.namech, cmd.config, cmd.hosts);
-    await CLI.updateChannel(cmd.namech, cmd.config, cmd.hosts);
+    await CLI.joinChannel(cmd.config, cmd.hosts, cmd.namech);
+    await CLI.updateChannel(cmd.config, cmd.hosts, cmd.namech);
     await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit, true);
     await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade);
   });
@@ -153,7 +153,7 @@ channelCmd
   //.requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .action(async cmd => {
-    await CLI.createChannel(cmd.namech, cmd.config, cmd.hosts);
+    await CLI.createChannel(cmd.config, cmd.hosts, cmd.namech);
   });
 
 channelCmd
@@ -163,7 +163,7 @@ channelCmd
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .action(async cmd => {
-    await CLI.joinChannel(cmd.namech, cmd.config, cmd.hosts);
+    await CLI.joinChannel(cmd.config, cmd.hosts, cmd.namech);
   });
 
 channelCmd
@@ -174,7 +174,7 @@ channelCmd
   //.requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
   .action(async (cmd) => {
-    await CLI.updateChannel(cmd.namech, cmd.config, cmd.hosts);
+    await CLI.updateChannel(cmd.config, cmd.hosts, cmd.namech);
   });
 
 channelCmd
@@ -185,10 +185,10 @@ channelCmd
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
   .option('--no-create', 'bypass createChannel')
   .action(async (cmd) => {
-    if (cmd.create) await CLI.createChannel(cmd.namech, cmd.config, cmd.hosts);
+    if (cmd.create) await CLI.createChannel(cmd.config, cmd.hosts, cmd.namech);
     await Utils.delay(DOCKER_DELAY);
-    await CLI.joinChannel(cmd.namech, cmd.config, cmd.hosts);
-    await CLI.updateChannel(cmd.namech, cmd.config, cmd.hosts);
+    await CLI.joinChannel(cmd.config, cmd.hosts, cmd.namech);
+    await CLI.updateChannel( cmd.config, cmd.hosts, cmd.namech);
   });
 
 
@@ -201,7 +201,7 @@ channelCmd
     .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
     .requiredOption('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-        await CLI.generateCustomChannelDef(cmd.orgdef, cmd.anchordef, cmd.namech, cmd.config, cmd.hosts);
+        await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.namech);
     });
 
 channelCmd
@@ -212,7 +212,7 @@ channelCmd
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
     .requiredOption('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-        await CLI.signCustomChannelDef(cmd.channeldef, cmd.namech, cmd.config, cmd.hosts);
+        await CLI.signCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.namech);
     });
 
 channelCmd
@@ -224,7 +224,7 @@ channelCmd
     .requiredOption('-s, --sigs <update-path>', 'path to the signatures folder')
     .requiredOption('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-        await CLI.submitCustomChannelDef(cmd.channeldef, cmd.sigs, cmd.namech, cmd.config, cmd.hosts);
+        await CLI.submitCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.sigs, cmd.namech);
     });
 
 
@@ -235,13 +235,9 @@ chaincodeCmd
   .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-  .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
-  .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
-  .requiredOption('-cRootPath, --chroot <path>', 'path to chaincode root')
-  .requiredOption('-cPath, --ch <path>', 'path to chaincode starting from root')
   .option('-p, --list <items>', 'comma separated list', x => { x.split(','); })
   .action(async (cmd) => {
-    await CLI.installChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.namech, cmd.vch, cmd.chroot, cmd.ch, cmd.list);
+    await CLI.installChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list);
   });
 
 chaincodeCmd
@@ -250,14 +246,11 @@ chaincodeCmd
   .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-  .requiredOption('-n, --namech <chaincode-name>', 'name of the chaincode')
-  .requiredOption('-v, --vch <chaincode-version>', 'version of the chaincode')
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option to force approving chaincode for first time')
   .option('--force', 'option to force approving chaincode for first time')
-  .requiredOption('-channel, --channel <channel-name>', 'name of the channel')
   .action(async (cmd) => {
-    await CLI.approveChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.namech, cmd.vch, cmd.channel, cmd.upgrade, cmd.policy, cmd.force);
+    await CLI.approveChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.upgrade, cmd.policy, cmd.force);
   });
 
 chaincodeCmd
