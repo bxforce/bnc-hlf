@@ -145,13 +145,8 @@ ${this.options.hosts.map(host => `
     async startCli(): Promise<boolean> {
         try {
             const serviceName =  `cli.${this.options.org.fullName}`;
-
             l(`Starting CLI ${serviceName}...`);
-
-            //const engine = this.options.org.getEngine(peer.options.engineName);
-            //this.container = await this.dockerEngine.getContainer(`cli.${this.options.org.fullName}`)
             await this.dockerEngine.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
-
             l(`Service Peer ${serviceName} started successfully !!!`);
 
             return true;

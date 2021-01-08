@@ -50,17 +50,6 @@ export class DeploymentParser extends BaseParser {
 
     // Parsing chains definition
     const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
-
-    // Parsing engine
-    //const engines: Engine[] = DeploymentParser.buildEngine(parsedYaml['engines']);
-
-    // Set engine for every organization
-    /*
-    organizations.map(organization => {
-      organization.engines = engines;
-      organization.expandEngine(true, true);
-    });
-    */
     l('Finish Parsing configuration file');
 
     // build the network instance
@@ -142,10 +131,6 @@ export class DeploymentParser extends BaseParser {
             ports: [
               ordererPort ?? `${ORDERER_DEFAULT_PORT.main}`,
               ordererMetrics ?? `${ORDERER_DEFAULT_PORT.operations}`
-              /*
-              ordererPort ?? `${index*1000+ORDERER_DEFAULT_PORT.main}`,
-              `${index*1000+ORDERER_DEFAULT_PORT.operations}`
-              */
             ],
             number: index
           })

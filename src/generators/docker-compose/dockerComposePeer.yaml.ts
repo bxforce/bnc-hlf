@@ -81,9 +81,6 @@ ${this.options.hosts && this.options.hosts.length > 0 ? `
     ports:
       - ${peer.options.ports[0]}:${peer.options.ports[0]}
 `:``}
-    #ports:
-    #  - ${peer.options.ports[0]}:${peer.options.ports[0]}
-    #  - ${peer.options.ports[3]}:${peer.options.ports[3]}
     volumes:
       - /var/run/:/host/var/run/
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/msp:/etc/hyperledger/fabric/msp
@@ -108,9 +105,6 @@ ${this.options.hosts.map(host => `
     environment:
       - COUCHDB_USER=${peer.name}User
       - COUCHDB_PASSWORD=${peer.name}Pwd
-    # Comment the port mapping IN ORDER to hide/expose the CouchDB service!!!!!
-    #ports:
-    #  - ${peer.options.couchDbPort}:5984
     networks:
       - ${this.options.composeNetwork}
 `).join('')}
@@ -150,16 +144,9 @@ ${this.options.hosts.map(host => `
   async startPeer(peer: Peer): Promise<boolean> {
     try {
       const serviceName =  `${peer.name}.${this.options.org.fullName}`;
-
       l(`Starting Peer ${serviceName}...`);
-
-      //const engine = this.options.org.getEngine(peer.options.engineName);
-      //const docker = new DockerEngine({ host: engine.options.host, port: engine.options.port });
-
       await this.dockerEngine.composeOne(serviceName, { cwd: this.path, config: this.filename, log: ENABLE_CONTAINER_LOGGING });
-
       l(`Service Peer ${serviceName} started successfully !!!`);
-
       return true;
     } catch(err) {
       e(err);

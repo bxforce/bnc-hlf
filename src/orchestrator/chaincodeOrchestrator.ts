@@ -316,8 +316,7 @@ export class ChaincodeOrchestrator {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const organization: Organization = network.organizations[0];
-        //const engine = organization.getEngine(organization.peers[0].options.engineName);
-        const docker =  new DockerEngine({socketPath: '/var/run/docker.sock'}); //{ host: engine.options.host, port: engine.options.port });
+        const docker =  new DockerEngine({socketPath: '/var/run/docker.sock'}); 
         return {docker, organization};
     }
     
