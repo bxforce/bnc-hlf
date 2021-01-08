@@ -28,8 +28,8 @@ import { e, l } from '../../utils/logs';
  *
  * @author wassim.znaidi@gmail.com
  */
-export class DockerComposeCliSingleton extends BaseGenerator {
-    private static instance: DockerComposeCliSingleton;
+export class DockerComposeCli extends BaseGenerator {
+    private static instance: DockerComposeCli;
 
     // TODO: add volumes section only for actual volumes...
     contents = `
@@ -105,22 +105,22 @@ ${this.options.hosts.map(host => `
      * This implementation let you subclass the Singleton class while keeping
      * just one instance of each subclass around.
      */
-    public static getInstance(): DockerComposeCliSingleton {
-        if (DockerComposeCliSingleton.instance == null) {
-           // DockerComposeCliSingleton.instance = new DockerComposeCliSingleton(filename, options);
+    public static getInstance(): DockerComposeCli {
+        if (DockerComposeCli.instance == null) {
+           // DockerComposeCli.instance = new DockerComposeCli(filename, options);
             //throw error here
             console.log("call init first !")
         }
 
-        return DockerComposeCliSingleton.instance;
+        return DockerComposeCli.instance;
     }
 
-    public static init(filename: string, options: DockerComposeYamlOptions, dockerEngine: DockerEngine): DockerComposeCliSingleton{
-        if(DockerComposeCliSingleton.instance != null){
+    public static init(filename: string, options: DockerComposeYamlOptions, dockerEngine: DockerEngine): DockerComposeCli{
+        if(DockerComposeCli.instance != null){
             console.log("ALREADY initialized")
         }
-        DockerComposeCliSingleton.instance = new DockerComposeCliSingleton(filename, options, dockerEngine);
-        return DockerComposeCliSingleton.instance;
+        DockerComposeCli.instance = new DockerComposeCli(filename, options, dockerEngine);
+        return DockerComposeCli.instance;
     }
 
     /**

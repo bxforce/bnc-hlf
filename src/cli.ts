@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 import { l } from './utils/logs';
-import { Orchestrator } from './orchestrator';
-import { ChaincodeOrchestrator } from './chaincodeOrchestrator';
-import { ChannelOrchestrator } from './channelOrchestrator';
+import { Orchestrator } from './orchestrator/orchestrator';
+import { ChaincodeOrchestrator } from './orchestrator/chaincodeOrchestrator';
+import { ChannelOrchestrator } from './orchestrator/channelOrchestrator';
 
 /**
  *
@@ -94,7 +94,7 @@ export class CLI {
 
 
   static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, compile = false) {
-    await ChaincodeOrchestrator.deployCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
+    await ChaincodeOrchestrator.deployChaincodeCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
   static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {

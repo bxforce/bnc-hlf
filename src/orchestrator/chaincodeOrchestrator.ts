@@ -16,26 +16,23 @@ limitations under the License.
 
 
 import {join} from 'path';
-import {DeploymentParser} from './parser/deploymentParser';
-import {HostsParser} from './parser/hostsParser';
-import {CommitParser} from './parser/commitParser';
-import {Organization} from './parser/model/organization';
-import {Peer} from './parser/model/peer';
-import {Network} from './parser/model/network';
-import {CommitConfiguration} from './parser/model/commitConfiguration';
-import {ConfigurationValidator} from './parser/validator/configurationValidator';
-import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockerComposeBase.yaml';
-import {DockerComposeCliSingleton} from './generators/docker-compose/dockerComposeCliSingleton.yaml';
-import {Chaincode} from'./core/hlf/chaincode';
-import {DockerComposeYamlOptions} from './utils/datatype';
-import {d, e, l} from './utils/logs';
-import {DockerEngine} from './utils/dockerAgent';
+import {Organization} from '../parser/model/organization';
+import {Peer} from '../parser/model/peer';
+import {Network} from '../parser/model/network';
+import {CommitConfiguration} from '../parser/model/commitConfiguration';
+import {DockerComposeEntityBaseGenerator} from '../generators/docker-compose/dockerComposeBase.yaml';
+import {DockerComposeCli} from '../generators/docker-compose/dockerComposeCli.yaml';
+import {Chaincode} from'../core/hlf/chaincode';
+import {DockerComposeYamlOptions} from '../utils/datatype';
+import {d, e, l} from '../utils/logs';
+import {DockerEngine} from '../utils/dockerAgent';
 import {
     BNC_NETWORK,
     NETWORK_ROOT_PATH,
     HLF_DEFAULT_VERSION,
     SEQUENCE
-} from './utils/constants';
+} from '../utils/constants';
+import { Helper } from './helper';
 
 /**
  * Main tools orchestrator
@@ -46,59 +43,10 @@ import {
  */
 export class ChaincodeOrchestrator {
 
-    /**
-     * Parse & validate deployment configuration file
-     * @param deploymentConfigPath
-     * @param hostsConfigPath
-     * @private
-     */
-    private static async _parse(deploymentConfigPath: string, hostsConfigPath: string): Promise<Network> {
-        l('[Start] Start parsing the blockchain configuration file');
-        l('Validate input configuration file');
-        const validator = new ConfigurationValidator();
-        const isValid = validator.isValidDeployment(deploymentConfigPath);
-
-        if (!isValid) {
-            e('Configuration file is invalid');
-            return;
-        }
-        l('Configuration file valid');
-
-        let configParser = new DeploymentParser(deploymentConfigPath);
-        const network = await configParser.parse();
-
-        //set hosts
-        if (hostsConfigPath) {
-            let hostsParser = new HostsParser(hostsConfigPath);
-            network.hosts = await hostsParser.parse();
-        }
-        l('[End] Blockchain configuration files parsed');
-
-        return network;
-    }
-
-    private static async _parseCommitConfig(commitConfigPath: string): Promise<CommitConfiguration> {
-        l('[Start] Start parsing the blockchain configuration file');
-
-        let configParse = new CommitParser(commitConfigPath);
-        const conf = await configParse.parse();
-        l('[End] Blockchain configuration files parsed');
-        return conf;
-    }
-
-    /**
-     * Return the default path where to store all files and materials
-     * @private
-     */
-    private static _getDefaultPath(): string {
-        const homedir = require('os').homedir();
-        return join(homedir, NETWORK_ROOT_PATH);
-    }
-    
-    static async deployCli(compile: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath);
+    static async deployChaincodeCli(compile: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        const network: Network = await ChaincodeOrchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
@@ -109,7 +57,7 @@ export class ChaincodeOrchestrator {
         const peer: Peer = network.organizations[0].peers[0];
 
         // Assign & check root path
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
         const options: DockerComposeYamlOptions = {
             networkRootPath: path,
@@ -136,25 +84,25 @@ export class ChaincodeOrchestrator {
         await engine.createNetwork({Name: options.composeNetwork});
 
         l('Creating cli container');
-        const cliSingleton = DockerComposeCliSingleton.init(`docker-compose-cli.yaml`, options, engine);
+        const cli = DockerComposeCli.init(`docker-compose-cli.yaml`, options, engine);
 
         l(`'Creating Cli container template`);
-        await cliSingleton.createTemplateCli();
+        await cli.createTemplateCli();
 
-        await cliSingleton.startCli()
+        await cli.startCli()
     }
 
     static async installChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, targets): Promise<void> {
         let targetPeers = await this.getTargetPeers(targets, deployConfigPath, hostsConfigPath)
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath);
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        await ChaincodeOrchestrator.deployCliSingleton(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deployConfigPath, hostsConfigPath, commitConfigPath)
+        await ChaincodeOrchestrator.deployCli(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deployConfigPath, hostsConfigPath, commitConfigPath)
         await ChaincodeOrchestrator.installChaincodeCli(config.chaincodeName, targetPeers, config.version, deployConfigPath, hostsConfigPath, commitConfigPath)
     }
 
     static async installChaincodeCli(name: string, targets: Peer[], version: string, deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         l('[End] Blockchain configuration files parsed');
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath); // TODO: fix choose between config and command variables
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath); // TODO: fix choose between config and command variables
         if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deployConfigPath, hostsConfigPath)
         const chaincode = new Chaincode(docker, name, version, config.scriptsPath); // new Chaincode(docker, config.chaincodeName, config.version);
@@ -168,7 +116,7 @@ export class ChaincodeOrchestrator {
 
     static async approveChaincodeCli(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, forceNew: boolean): Promise<void> {
         l(' REQUEST to approve chaincode')
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath);
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
         const chaincode = new Chaincode(docker, config.chaincodeName, config.version, config.scriptsPath); // new Chaincode(docker, config.chaincodeName, config.version);
@@ -199,7 +147,7 @@ export class ChaincodeOrchestrator {
     static async commitChaincode(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean): Promise <void> {
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath);
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath);
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const chaincode = new Chaincode(docker,config.chaincodeName, config.version, config.scriptsPath); // TODO add those args in command line
         await chaincode.init(organization.fullName);
@@ -236,9 +184,9 @@ export class ChaincodeOrchestrator {
 
     static async deployChaincode(targets: string[], upgrade: boolean, policy: boolean, forceNew: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise <void> {
         let targetPeers = await this.getTargetPeers(targets, deploymentConfigPath, hostsConfigPath)
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath);
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        await this.deployCliSingleton(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
+        await this.deployCli(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
         // test if is installed
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
         const chaincode = new Chaincode(docker, config.chaincodeName, config.version, config.scriptsPath);
@@ -254,11 +202,11 @@ export class ChaincodeOrchestrator {
         }
     }
 
-    private static async deployCliSingleton(name: string, targets: Peer[], version: string, chaincodeRootPath: string, scriptsRootPath: string, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
+    private static async deployCli(name: string, targets: Peer[], version: string, chaincodeRootPath: string, scriptsRootPath: string, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         //let config = await this.getChaincodeParams(commitConfigPath);
         //l(`[Chaincode] - Request to install  a chaincode (${config.chaincodeName})`); // config.chaincodeRootPath, config.scriptsRootPath
         l(`[Chaincode] - Request to install  a chaincode (${name})`);
-        const network: Network = await ChaincodeOrchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
@@ -270,7 +218,7 @@ export class ChaincodeOrchestrator {
         l('[End] Blockchain configuration files parsed');
 
         // Assign & check root path
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
         const options: DockerComposeYamlOptions = {
             networkRootPath: path,
@@ -296,7 +244,7 @@ export class ChaincodeOrchestrator {
         await engine.createNetwork({Name: options.composeNetwork});
 
         l('Creating cli container & deploy');
-        const cliSingleton = DockerComposeCliSingleton.init(`docker-compose-cli-${organization.name}.yaml`, options, engine);
+        const cliSingleton = DockerComposeCli.init(`docker-compose-cli-${organization.name}.yaml`, options, engine);
 
         l(`'Creating Cli container template`);
         await cliSingleton.createTemplateCli();
@@ -314,7 +262,7 @@ export class ChaincodeOrchestrator {
     }
 
     private static async getCommitOrgNames(commitConfigPath: string){
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath);
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const organizations: Organization[] = config.organizations;
         let listOrgs=[];
@@ -325,7 +273,7 @@ export class ChaincodeOrchestrator {
     }
 
     private static async getTargetCommitPeers(commitConfigPath: string){
-        const config: CommitConfiguration = await ChaincodeOrchestrator._parseCommitConfig(commitConfigPath);
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const organizations: Organization[] = config.organizations;
         let targets=''
@@ -346,7 +294,7 @@ export class ChaincodeOrchestrator {
     }
 
     private static async getTargetPeers(targets: string[], deploymentConfigPath: string, hostsConfigPath: string) {
-        const network: Network = await ChaincodeOrchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         let targetPeers: Peer[] = [];
         if(!targets){ //load all peers
@@ -365,7 +313,7 @@ export class ChaincodeOrchestrator {
     }
 
     private static async loadOrgEngine(deploymentConfigPath: string, hostsConfigPath: string) {
-        const network: Network = await ChaincodeOrchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const organization: Organization = network.organizations[0];
         //const engine = organization.getEngine(organization.peers[0].options.engineName);

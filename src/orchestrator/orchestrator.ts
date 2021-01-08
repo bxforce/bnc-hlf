@@ -13,38 +13,33 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import {join} from 'path';
-import {DeploymentParser} from './parser/deploymentParser';
-import {HostsParser} from './parser/hostsParser';
-import {GenesisParser} from './parser/genesisParser';
-import {Organization} from './parser/model/organization';
-import {Peer} from './parser/model/peer';
-import {Network} from './parser/model/network';
-import {ConfigurationValidator} from './parser/validator/configurationValidator';
-import {OrgCertsGenerator} from './generators/crypto/createOrgCerts';
-import {OrdererCertsGenerator} from './generators/crypto/createOrdererCerts';
-import {ChannelGenerator} from './generators/artifacts/channelGenerator';
-import {ConfigtxYamlGenerator} from './generators/artifacts/configtxGenerator';
-import {DockerComposeEntityBaseGenerator} from './generators/docker-compose/dockerComposeBase.yaml';
-import {DockerComposeCaGenerator} from './generators/docker-compose/dockerComposeCa.yaml';
-import {DockerComposeCaOrdererGenerator} from './generators/docker-compose/dockerComposeCaOrderer.yaml';
-import {DockerComposePeerGenerator} from './generators/docker-compose/dockerComposePeer.yaml';
-import {DockerComposeOrdererGenerator} from './generators/docker-compose/dockerComposeOrderer.yaml';
-import {NetworkCleanShGenerator, NetworkCleanShOptions} from './generators/utils/networkClean.sh';
-import {DownloadFabricBinariesGenerator} from './generators/utils/downloadFabricBinaries';
-import {DockerComposeYamlOptions} from './utils/datatype';
-import {d, e, l} from './utils/logs';
-import {DockerEngine} from './utils/dockerAgent';
-import {Utils} from './utils/helper';
+
+import {Organization} from '../parser/model/organization';
+import {Peer} from '../parser/model/peer';
+import {Network} from '../parser/model/network';
+import {OrgCertsGenerator} from '../generators/crypto/createOrgCerts';
+import {OrdererCertsGenerator} from '../generators/crypto/createOrdererCerts';
+import {ConfigtxYamlGenerator} from '../generators/artifacts/configtxGenerator';
+import {DockerComposeEntityBaseGenerator} from '../generators/docker-compose/dockerComposeBase.yaml';
+import {DockerComposeCaGenerator} from '../generators/docker-compose/dockerComposeCa.yaml';
+import {DockerComposeCaOrdererGenerator} from '../generators/docker-compose/dockerComposeCaOrderer.yaml';
+import {DockerComposePeerGenerator} from '../generators/docker-compose/dockerComposePeer.yaml';
+import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
+import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
+import {DockerComposeYamlOptions} from '../utils/datatype';
+import {d, e, l} from '../utils/logs';
+import {DockerEngine} from '../utils/dockerAgent';
+import {Utils} from '../utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getDockerComposePath = Utils.getDockerComposePath;
-import { SysWrapper } from './utils/sysWrapper';
+import { SysWrapper } from '../utils/sysWrapper';
 import {
     BNC_NETWORK,
     DEFAULT_CA_ADMIN,
     HLF_DEFAULT_VERSION,
     NETWORK_ROOT_PATH
-} from './utils/constants';
+} from '../utils/constants';
+import { Helper } from './helper';
 
 /**
  * Main tools orchestrator
@@ -54,105 +49,15 @@ import {
  * @author ahmed souissi
  */
 export class Orchestrator {
-
-    /**
-     * Parse & validate deployment configuration file
-     * @param deploymentConfigPath
-     * @param hostsConfigPath
-     * @private
-     */
-    private static async _parse(deploymentConfigPath: string, hostsConfigPath: string): Promise<Network> {
-        l('[Start] Start parsing the blockchain configuration file');
-        l('Validate input configuration file');
-        const validator = new ConfigurationValidator();
-        const isValid = validator.isValidDeployment(deploymentConfigPath);
-
-        if (!isValid) {
-            e('Configuration file is invalid');
-            return;
-        }
-        l('Configuration file valid');
-
-        let configParser = new DeploymentParser(deploymentConfigPath);
-        const network = await configParser.parse();
-        
-        //set hosts
-        if (hostsConfigPath) {
-            let hostsParser = new HostsParser(hostsConfigPath);
-            network.hosts = await hostsParser.parse();
-        }
-        l('[End] Blockchain configuration files parsed');
-
-        return network;
-    }
-
-    /**
-     * Parse & validate genesis configuration file
-     * @param genesisConfigPath
-     * @private
-     */
-    private static async _parseGenesis(genesisConfigPath: string): Promise<Network | undefined> {
-        try {
-            l('Parsing genesis input file');
-            const validator = new ConfigurationValidator();
-            const isValid = validator.isValidGenesis(genesisConfigPath);
-            if (!isValid) {
-                e('Genesis configuration input file is invalid');
-                return;
-            }
-            l('Input genesis file validated');
-
-            l('Start parsing genesis input file');
-            const parser = new GenesisParser(genesisConfigPath);
-            const network: Network = await parser.parse();
-            l('Genesis input file parsed');
-
-            return network;
-        } catch (err) {
-            e(err);
-            return null;
-
-        }
-    }
-
-    /**
-     * download hyperledger fabric binaries
-     * @param folderPath folder where to store files
-     * @param network
-     * @private
-     */
-    private static async _downloadBinaries(folderPath: string, network: Network): Promise<boolean> {
-        try {
-            l('[Start] Download fabric binaries...');
-            const downloadFabricBinariesGenerator = new DownloadFabricBinariesGenerator('downloadFabric.sh', folderPath, network);
-            await downloadFabricBinariesGenerator.save();
-            await downloadFabricBinariesGenerator.run();
-            l('[End] Ran Download fabric binaries');
-
-            return true;
-        } catch (err) {
-            e(err);
-            return false;
-        }
-    }
-
-    /**
-     * Return the default path where to store all files and materials
-     * @private
-     */
-    private static _getDefaultPath(): string {
-        const homedir = require('os').homedir();
-        return join(homedir, NETWORK_ROOT_PATH);
-    }
-
+    
     /**
      * Generate the Genesis template file
      * @param configGenesisFilePath
      */
     static async generateGenesis(configGenesisFilePath: string) {
-        const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+        const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
         l('[genesis]: start generating genesis block...');
         const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
@@ -167,9 +72,9 @@ export class Orchestrator {
      * @param configGenesisFilePath
      */
     static async generateAnchorPeer(configGenesisFilePath: string) {
-        const network: Network = await Orchestrator._parseGenesis(configGenesisFilePath);
+        const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
         l('[anchor peer]: start generating anchor peer update...');
         const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
@@ -185,9 +90,9 @@ export class Orchestrator {
     static async generatePeersCredentials(deploymentConfigFilePath: string, hostsConfigPath: string) {
         // TODO check if files exists already for the same peers/organizations
         l('[Peer Cred]: start parsing deployment file...');
-        const network = await Orchestrator._parse(deploymentConfigFilePath, hostsConfigPath);
+        const network = await Helper._parse(deploymentConfigFilePath, hostsConfigPath);
         if (!network) return;
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         await SysWrapper.createFolder(path);
 
         // Check if HLF binaries exists
@@ -195,7 +100,7 @@ export class Orchestrator {
         const binariesFolderExists = await SysWrapper.existsFolder(binariesFolderPath);
         if (!binariesFolderExists) {
             l('[channel config]: start downloading HLF binaries...');
-            const isDownloaded = await Orchestrator._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
+            const isDownloaded = await Helper._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
             if (!isDownloaded) {
                 e('[channel config]: Error while downloading HLF binaries files');
                 return;
@@ -249,9 +154,9 @@ export class Orchestrator {
     static async generateOrdererCredentials(genesisFilePath: string) {
         // TODO check if files exists already for the same orderers/organizations
         l('[Orderer Cred]: start parsing...');
-        const network = await Orchestrator._parseGenesis(genesisFilePath);
+        const network = await Helper._parseGenesis(genesisFilePath);
         if (!network) return;
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         await SysWrapper.createFolder(path);
         l('[Orderer Cred]: parsing done!!!');
 
@@ -302,7 +207,7 @@ export class Orchestrator {
      * @param enableOrderers
      */
     static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
-        const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
@@ -312,7 +217,7 @@ export class Orchestrator {
         l('[End] Blockchain configuration files parsed');
 
         // Assign & check root path
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         await SysWrapper.createFolder(path);
         
         // Auto-create docker-compose folder if not exists
@@ -366,7 +271,7 @@ export class Orchestrator {
      */
     static async stopHlfServices(forceRemove: boolean, deploymentConfigPath: string, hostsConfigPath: string, deleteNetwork: boolean = false, deleteVolume: boolean = false): Promise<boolean> {
         try {
-            const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
+            const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
             if (!network) return;
 
             // loop on organization & peers && orderers
@@ -429,9 +334,9 @@ export class Orchestrator {
      * @param rmi remove image also
      */
     static async cleanDocker(rmi: boolean, deploymentConfigPath: string, hostsConfigPath: string) {
-        const network: Network = await Orchestrator._parse(deploymentConfigPath, hostsConfigPath);
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
-        const path = network.options.networkConfigPath ?? this._getDefaultPath();
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
         const options = new NetworkCleanShOptions();
         options.removeImages = rmi;

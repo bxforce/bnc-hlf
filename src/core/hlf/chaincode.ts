@@ -19,7 +19,7 @@ import { ChannelRequest, Orderer } from 'fabric-client';
 import { Peer } from '../../parser/model/peer';
 import { Network } from '../../parser/model/network';
 import { ClientConfig, ClientHelper } from './client';
-import { Orchestrator } from '../../orchestrator';
+import { Orchestrator } from '../../orchestrator/orchestrator';
 import { DockerEngine } from '../../utils/dockerAgent';
 import { d, e, l } from '../../utils/logs';
 
