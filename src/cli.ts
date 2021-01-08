@@ -16,6 +16,8 @@ limitations under the License.
 
 import { l } from './utils/logs';
 import { Orchestrator } from './orchestrator';
+import { ChaincodeOrchestrator } from './chaincodeOrchestrator';
+import { ChannelOrchestrator } from './channelOrchestrator';
 
 /**
  *
@@ -27,11 +29,11 @@ export class CLI {
 
   static async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any) {
     l('Request Init command ...');
-    await Orchestrator.generateConfigtx(genesisConfigPath); // Generate the configtx.yaml file (mainly for genesis block)
+    await ChannelOrchestrator.generateConfigtx(genesisConfigPath); // Generate the configtx.yaml file (mainly for genesis block)
     if (!(genesis || configtx || anchortx)) {
       l('[Init]: generate all config files (genesis, configtx, anchortx)...');
       await Orchestrator.generateGenesis(genesisConfigPath);
-      await Orchestrator.generateChannelConfig(genesisConfigPath);
+      await ChannelOrchestrator.generateChannelConfig(genesisConfigPath);
       await Orchestrator.generateAnchorPeer(genesisConfigPath);
     } else {
       if (genesis) {
@@ -41,7 +43,7 @@ export class CLI {
       }
       if (configtx) {
         l('[Init]: generate channel config file... ');
-        await Orchestrator.generateChannelConfig(genesisConfigPath);
+        await ChannelOrchestrator.generateChannelConfig(genesisConfigPath);
         l('[Init]: channel configuration generated done !!! ');
       }
       if (anchortx) {
@@ -62,37 +64,37 @@ export class CLI {
   }
 
   static async createChannel(deployConfigPath: string, hostsConfigPath: string, channelName) {
-    await Orchestrator.createChannel(deployConfigPath, hostsConfigPath, channelName);
+    await ChannelOrchestrator.createChannel(deployConfigPath, hostsConfigPath, channelName);
   }
 
   static async joinChannel(deployConfigPath: string, hostsConfigPath: string, channelName) {
-     await Orchestrator.joinChannel(deployConfigPath, hostsConfigPath, channelName);
+     await ChannelOrchestrator.joinChannel(deployConfigPath, hostsConfigPath, channelName);
   }
   
   static async updateChannel(deployConfigPath: string, hostsConfigPath: string, channelName) {
-    await Orchestrator.updateChannel(deployConfigPath, hostsConfigPath, channelName);
+    await ChannelOrchestrator.updateChannel(deployConfigPath, hostsConfigPath, channelName);
   }
 
 
   static async installChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, targets?: string[]) {
-    await Orchestrator.installChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, targets);
+    await ChaincodeOrchestrator.installChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, targets);
   }
 
   static async approveChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, forceNew: boolean) {
-    await Orchestrator.approveChaincodeCli(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, forceNew)
+    await ChaincodeOrchestrator.approveChaincodeCli(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, forceNew)
   }
 
   static async commitChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean) {
-    await Orchestrator.commitChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy)
+    await ChaincodeOrchestrator.commitChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy)
   }
 
   static async deployChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, targets?: string[], upgrade?: boolean, policy?: boolean, forceNew?:boolean) {
-    await Orchestrator.deployChaincode(targets, upgrade, policy, forceNew, deployConfigPath, hostsConfigPath, commitConfigPath)
+    await ChaincodeOrchestrator.deployChaincode(targets, upgrade, policy, forceNew, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
 
   static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, compile = false) {
-    await Orchestrator.deployCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
+    await ChaincodeOrchestrator.deployCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
   static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
@@ -111,19 +113,19 @@ export class CLI {
   
   
   static async generateNewOrgDefinition(deployConfigPath: string, hostsConfigPath: string) {
-    await Orchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath);
+    await ChannelOrchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath);
   }
 
   static async generateCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName: string) {
-    await Orchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, channelName);
+    await ChannelOrchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, channelName);
   }
 
   static async signCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, channelDef, channelName){
-    await Orchestrator.signCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, channelName);
+    await ChannelOrchestrator.signCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, channelName);
   }
 
   static async submitCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, channelDef, signatures, channelName: string){
-    await Orchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName);
+    await ChannelOrchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName);
   }
 
   /****************************************************************************/
