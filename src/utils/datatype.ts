@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 import { Organization } from '../parser/model/organization';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
 import { Network } from '../parser/model/network';
 import { IEnrollResponse } from 'fabric-ca-client';
 
@@ -26,6 +27,7 @@ export class DockerComposeYamlOptions {
   networkRootPath: string;
   composeNetwork: string;
   org: Organization;
+  ord?: OrdererOrganization;
   hosts;
   envVars?: {
     FABRIC_VERSION?: string;

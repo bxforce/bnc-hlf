@@ -88,6 +88,11 @@ export namespace Utils {
 
   }
 
+  export function getOrdererMspRootPath(rootPath: string, orgName: string, orderer: Orderer): string {
+    return `${rootPath}/organizations/ordererOrganizations/${orgName}/orderers/${orderer.fullName}/msp`;
+
+  }
+
   /**
    * Return Orderer Entity MSP Path
    * @param rootPath
@@ -96,6 +101,10 @@ export namespace Utils {
    */
   export function getOrdererTlsPath(rootPath: string, ordererOrganization: OrdererOrganization, orderer: Orderer): string {
     return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${orderer.fullName}/tls`;
+  }
+
+  export function getOrdererTlsRootPath(rootPath: string, orgName: string, orderer: Orderer): string {
+    return `${rootPath}/organizations/ordererOrganizations/${orgName}/orderers/${orderer.fullName}/tls`;
   }
 
   /**

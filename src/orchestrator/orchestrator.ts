@@ -151,10 +151,10 @@ export class Orchestrator {
      * Generate Crypto & Certificates credentials for orderers
      * @param genesisFilePath
      */
-    static async generateOrdererCredentials(genesisFilePath: string) {
+    static async generateOrdererCredentials(genesisFilePath: string, hostsConfigPath: string) {
         // TODO check if files exists already for the same orderers/organizations
         l('[Orderer Cred]: start parsing...');
-        const network = await Helper._parseGenesis(genesisFilePath);
+        const network = await Helper._parse(genesisFilePath, hostsConfigPath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         await SysWrapper.createFolder(path);
@@ -170,7 +170,8 @@ export class Orchestrator {
         const options: DockerComposeYamlOptions = {
             networkRootPath: path,
             composeNetwork: BNC_NETWORK,
-            org: null,
+            org: network.organizations[0],
+            ord: network.ordererOrganization[0],
             hosts: []
         };
         const engine = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
@@ -191,6 +192,7 @@ export class Orchestrator {
         const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
             path,
             network,
+            options,
             {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
         const isGenerated = await ordererGenerator.buildCertificate();
         l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
@@ -297,7 +299,7 @@ export class Orchestrator {
                 
                 services.push(`${org.ca.name}.${org.name}`);
                 
-                services.push(`${network.ordererOrganization.caName}`);
+                services.push(`${network.ordererOrganization[0].caName}`);
 
                 //remove all cli containers
                 services.push(`cli.${org.fullName}`)

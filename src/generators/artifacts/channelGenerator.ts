@@ -67,13 +67,13 @@ ${this.network.organizations[0].peers.map((peer, index) => `
 `).join('')}
 
 orderers:
-    ${this.network.organizations[0].orderers[0].name}.${this.network.ordererOrganization.domainName}:
-      url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].orderers[0].fullName}:${this.network.ordererOrganization.orderers[0].options.ports[0]}
+    ${this.network.organizations[0].orderers[0].name}.${this.network.ordererOrganization[0].domainName}:
+      url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].orderers[0].fullName}:${this.network.ordererOrganization[0].orderers[0].options.ports[0]}
       grpcOptions:
-        ssl-target-name-override: ${this.network.ordererOrganization.orderers[0].name}.${this.network.ordererOrganization.domainName}
+        ssl-target-name-override: ${this.network.ordererOrganization[0].orderers[0].name}.${this.network.ordererOrganization[0].domainName}
         grpc-max-send-message-length: 40000
       tlsCACerts:
-        path: ${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.network.organizations[0].domainName}/tlsca/tlsca.${this.network.ordererOrganization.domainName}-cert.pem
+        path: ${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.network.organizations[0].fullName}/tlsca/tlsca.${this.network.ordererOrganization[0].domainName}-cert.pem
   `;
 
   /**
@@ -202,9 +202,9 @@ orderers:
       }
 
       // update the provided channel
-       let sig= await channelClient.signConfig(anchorConfigPath);
+      let sig= await channelClient.signConfig(anchorConfigPath);
       const isUpdated = await channelClient.submitChannelUpdate(anchorConfigPath, [sig], channelName, this.network.organizations[0].mspName);
-    //  const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath);
+      //  const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath);
       if(!isUpdated) {
         e(`Error channel (${channelName}) update !!!`);
         return false;
@@ -237,7 +237,7 @@ orderers:
       const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
       await configtxlator.createInitialConfigPb(envelope);
       await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
-      
+
       let original = await configtxlator.getFile(configtxlator.names.initialJSON);
       let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
 

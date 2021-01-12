@@ -49,7 +49,7 @@ export class DeploymentParser extends BaseParser {
     const parsedYaml = await this.parseRaw();
 
     // Parsing chains definition
-    const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
+    const {organizations, caEntityOrderer} = this.buildOrganisations(parsedYaml['chains']);
     l('Finish Parsing configuration file');
 
     // build the network instance
@@ -65,8 +65,19 @@ export class DeploymentParser extends BaseParser {
     });
     network.organizations = organizations;
 
+      let ordererOrganizations = [];
+      ordererOrganizations.push(new OrdererOrganization(`ordererOrganization${organizations[0].name}`, {
+          domainName: organizations[0].domainName,
+          orgName: organizations[0].name,
+          ca: caEntityOrderer
+      }))
+      for(const org of network.organizations) {
+          ordererOrganizations[0].orderers.push(...org.orderers);
+      }
+      network.ordererOrganization = ordererOrganizations;
+
     // set a default ordererOrganization
-    const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
+    /*const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
       domainName: organizations[0].domainName,
       ca: new Ca('ca.orderer', {})
     });
@@ -75,7 +86,13 @@ export class DeploymentParser extends BaseParser {
     }
     network.ordererOrganization = ordererOrganization;
 
-    return network;
+     */
+      if (network.options.consensus === ConsensusType.RAFT) {
+          network.ordererOrganization[0].isSecure = true;
+      }
+
+
+      return network;
   }
 
   /**
@@ -102,13 +119,22 @@ export class DeploymentParser extends BaseParser {
    * Parse the organization section within the deployment configuration file
    * @param yamlOrganisations
    */
-  private buildOrganisations(yamlOrganisations): Organization[] {
+  private buildOrganisations(yamlOrganisations) {
     const organizations: Organization[] = [];
     const { template_folder, fabric, tls, consensus, db, organisations } = yamlOrganisations;
-
+      let caEntityOrderer;
     organisations.forEach(org => {
-      const { organisation, domain_name, ca, orderers, peers } = org;
-
+      const { organisation, domain_name, ca, ca_orderer, orderers, peers } = org;
+        // Parse CA orderer
+        const {name, url, port} = ca_orderer;
+        caEntityOrderer = new Ca(name, {  //
+            number: 0,
+            port: port,
+            host: url,
+            user: 'admin',
+            password: 'adminpw',
+            isSecure: false,
+        });
       // parse CA
       const { name: caName, engine: engineName, port: caPort } = ca;
       const caEntity = new Ca(caName, {
@@ -176,6 +202,6 @@ export class DeploymentParser extends BaseParser {
       );
     });
 
-    return organizations;
+    return {organizations, caEntityOrderer};
   }
 }

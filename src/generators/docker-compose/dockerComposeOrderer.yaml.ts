@@ -65,8 +65,8 @@ ${this.options.org.orderers.map(orderer => `
       - ${this.options.composeNetwork}   
     volumes:
       - ${getArtifactsPath(this.options.networkRootPath)}/${GENESIS_FILE_NAME}:/var/hyperledger/orderer/orderer.genesis.block
-      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${orderer.fullName}/msp:/var/hyperledger/orderer/msp
-      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.domainName}/orderers/${orderer.fullName}/tls/:/var/hyperledger/orderer/tls
+      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/msp:/var/hyperledger/orderer/msp
+      - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/tls/:/var/hyperledger/orderer/tls
       - ${orderer.fullName}:/var/hyperledger/production/orderer
     labels:
       - "bnc=hlf"

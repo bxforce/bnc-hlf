@@ -42,7 +42,7 @@ export class GenesisParser extends BaseParser {
         const networkChannel = new Channel(channel);
         
         // Parse CA
-        const {type, url, port, settings} = ca;
+       /* const {type, url, port, settings} = ca;
         const caEntity = new Ca('ca.orderer', {
             number: 0,
             port: port,
@@ -52,10 +52,13 @@ export class GenesisParser extends BaseParser {
             isSecure: false,
         });
 
+
+        */
         // parse the organization
         const orgs = [];
+        const ordererOrganizations = [];
         for (const org of organisations) {
-            const {organisation: orgName, domain_name: orgDomain, orderers, anchorPeer} = org;
+            const {organisation: orgName, domain_name: orgDomain, ca_orderer, orderers, anchorPeer} = org;
 
             // get Anchor peer
             const {host_name: anchorHost, port: anchorPort} = anchorPeer;
@@ -89,6 +92,27 @@ export class GenesisParser extends BaseParser {
                     orderers: ords
                 })
             );
+
+            // Parse CA orderer
+            const {name, url, port} = ca_orderer;
+            let caEntityOrderer = new Ca(name, {  //
+                number: 0,
+                port: port,
+                host: url,
+                user: 'admin',
+                password: 'adminpw',
+                isSecure: false,
+            });
+
+            let myOrdOrg = new OrdererOrganization(`ordererOrganization${orgName}`, {
+                domainName: orgDomain,
+                orgName: orgName,
+                ca: caEntityOrderer
+            })
+
+            myOrdOrg.orderers.push(...ords);
+
+            ordererOrganizations.push(myOrdOrg)
         }
 
         // fill and return the network object
@@ -103,7 +127,7 @@ export class GenesisParser extends BaseParser {
         });
         network.organizations = orgs;
 
-        const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
+        /*const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
             domainName: orderer_domain,
             ca: caEntity
         });
@@ -114,11 +138,19 @@ export class GenesisParser extends BaseParser {
 
         network.ordererOrganization = ordererOrganization;
 
+         */
+
+        network.ordererOrganization = ordererOrganizations;
+
+        // network.ordererOrganization = ordererOrganization;
+
         // Raft consensus must be always secure
         if (network.options.consensus === ConsensusType.RAFT) {
-            network.ordererOrganization.isSecure = true;
+            //network.ordererOrganization.isSecure = true;
+            for (const ord of network.ordererOrganization) {
+                ord.isSecure = true;
+            }
         }
-
         network.channel = networkChannel;
 
         return network;
