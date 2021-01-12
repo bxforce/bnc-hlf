@@ -125,7 +125,7 @@ program
     await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
     await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true);
     await Utils.delay(DOCKER_DELAY);
-    await CLI.createChannel(cmd.namech, cmd.config, cmd.hosts);
+    await CLI.createChannel(cmd.config, cmd.hosts, cmd.namech);
     await Utils.delay(DOCKER_DELAY);
     await CLI.joinChannel(cmd.config, cmd.hosts, cmd.namech);
     await CLI.updateChannel(cmd.config, cmd.hosts, cmd.namech);
