@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {Organization} from '../models/organization';
-import {Network} from '../models/network';
 import {BaseParser} from './base';
-import {Orderer} from '../models/orderer';
-import {Peer} from '../models/peer';
-import {ConsensusType, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION} from '../utils/constants';
-import {Ca} from '../models/ca';
-import {OrdererOrganization} from '../models/ordererOrganization';
-import {Channel} from '../models/channel';
+import {Organization} from '../parser/model/organization';
+import {Network} from '../parser/model/network';
+import {Orderer} from '../parser/model/orderer';
+import {Peer} from '../parser/model/peer';
+import {Ca} from '../parser/model/ca';
+import {OrdererOrganization} from '../parser/model/ordererOrganization';
+import {Channel} from '../parser/model/channel';
+import {ConsensusType, HLF_DEFAULT_VERSION} from '../utils/constants';
 
 /**
  *
@@ -37,13 +37,13 @@ export class GenesisParser extends BaseParser {
         const parsedYaml = await this.parseRaw();
         const genesisBlock = parsedYaml['genesis'];
 
-        const {template_folder, consensus, ordererDomain, ca, channel, organisations} = genesisBlock;
+        const {template_folder, consensus, orderer_domain, ca, channel, organisations} = genesisBlock;
         const networkConsensus = consensus as ConsensusType;
         const networkChannel = new Channel(channel);
-
+        
         // Parse CA
         const {type, url, port, settings} = ca;
-        const caEntity = new Ca('caOrderer', {
+        const caEntity = new Ca('ca.orderer', {
             number: 0,
             port: port,
             host: url,
@@ -72,8 +72,11 @@ export class GenesisParser extends BaseParser {
                 ords.push(
                     new Orderer(ordererName, {
                         consensus,
+                        domainName: orgDomain,
                         host: ordererHost,
-                        ports: [ordererPort]
+                        ports: [
+                            ordererPort
+                        ]
                     })
                 );
             }
@@ -91,9 +94,9 @@ export class GenesisParser extends BaseParser {
         // fill and return the network object
         const network = new Network('genesis-network', {
             networkConfigPath: template_folder,
-            hyperledgerVersion: HLF_VERSION.HLF_2,
-            hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
-            externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
+            hyperledgerVersion: HLF_DEFAULT_VERSION.FABRIC,
+            hyperledgerCAVersion: HLF_DEFAULT_VERSION.CA,
+            hyperledgerThirdpartyVersion : HLF_DEFAULT_VERSION.THIRDPARTY,
             inside: false,
             consensus: networkConsensus,
             forDeployment: false,
@@ -101,7 +104,7 @@ export class GenesisParser extends BaseParser {
         network.organizations = orgs;
 
         const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
-            domainName: ordererDomain,
+            domainName: orderer_domain,
             ca: caEntity
         });
 

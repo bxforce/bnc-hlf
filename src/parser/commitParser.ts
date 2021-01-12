@@ -14,17 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { l } from '../utils/logs';
-import { Organization } from '../models/organization';
-import { Engine } from '../models/engine';
-import { Peer } from '../models/peer';
-import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
-import { Ca } from '../models/ca';
-import { Network } from '../models/network';
-import { CommitConfiguration } from '../models/commitConfiguration';
-import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
-import { OrdererOrganization } from '../models/ordererOrganization';
+import { Organization } from '../parser/model/organization';
+import { Engine } from '../parser/model/engine';
+import { Peer } from '../parser/model/peer';
+import { Orderer } from '../parser/model/orderer';
+import { Ca } from '../parser/model/ca';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
+import { Network } from '../parser/model/network';
+import { CommitConfiguration } from '../parser/model/commitConfiguration';
+import { ConsensusType, CA_DEFAULT_PORT, DEFAULT_CA_ADMIN } from '../utils/constants';
+import { l } from '../utils/logs';
 
 /**
  * Parser class for the deployment configuration file
@@ -53,13 +53,11 @@ export class CommitParser extends BaseParser {
         // Parsing chaincode definition
         const organizations: Organization[] = this.buildOrganisations(parsedYaml['chaincode']);
         // build the network instance
-        const { template_folder, channel, chaincode, root_path_chaincode,root_path_scripts, path_chaincode, version, endorsementPolicy } = parsedYaml['chaincode'];
-        const conf: CommitConfiguration = new CommitConfiguration(this.fullFilePath, channel, chaincode,root_path_chaincode,root_path_scripts, path_chaincode, version, endorsementPolicy);
+        const { template_folder, channel, chaincode, root_path_chaincode, root_path_scripts, compilation_command, path_chaincode, path_scripts, endorsementPolicy, version } = parsedYaml['chaincode'];
+        const conf: CommitConfiguration = new CommitConfiguration(this.fullFilePath, channel, chaincode, root_path_chaincode, root_path_scripts, compilation_command, path_chaincode, path_scripts, version, endorsementPolicy);
         conf.organizations = organizations;
         return conf;
     }
-
-
 
     /**
      * Parse the organization section within the deployment configuration file
@@ -67,9 +65,9 @@ export class CommitParser extends BaseParser {
      */
     private buildOrganisations(yamlOrganisations): Organization[] {
         const organizations: Organization[] = [];
-        const { template_folder, organisations } = yamlOrganisations;
+        const { template_folder, commit } = yamlOrganisations;
 
-        organisations.forEach(org => {
+        commit.forEach(org => {
             const { organisation, domain_name, peers } = org;
             const ords = [];
             // peer parsing

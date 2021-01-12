@@ -1,13 +1,13 @@
-import { Network } from '../../models/network';
-import { Utils } from '../../utils/utils';
+import { Network } from '../../parser/model/network';
+import { Utils } from '../../utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import { SysWrapper } from '../../utils/sysWrapper';
 import { e } from '../../utils/logs';
-import { Peer } from '../../models/peer';
+import { Peer } from '../../parser/model/peer';
 import execContent = SysWrapper.execContent;
-import { ClientHelper } from '../../core/hlf/helpers';
-import { Orderer } from '../../models/orderer';
-import { CSR } from '../../utils/data-type';
+import { ClientHelper } from '../../core/hlf/client';
+import { Orderer } from '../../parser/model/orderer';
+import { CSR } from '../../utils/datatype';
 
 /**
  * Helper class to generate CSR files (to be used with the enrolling procedure)
@@ -32,7 +32,7 @@ export class CertificateCsr {
   async generateCsrHost(entity: object): Promise<CSR> {
     const san: string = entity instanceof Peer ?
       `${(entity as Peer).name}.${this.network.organizations[0].fullName}` :
-      this.network.ordererOrganization.ordererFullName((entity as Orderer));
+      (entity as Orderer).fullName;
 
     const csrFolder = entity instanceof Peer ? this._getOrgCsrFolder() : this._getOrdCsrFolder();
 

@@ -14,8 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import * as fs from 'fs';
 import * as YamlValidator from 'yaml-validator';
-import { l } from '../../utils/logs';
+import { l, e } from '../../utils/logs';
+
+const REPORT_FILE = '/tmp/bnc-validator.log'
 
 // TODO use directly the js-yaml safeLoad schema options
 /**
@@ -33,22 +36,21 @@ export class ConfigurationValidator {
       organisations: [
         {
           organisation: 'string',
-          engineOrg: 'string',
           domain_name: 'string',
           ca: {
             name: 'string',
-            engine_name: 'string'
+            engine: 'string'
           },
           orderers: [
             {
               orderer: 'string',
-              engine_name: 'string'
+              engine: 'string'
             }
           ],
           peers: [
             {
               peer: 'string',
-              engine_name: 'string'
+              engine: 'string'
             }
           ]
         }
@@ -56,21 +58,9 @@ export class ConfigurationValidator {
     },
     engines: [
       {
-        engine: 'string',
-        hosts: [
-          {
-            host: 'string',
-            type: 'string',
-            url: 'string',
-            port: 'number',
-            settings: ['string']
-          }
-        ]
-      }
-    ],
-    'ips?': [
-      {
-        ip: 'string'
+        name: 'string',
+        type: 'string',
+        url: 'string'
       }
     ]
   };
@@ -109,7 +99,7 @@ export class ConfigurationValidator {
 
   private getValidatorOptions(structure): YamlValidator.IYamlValidatorOptions {
     return {
-      log: false,
+      log: REPORT_FILE,
       structure: structure,
       onWarning: function(error, filepath) {
         l(`${filepath} has error: ${error}`);
@@ -121,10 +111,17 @@ export class ConfigurationValidator {
   // TODO in case of error, display it
   private static isValid(filePath: string, options: YamlValidator.IYamlValidatorOptions) {
     l(`Validating ${filePath}...`);
+    if (! fs.existsSync(filePath)) {
+      e(`File ${filePath} not found`);
+      return false;
+    }
     const validator = new YamlValidator(options);
     validator.validate([filePath]);
     const reports = validator.report();
-
+    if (reports != 0) {
+      l(`Report ${reports} in file ${REPORT_FILE}`);
+      l(fs.readFileSync(REPORT_FILE, 'utf8'));
+    }
     return reports == 0;
   }
 }

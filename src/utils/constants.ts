@@ -30,20 +30,13 @@ export enum ConsensusType {
   SOLO = 'solo'
 }
 
-export enum HLF_VERSION {
-  HLF_2 = '2.0.0',
-  HLF_2_1 = '2.1.0'
+export enum HLF_DEFAULT_VERSION {
+  FABRIC = '2.2.1',
+  THIRDPARTY = '0.4.18',
+  CA = '1.4.4'
 }
 
-export enum EXTERNAL_HLF_VERSION {
-  EXT_HLF_2 = '0.4.18'
-}
-
-export enum HLF_CA_VERSION {
-  HLF_2= '1.4.4'
-}
-
-export enum Type_User {
+export enum USER_TYPE {
   admin = 'admin',
   user = 'user'
 }
@@ -68,12 +61,17 @@ export const enum HLF_WALLET_TYPE {
 
 export const CA_DEFAULT_PORT = 7054;
 
-export const ORDERER_DEFAULT_PORT = 7050;
+export const ORDERER_DEFAULT_PORT = {
+  main: 7050,
+  operations: 8443
+};
 
 export const PEER_DEFAULT_PORT = {
   event: 7051,
   event_chaincode: 7052,
-  event_hub: 7053
+  event_hub: 7053,
+  operations: 9443,
+  couchdb: 5984
 };
 
 export const DEFAULT_CA_ADMIN = {
@@ -86,14 +84,26 @@ export const UNIX_DOCKER_SOCKET = '/var/run/docker.sock';
 /* default folder to store all generated tools files and data */
 export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
 
+/* default file containing the whole configuration */
+export const CONFIG_DEFAULT_PATH = '/bnc/config/config.yaml';
+
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const channelTimeout = 10000;
 export const updateTimeout = 60000;
 export const BNC_TOOL_NAME = 'BNC';
 export const BNC_NETWORK = 'bnc_network';
 export const DOCKER_CA_DELAY = 3000;
+export const DOCKER_DELAY = 5000;
 export const MAX_ENROLLMENT_COUNT = 3;
 export const ENABLE_CONTAINER_LOGGING = true;
 export const CHANNEL_RAFT_ID = 'system-channel';
 export const CHANNEL_DEFAULT_NAME = 'mychannel';
 export const SEQUENCE = 1;
+export const BLOCK_SIZE = 50;
+
+export const CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH = "volume_chaincode";
+export const CHAINCODE_DEFAULT_CHAINCODE_PATH = "abstore/go";
+export const CHAINCODE_DEFAULT_SCRIPTS_ROOT_PATH = "volume_scripts";
+export const CHAINCODE_DEFAULT_SCRIPTS_PATH = "./scripts/";
+export const CHAINCODE_DEFAULT_COMPILATION_COMMAND = "/bin/bash -c \"cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1\"";
+

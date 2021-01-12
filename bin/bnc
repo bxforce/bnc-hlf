@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# env BNC_BUILD_PATH
+# env BNC_CONFIG_PATH
+# env BNC_ENTRYPOINT
+
+DOCKER_IMAGE=bnc-hlf
+DOCKER_NETWORK=bnc_network
+
+if [[ "$(docker images -q $DOCKER_IMAGE 2> /dev/null)" == "" ]] || [[ ! -z "$BNC_BUILD_PATH" ]]; then
+    docker build -t bnc-hlf -f Dockerfile $BNC_BUILD_PATH
+fi
+
+if [[ -z "$(docker network ls -q -f name=$DOCKER_NETWORK)" ]]; then 
+    docker network create --driver=bridge $DOCKER_NETWORK;
+fi
+
+if [[ -z "$BNC_CONFIG_PATH" ]]; then
+    BNC_CONFIG_PATH=$PWD/tests/single_machine
+fi
+
+if [[ -z "$BNC_ENTRYPOINT" ]]; then
+    BNC_ENTRYPOINT=bnc
+fi
+
+docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK \
+    -v /tmp/hyperledger-fabric-network:/tmp/hyperledger-fabric-network \
+    -v volume_chaincode:/bnc/chaincode \
+    -v volume_scripts:/bnc/scripts \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --entrypoint $BNC_ENTRYPOINT \
+        bnc-hlf $@
+
+#    -v $BNC_CONFIG_PATH:/bnc/config \
+
+

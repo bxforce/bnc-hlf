@@ -1,0 +1,249 @@
+
+## DEMO commands for bnc multi-machine
+
+Here a first and simple command set to deploy a hyperledger fabric network.
+
+1- Prepare BNC configuration input files:
+  * Deployment configuration: you can find a sample in /bnc-hlf/tests/manual/wassim/config-deploy-org1.yaml
+  * Genesis configuration: you can find a sample in bnc-hlf/tests/manual/wassim/config-genesis-org1-org2.yaml
+  * Config hosts that will serve as extra_host section for the two orgs to recognize each other, find sample /bnc-hlf/tests/manual/templates/config-ip.yaml
+  
+2- Generate cryptographic and certificates credentials for both peers and orderers
+  * for peers in org1:
+  ````shell script
+    bnc enroll-peers -f ./tests/manual/wassim/config-deploy-org1.yaml
+  ````
+  * for peers in org2:
+  ````shell script
+    bnc enroll-peers -f ./tests/manual/wassim/config-deploy-org2.yaml
+  ````
+    * Make sure you copy the msp folder and tlscacerts under  organizations/peerOrganizations/org2.bnc.com and put it 
+    in the VM of org1 under organizations/peerOrganizations
+  * for orderers in org1:
+  ````shell script
+  bnc enroll-orderers -f ./tests/manual/wassim/config-genesis-org1-org2.yaml
+  ````
+Copy the ordererOrganization folder and put it in the VM of org2 under organizations
+
+3- Generate Genesis block in the Org1
+````shell script
+bnc init -f ./tests/manual/wassim/config-genesis-org1-org2.yaml
+````
+
+* COPY the artifacts folder from org1 that contains the genesis file and put it in second VM
+
+4- Start Blockchain docker peers & orderers containers
+
+* In VM of org1
+````shell script
+bnc start -f ./tests/manual/wassim/config-deploy-org1.yaml
+````
+* In VM of org2
+````shell script
+bnc start -f ./tests/manual/wassim/config-deploy-org2.yaml
+````
+
+7- create a channel in ORG1
+````shell script
+bnc channel create -f ./tests/manual/wassim/config-deploy-org1.yaml -t ../hyperledger-fabric-network/artifacts/mychannel.tx -n mychannel
+````
+
+8- join channel 
+
+* TO join all peers defined in your config deploy file in org1
+````shell script
+bnc channel join -n mychannel -f ./tests/manual/wassim/config-deploy-org1.yaml
+````
+
+* TO join all peers defined in your config deploy file in org2
+````shell script
+bnc channel join -n mychannel -f ./tests/manual/wassim/config-deploy-org2.yaml
+````
+
+9- Update channel
+
+* IN org1
+````shell script
+bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org1.yaml -t ../hyperledger-fabric-network/artifacts/org1MSPanchors.tx 
+````
+* In Org2
+````shell script
+bnc channel update -n mychannel -f ./tests/manual/wassim/config-deploy-org2.yaml -t ../hyperledger-fabric-network/artifacts/org2MSPanchors.tx 
+````
+
+
+10- Stop the blockchain
+````shell script
+bnc stop -f [bncDeploymentConfigFilePath]
+````
+
+## DEMO commands for chaincode CLI
+
+1st step :  Create a chaincode package that we will use to install the chaincode on peers 
+
+create the package on both VM of org1 and org2
+
+````shell script
+cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go
+GO111MODULE=on go mod vendor
+cd -
+peer lifecycle chaincode package mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1
+````
+
+2nd step :  install the package on peer0 of Org1 and peer0 of Org2
+````shell script
+peer lifecycle chaincode install mycc.tar.gz
+peer lifecycle chaincode queryinstalled  ( to get the ID)
+CC_PACKAGE_ID=mycc_1:0dcea8280752b53a2a534f280445e36fa4cb32f648c2d7729589821f300d74be  ( set the package ID)
+````
+
+4th step: Approve chaincode on org2 since we already have vars set giving orderer3 TLS cert
+````shell script
+peer lifecycle chaincode approveformyorg --channelID mychannel --name mycc --version 1.0 --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer3.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
+````
+
+5th step: Approve chaincode definition for org1
+````shell script
+peer lifecycle chaincode approveformyorg --channelID mychannel --name mycc --version 1.0 --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem
+
+````
+
+6th step: check the commits to see who approved the chaincode in ORG1
+````shell script
+peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name mycc --version 1.0 --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --output json
+````
+
+7th step: commit chaincode definition after approval ( we will commit this as org1 and it will target peers in both org1 and org2 for endorsements)
+ ````shell script
+ peer lifecycle chaincode commit -o orderer0.bnc.com:7050 --channelID mychannel --name mycc --version 1.0 --sequence 1 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer1.org2.bnc.com/tls/ca.crt
+````
+
+
+8th step : INVOKE chaincode giving as targets peer0 of org1 and org2 as targets
+ ````shell script
+peer chaincode invoke -o orderer0.bnc.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt -c '{"Args":["Init","a","100","b","100"]}' --waitForEvent
+````
+
+9th step :query chaincode 
+ ````shell script
+peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
+````
+
+10th step : call the invoke fct to move 10 from a to b
+ ````shell script
+peer chaincode invoke -o orderer0.bnc.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer0.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls/ca.crt --peerAddresses peer0.org2.bnc.com:10051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}' --waitForEvent
+ ````
+
+
+11th step :query chaincode 
+ ````shell script
+peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
+````
+
+## DEMO FOR CHAINCODE COMMANDS
+first install on peer0 of org1, if -p is not specified it will install on all peers
+ ````shell script
+sudo bnc chaincode install -n mycc -cRootPath /home/ubuntu/fabric-samples/chaincode/ -cPath abstore/go -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org1.yaml
+````
+Then install on peer0 of org2
+ ````shell script
+sudo bnc chaincode install -n mycc -cPath abstore/go -v 1 -p peer0  -f ./tests/manual/wassim/config-deploy-org2.yaml
+````
+Approve chaincode definition on org2
+ ````shell script
+sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org2.yaml -n mycc -v 1 -channel mychannel
+````
+
+Approve chaincode definition on org1
+ ````shell script
+sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org1.yaml -n mycc -v 1 -channel mychannel
+````
+Commit chaincode only as org1
+ ````shell script
+sudo bnc chaincode commit -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml
+````
+
+If you to do all previous steps in one single command use the following:
+
+ ````shell script
+sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml -p peer0
+````
+If you want to install chaincode on all peers defined in config-deploy , do not specify -p
+ 
+````shell script
+sudo bnc chaincode deploy -f ./tests/manual/wassim/config-deploy-org1.yaml -c ./tests/manual/wassim/config-chaincode.yaml 
+````
+## DEMO FOR CHAINCODE UPGRADE COMMANDS
+
+add the flag --upgrade in the approve/commit and modify your version
+
+## DEMO FOR ADD NEW ORG
+
+For this demo we suppose we already have a deployed network of two orgs on two different machines.
+
+Start by enrolling org3 peers and starting the containers.
+
+Note: For the new org orderers you should precise orderers that are already part of the network.
+
+Have a look at the sample file tests/manual/wassim/config-deploy-org3.yaml
+
+ ````shell script
+sudo bnc enroll-peers -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+
+ ````shell script
+sudo bnc start -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+
+1 - Org3 will generate the org definition and the anchor definition: 
+ ````shell script
+sudo bnc generate-org-definition -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+COPY both files org3.json and org3Anchor.json under artifacts from machine org3 to machine org1
+
+2- On machine org1 do :
+ ````shell script
+sudo bnc channel generate-definition -o ../hyperledger-fabric-network/artifacts/org3.json -a ../hyperledger-fabric-network/artifacts/org3Anchor.json -f ./tests/manual/wassim/config-deploy-org1.yaml -n mychannel
+````
+Now under artifacts of machine of org1 you will have a new folder : artifacts /mychannel/requestNewOrg/config_update_as_envelope_pv.pb
+Copy folder mychannel to all orgs that will sign config_update_as_envelope_pv.pb
+In our case : COPY mychannel folder under artifacts in machine org2
+
+3- In machine org2 do :
+ ````shell script
+sudo bnc channel sign-definition -f ./tests/manual/wassim/config-deploy-org2.yaml -n mychannel -c ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/config_update_as_envelope_pb.pb
+````
+
+Now under artifacts/mychannel/requestNewOrg/signatures u will have the sig of org2.
+Copy the folder signatures put it in the machine of org1 under artifacts/mychannel/requestNewOrg
+
+4- Now in machine org1:
+
+ ````shell script
+sudo bnc channel sign-definition -f ./tests/manual/wassim/config-deploy-org1.yaml -n mychannel -c ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/config_update_as_envelope_pb.pb
+````
+5 - Now under signatures on machine org1 you have both signatures , so u can submit channel update from org1: 
+ ````shell script
+sudo bnc channel submit-definition -c ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/config_update_as_envelope_pb.pb -s ../hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/signatures -f ./tests/manual/wassim/config-deploy-org1.yaml -n mychannel
+ 
+````
+
+copy /hyperledger-fabric-network/organizations/ordererOrganizations/bnc.com/tlsca from org1 to org3
+copy orderer4 folder from org1 to org3
+
+6- Now org3 needs to join the channel. Do the following in machine org3:
+
+ ````shell script
+sudo bnc channel join -n mychannel -f ./tests/manual/wassim/config-deploy-org3.yaml
+````
+7 - in order to start using chaincode org3 needs to first install it.
+On machine org3 do :
+
+ ````shell script
+sudo bnc chaincode install -f ./tests/manual/wassim/config-deploy-org3.yaml -c ./tests/manual/wassim/config-chaincode.yaml
+````
+
+8- Finally approve the chaincode : 
+ ````shell script
+sudo bnc chaincode approve -f ./tests/manual/wassim/config-deploy-org3.yaml -c ./tests/manual/wassim/config-chaincode.yaml --force
+````

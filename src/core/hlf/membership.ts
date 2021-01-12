@@ -16,9 +16,9 @@ limitations under the License.
 
 import * as FabricCAServices from 'fabric-ca-client';
 import { IEnrollmentRequest, IEnrollResponse, IRegisterRequest, TLSOptions } from 'fabric-ca-client';
-import { ClientConfig, ClientHelper } from './helpers';
+import { ClientConfig, ClientHelper } from './client';
 import { d, e } from '../../utils/logs';
-import { CSR, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/data-type';
+import { CSR, IEnrollmentResponse, IEnrollSecretResponse } from '../../utils/datatype';
 
 export type UserParams = IRegisterRequest;
 export type AdminParams = IEnrollmentRequest;
@@ -145,13 +145,6 @@ export class Membership extends ClientHelper {
    */
   async addUser(params: UserParams, mspId: string, csrObj?: CSR): Promise<IEnrollSecretResponse | undefined> {
     try {
-      // check if the user exists
-      const userIdentity = await this.wallet.getIdentity(params.enrollmentID);
-      if (userIdentity) {
-        d(`An identity for the user (${params.enrollmentID}) already exists`);
-        return null;
-      }
-
       // check if the admin account exists
       const adminIdentity = await this.wallet.getIdentity(this.clientConfig.admin.name);
       if (!adminIdentity) {
@@ -159,7 +152,14 @@ export class Membership extends ClientHelper {
         d('Check if admin account is already enrolled');
         return null;
       }
-
+      
+      // check if the user exists
+      const userIdentity = await this.wallet.getIdentity(params.enrollmentID);
+      if (userIdentity) {
+        d(`An identity for the user (${params.enrollmentID}) already exists`);
+        return null;
+      }
+      
       // build a user object to interact with the CA
       const provider = this.wallet.getWallet().getProviderRegistry().getProvider(adminIdentity.type);
       const adminUser = await provider.getUserContext(adminIdentity, this.clientConfig.admin.name);
@@ -196,7 +196,6 @@ export class Membership extends ClientHelper {
   private static async _getCATlsOptions(caTlsCertPath: string): Promise<TLSOptions> {
     const caTlsCertData = await ClientHelper.readSingleFileInDir(caTlsCertPath);
     const caRoots = Buffer.from(caTlsCertData);
-
     return {
       trustedRoots: caRoots,
       verify: false

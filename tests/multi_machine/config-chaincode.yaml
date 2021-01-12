@@ -1,0 +1,23 @@
+chaincode:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  root_path_chaincode: "volume_chaincode"
+  root_path_scripts: "volume_scripts"
+  compilation_command: "/bin/bash -c \"cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1\""
+  path_chaincode: "abstore/go"
+  channel: "mychannel"
+  chaincode: "mycc"
+  version: "1"
+  endorsementPolicy: "OR ('org1MSP.peer','org2MSP.peer')"
+  commit:
+    - organisation: "org1"
+      domain_name: "bnc.com"
+      peers:
+        - peer: "peer0"
+          host_name: "peer0.org1.bnc.com"
+          port: 7051
+    - organisation: "org2"
+      domain_name: "bnc.com"
+      peers:
+        - peer: "peer0"
+          host_name: "peer0.org2.bnc.com"
+          port: 10051

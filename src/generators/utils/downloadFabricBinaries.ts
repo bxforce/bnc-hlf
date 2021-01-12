@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 import { BaseGenerator } from '../base';
-import { Network } from '../../models/network';
+import { Network } from '../../parser/model/network';
 
 // TODO inline the script with the one here: https://github.com/hyperledger/fabric/blob/master/scripts/bootstrap.sh
 /**
@@ -31,7 +31,7 @@ export class DownloadFabricBinariesGenerator extends BaseGenerator {
 
 export VERSION=${this.network.options.hyperledgerVersion}
 export CA_VERSION=${this.network.options.hyperledgerCAVersion}
-export THIRDPARTY_IMAGE_VERSION=${this.network.options.externalHyperledgerVersion}
+export THIRDPARTY_IMAGE_VERSION=${this.network.options.hyperledgerThirdpartyVersion}
 export ARCH=$(echo "$(uname -s|tr '[:upper:]' '[:lower:]'|sed 's/mingw64_nt.*/windows/')-$(uname -m | sed 's/x86_64/amd64/g')")
 export MARCH=$(uname -m)
 

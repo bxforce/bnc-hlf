@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { l } from '../utils/logs';
-import { Organization } from '../models/organization';
-import { Engine } from '../models/engine';
-import { Peer } from '../models/peer';
-import { Orderer } from '../models/orderer';
 import { BaseParser } from './base';
-import { Ca } from '../models/ca';
-import { Network } from '../models/network';
-import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, EXTERNAL_HLF_VERSION, HLF_CA_VERSION, HLF_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
-import { OrdererOrganization } from '../models/ordererOrganization';
+import { Organization } from '../parser/model/organization';
+import { Engine } from '../parser/model/engine';
+import { Peer } from '../parser/model/peer';
+import { Orderer } from '../parser/model/orderer';
+import { Ca } from '../parser/model/ca';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
+import { Network } from '../parser/model/network';
+import { CA_DEFAULT_PORT, ConsensusType, DEFAULT_CA_ADMIN, HLF_DEFAULT_VERSION, ORDERER_DEFAULT_PORT, PEER_DEFAULT_PORT } from '../utils/constants';
+import { l } from '../utils/logs';
 
 /**
  * Parser class for the deployment configuration file
@@ -46,50 +46,34 @@ export class DeploymentParser extends BaseParser {
    */
   async parse(): Promise<Network> {
     l('Starting Parsing configuration file');
-
     const parsedYaml = await this.parseRaw();
 
     // Parsing chains definition
     const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
-
-    // Parsing engine
-    const engines: Engine[] = DeploymentParser.buildEngine(parsedYaml['engines']);
-
-    // parse IPS
-
-    const ips = parsedYaml['ips'];
-   
-
-    // Set engine for every organization
-    organizations.map(organization => {
-      organization.engines = engines.filter(eng => eng.orgName === organization.engineOrgName);
-      organization.expandEngine(true, true);
-    });
     l('Finish Parsing configuration file');
 
     // build the network instance
     const { template_folder, fabric, consensus } = parsedYaml['chains'];
     const network: Network = new Network(this.fullFilePath, {
-      hyperledgerVersion: fabric as HLF_VERSION,
-      hyperledgerCAVersion: HLF_CA_VERSION.HLF_2,
-      externalHyperledgerVersion: EXTERNAL_HLF_VERSION.EXT_HLF_2,
+      hyperledgerVersion: fabric != null ? fabric : HLF_DEFAULT_VERSION.FABRIC,
+      hyperledgerCAVersion: HLF_DEFAULT_VERSION.CA,
+      hyperledgerThirdpartyVersion : HLF_DEFAULT_VERSION.THIRDPARTY,
       consensus: consensus as ConsensusType,
-      inside: false,
       networkConfigPath: template_folder,
+      inside: false,
       forDeployment: true
     });
     network.organizations = organizations;
 
     // set a default ordererOrganization
     const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
-      domainName: organizations[0].domainName
+      domainName: organizations[0].domainName,
+      ca: new Ca('ca.orderer', {})
     });
     for(const org of network.organizations) {
       ordererOrganization.orderers.push(...org.orderers);
     }
     network.ordererOrganization = ordererOrganization;
-    //set ips
-    network.ips = ips;
 
     return network;
   }
@@ -97,7 +81,7 @@ export class DeploymentParser extends BaseParser {
   /**
    * Parse the engine section within the deployment configuration file
    * @param yamlEngine
-   */
+  
   private static buildEngine(yamlEngine): Engine[] {
     const engines = [];
 
@@ -112,6 +96,7 @@ export class DeploymentParser extends BaseParser {
 
     return engines;
   }
+  */
 
   /**
    * Parse the organization section within the deployment configuration file
@@ -122,12 +107,12 @@ export class DeploymentParser extends BaseParser {
     const { template_folder, fabric, tls, consensus, db, organisations } = yamlOrganisations;
 
     organisations.forEach(org => {
-      const { organisation, orgIndex = 0, engineOrg, domain_name, ca, orderers, peers } = org;
+      const { organisation, domain_name, ca, orderers, peers } = org;
 
       // parse CA
-      const { name: caName, engine_name: caEngineName, port: caPort } = ca;
+      const { name: caName, engine: engineName, port: caPort } = ca;
       const caEntity = new Ca(caName, {
-        engineName: caEngineName,
+        engineName: engineName,
         port: caPort ?? CA_DEFAULT_PORT,
         number: 0,
         user: DEFAULT_CA_ADMIN.name,
@@ -137,13 +122,15 @@ export class DeploymentParser extends BaseParser {
       // parse & store orderers
       const ords = [];
       orderers.forEach((ord, index) => {
-        const { orderer, engine_name: ordererEngineName, port: ordererPort } = ord;
+        const { orderer, engine: engineName, port: ordererPort, metrics: ordererMetrics } = ord;
         ords.push(
           new Orderer(orderer, {
-            engineName: ordererEngineName,
+            domainName: domain_name,
+            engineName: engineName,
             consensus,
             ports: [
-              ordererPort ?? `${index*1000+ORDERER_DEFAULT_PORT}`
+              ordererPort ?? `${ORDERER_DEFAULT_PORT.main}`,
+              ordererMetrics ?? `${ORDERER_DEFAULT_PORT.operations}`
             ],
             number: index
           })
@@ -153,20 +140,24 @@ export class DeploymentParser extends BaseParser {
       // peer parsing
       const parsedPeers: Peer[] = [];
       peers.forEach((pe, index) => {
-        const { peer: peerName, engine_name: peerEngineName, port: peerPort } = pe;
-
-        // TODO check if db leveldb or couchdb
-
+        const { peer: peerName, engine: engineName, port: peerPort, metrics: peerMetrics } = pe; // TODO check if db leveldb or couchdb
         parsedPeers.push(
           new Peer(peerName, {
-            engineName: peerEngineName,
+            engineName: engineName,
             number: index,
             ports: [
+              peerPort ?? `${PEER_DEFAULT_PORT.event}`,
+              peerPort+1 ?? `${PEER_DEFAULT_PORT.event_chaincode}`,
+              peerPort+2 ?? `${PEER_DEFAULT_PORT.event_hub}`,
+              peerMetrics ?? `${PEER_DEFAULT_PORT.operations}`
+              /*
               peerPort ?? `${index*1000+PEER_DEFAULT_PORT.event}`,
               peerPort+1 ?? `${index*1000+PEER_DEFAULT_PORT.event_chaincode}`,
-              peerPort+2 ?? `${index*1000+PEER_DEFAULT_PORT.event_hub}`
+              peerPort+2 ?? `${index*1000+PEER_DEFAULT_PORT.event_hub}`,
+              `${index*1000+PEER_DEFAULT_PORT.operations}`
+              */
             ],
-            couchDbPort: `${5+orgIndex}${index}84`,
+            couchDbPort: `${PEER_DEFAULT_PORT.couchdb}`, //`${5+orgIndex}${index}84`,
             couchDB: db
           })
         );
@@ -179,9 +170,8 @@ export class DeploymentParser extends BaseParser {
           peers: parsedPeers,
           templateFolder: template_folder,
           fabricVersion: fabric,
-          tls,
           domainName: domain_name,
-          engineOrgName: engineOrg
+          tls
         })
       );
     });

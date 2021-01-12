@@ -16,27 +16,31 @@ limitations under the License.
 
 import * as util from 'util';
 import { ChannelRequest, Orderer } from 'fabric-client';
-import { ensureFile } from 'fs-extra';
-import * as fs from 'fs';
-import { ClientConfig, ClientHelper } from './helpers';
+import { Peer } from '../../parser/model/peer';
+import { Network } from '../../parser/model/network';
+import { ClientConfig, ClientHelper } from './client';
+import { Orchestrator } from '../../orchestrator/orchestrator';
+import { DockerEngine } from '../../utils/dockerAgent';
 import { d, e, l } from '../../utils/logs';
-import { DockerEngine } from '../../agents/docker-agent';
-import { Peer } from '../../models/peer';
-import { Orchestrator } from '../../orchestrator';
-import {Network} from '../../models/network';
 
+/**
+ * Class responsible to manage HLF chaincode
+ *
+ * @author sahar.fehri@irt-systemx.fr
+ */
 export class Chaincode {
     public container;
     public docker;
     public options;
     public name;
     public version;
+    public scriptsPath;
 
-
-    constructor(docker : DockerEngine, name: string, version: string ) {
+    constructor(docker : DockerEngine, name: string, version: string, scriptsPath: string) {
         this.docker = docker;
         this.name = name;
         this.version = version;
+        this.scriptsPath = scriptsPath;
     }
 
     async init(name) {
@@ -45,7 +49,7 @@ export class Chaincode {
 
     async checkCommitReadiness(arg, targets, sequence, nameChannel, endorsement?): Promise <boolean> {
         try {
-            const cmd = ['./scripts/commit.sh', `${arg}`, `${targets}`]
+            const cmd = [this.scriptsPath+'commit.sh', `${arg}`, `${targets}`]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -66,7 +70,7 @@ export class Chaincode {
 
     async installChaincode(v1,v2, path): Promise <boolean> {
         try {
-            const cmd = ["./scripts/install.sh"]
+            const cmd = [this.scriptsPath+"install.sh"]
             let envArray = [
                 `CORE_PEER_ADDRESS=${v1}`,
                 `CORE_PEER_TLS_ROOTCERT_FILE=${v2}`,
@@ -92,15 +96,12 @@ export class Chaincode {
             return res.toString().replace(/\W/g, '');
         } catch(err) {
             e(err);
-
         }
-
     }
-
 
     async approve(sequence, channelName, endorsement?): Promise <boolean> {
         try {
-            const cmd = ["./scripts/approve.sh"]
+            const cmd = [this.scriptsPath+"approve.sh"]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -119,10 +120,9 @@ export class Chaincode {
         }
     }
 
-
     async getLastSequence(channelName): Promise<string> {
         try {
-            const cmd = ["./scripts/queryCommitted.sh"]
+            const cmd = [this.scriptsPath+"queryCommitted.sh"]
             let envArray = [
                 `CC_NAME=${this.name}`,
                 `VERSION=${this.version}`,
