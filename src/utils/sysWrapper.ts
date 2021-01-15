@@ -20,6 +20,7 @@ import {exec} from 'shelljs';
 import memFs = require('mem-fs');
 import memFsEditor = require('mem-fs-editor');
 import {l} from './logs';
+import copy from 'recursive-copy';
 
 /**
  *
@@ -37,6 +38,20 @@ export module SysWrapper {
       } catch (ex) {
         rejected(ex);
       }
+    });
+  }
+
+  export function copyFolderRecursively(src: string, dest: string): Promise<void>  {
+    return new Promise((fulfilled, rejected) => {
+      try {
+        fs.copySync(src, dest)
+        console.log('success!')
+        fulfilled()
+      } catch (err) {
+        console.error(err)
+        rejected(err)
+      }
+
     });
   }
 

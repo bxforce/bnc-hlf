@@ -134,17 +134,19 @@ export class Orchestrator {
         l('[Peer Cred]: start CA container...');
         const ca = new DockerComposeCaGenerator(`docker-compose-ca-${network.organizations[0].name}.yaml`, path, network, options, engine);
         await ca.save();
-        const caStarted = await ca.startOrgCa();
+       const caStarted = await ca.startOrgCa();
         if (!caStarted) {
             e('[Peer Cred]: Error while starting the Organization CA container !!!');
             return;
         }
         l(`[Peer Cred]: CA container started (${caStarted}) !!!`);
 
+
         l(`[Peer Cred]: start create peer crypto & certs credentials...`);
         const orgCertsGenerator = new OrgCertsGenerator(`connection-profile-ca-${network.organizations[0].name}-client.yaml`, path, network, options);
         const isGenerated = await orgCertsGenerator.buildCertificate();
         if (isGenerated) l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `); else e(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
+        console.log(network.organizations[0].ca)
     }
 
     /**
@@ -166,36 +168,56 @@ export class Orchestrator {
             return;
         }
 
-        l('[Orderer Cred]: configure local docker engine to be used for the generation process !!!');
-        const options: DockerComposeYamlOptions = {
-            networkRootPath: path,
-            composeNetwork: BNC_NETWORK,
-            org: network.organizations[0],
-            ord: network.ordererOrganization[0],
-            hosts: []
-        };
-        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
-        await engine.createNetwork({Name: options.composeNetwork});
-        l('[Orderer Cred]: docker engine configured !!!');
+            console.log(network.ordererOrganization[0].ca)
+        if (network.ordererOrganization[0].ca.options.isOrgCA == false){
+            l('[Orderer Cred]: configure local docker engine to be used for the generation process !!!');
+            const options: DockerComposeYamlOptions = {
+                networkRootPath: path,
+                composeNetwork: BNC_NETWORK,
+                org: network.organizations[0],
+                ord: network.ordererOrganization[0],
+                hosts: []
+            };
+            const engine = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
+            await engine.createNetwork({Name: options.composeNetwork});
+            l('[Orderer Cred]: docker engine configured !!!');
 
-        l('[Orderer Cred]: start CA container...');
-        const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
-        await ca.save();
-        const caStarted = await ca.startOrdererCa();
-        if (!caStarted) {
-            e('[Orderer Cred]: Error while starting the orderer CA container !!!');
-            return;
+            l('[Orderer Cred]: start CA container...');
+            const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
+            await ca.save();
+            const caStarted = await ca.startOrdererCa();
+            if (!caStarted) {
+                e('[Orderer Cred]: Error while starting the orderer CA container !!!');
+                return;
+            }
+            l(`[Orderer Cred]: CA container started (${caStarted}) !!!`);
+
+            l('[Orderer Cred]: start generating credentials...');
+            const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
+                path,
+                network,
+                options,
+                {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
+            const isGenerated = await ordererGenerator.buildCertificate();
+            l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
+            console.log(network.ordererOrganization[0].ca)
+        } else {
+            l('[Orderer Cred]: Generate orderer certs by the organization CA');
+            l('[Orderer Cred]: start generating credentials...');
+            const options: DockerComposeYamlOptions = {
+                networkRootPath: path,
+                composeNetwork: BNC_NETWORK,
+                org: network.organizations[0],
+                ord: network.ordererOrganization[0],
+                hosts: []
+            };
+            const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
+                path,
+                network,
+                options,
+                {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
+            const isGenerated = await ordererGenerator.buildCertificateWithORGCA();
         }
-        l(`[Orderer Cred]: CA container started (${caStarted}) !!!`);
-
-        l('[Orderer Cred]: start generating credentials...');
-        const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
-            path,
-            network,
-            options,
-            {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
-        const isGenerated = await ordererGenerator.buildCertificate();
-        l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
     }
 
     

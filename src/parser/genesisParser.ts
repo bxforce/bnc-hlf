@@ -92,17 +92,23 @@ export class GenesisParser extends BaseParser {
                     orderers: ords
                 })
             );
+            let caEntityOrderer;
 
             // Parse CA orderer
-            const {name, url, port} = ca_orderer;
-            let caEntityOrderer = new Ca(name, {  //
-                number: 0,
-                port: port,
-                host: url,
-                user: 'admin',
-                password: 'adminpw',
-                isSecure: false,
-            });
+            if(ca_orderer != undefined){
+                const {name, url, port} = ca_orderer;
+                caEntityOrderer = new Ca(name, {  //
+                    number: 0,
+                    port: port,
+                    host: url,
+                    user: 'admin',
+                    password: 'adminpw',
+                    isSecure: false,
+                });
+            } else {
+                caEntityOrderer = null;
+            }
+
 
             let myOrdOrg = new OrdererOrganization(`ordererOrganization${orgName}`, {
                 domainName: orgDomain,

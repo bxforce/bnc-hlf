@@ -75,18 +75,7 @@ export class DeploymentParser extends BaseParser {
           ordererOrganizations[0].orderers.push(...org.orderers);
       }
       network.ordererOrganization = ordererOrganizations;
-
-    // set a default ordererOrganization
-    /*const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
-      domainName: organizations[0].domainName,
-      ca: new Ca('ca.orderer', {})
-    });
-    for(const org of network.organizations) {
-      ordererOrganization.orderers.push(...org.orderers);
-    }
-    network.ordererOrganization = ordererOrganization;
-
-     */
+      
       if (network.options.consensus === ConsensusType.RAFT) {
           network.ordererOrganization[0].isSecure = true;
       }
@@ -126,17 +115,36 @@ export class DeploymentParser extends BaseParser {
     organisations.forEach(org => {
       const { organisation, domain_name, ca, ca_orderer, orderers, peers } = org;
         // Parse CA orderer
-        const {name, url, port} = ca_orderer;
-        caEntityOrderer = new Ca(name, {  //
-            number: 0,
-            port: port,
-            host: url,
-            user: 'admin',
-            password: 'adminpw',
-            isSecure: false,
-        });
+        console.log('#######################################################"', ca_orderer)
+
+        const { name: caName, engine: engineName, port: caPort } = ca;
+
+        if (ca_orderer != undefined) {
+            const {name, url, port} = ca_orderer;
+            caEntityOrderer = new Ca(name, {
+                number: 0,
+                port: port,
+                host: url,
+                user: 'admin',
+                password: 'adminpw',
+                isSecure: false,
+                isOrgCA: false,
+            });
+        } else {
+           // caEntityOrderer = null
+            caEntityOrderer = new Ca(`${caName}.${organisation}`, {
+                number: 0,
+                port: caPort ?? CA_DEFAULT_PORT,
+                host: `${caName}.${organisation}`,
+                user: 'admin',
+                password: 'adminpw',
+                isSecure: false,
+                isOrgCA: true,
+            });
+        }
+
       // parse CA
-      const { name: caName, engine: engineName, port: caPort } = ca;
+      //const { name: caName, engine: engineName, port: caPort } = ca;
       const caEntity = new Ca(caName, {
         engineName: engineName,
         port: caPort ?? CA_DEFAULT_PORT,
