@@ -167,17 +167,16 @@ export class Orchestrator {
             e('[Orderer Cred]: input file contains invalid parameters !!! ');
             return;
         }
-
-            console.log(network.ordererOrganization[0].ca)
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            ord: network.ordererOrganization[0],
+            hosts: []
+        };
         if (network.ordererOrganization[0].ca.options.isOrgCA == false){
             l('[Orderer Cred]: configure local docker engine to be used for the generation process !!!');
-            const options: DockerComposeYamlOptions = {
-                networkRootPath: path,
-                composeNetwork: BNC_NETWORK,
-                org: network.organizations[0],
-                ord: network.ordererOrganization[0],
-                hosts: []
-            };
+
             const engine = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
             await engine.createNetwork({Name: options.composeNetwork});
             l('[Orderer Cred]: docker engine configured !!!');
@@ -204,13 +203,6 @@ export class Orchestrator {
         } else {
             l('[Orderer Cred]: Generate orderer certs by the organization CA');
             l('[Orderer Cred]: start generating credentials...');
-            const options: DockerComposeYamlOptions = {
-                networkRootPath: path,
-                composeNetwork: BNC_NETWORK,
-                org: network.organizations[0],
-                ord: network.ordererOrganization[0],
-                hosts: []
-            };
             const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
                 path,
                 network,
