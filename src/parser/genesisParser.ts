@@ -37,7 +37,7 @@ export class GenesisParser extends BaseParser {
         const parsedYaml = await this.parseRaw();
         const genesisBlock = parsedYaml['genesis'];
 
-        const {template_folder, consensus, orderer_domain, ca, channel, organisations} = genesisBlock;
+        const {template_folder, consensus, channel, organisations} = genesisBlock;
         const networkConsensus = consensus as ConsensusType;
         const networkChannel = new Channel(channel);
         

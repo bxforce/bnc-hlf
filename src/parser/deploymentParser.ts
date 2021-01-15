@@ -115,10 +115,7 @@ export class DeploymentParser extends BaseParser {
     organisations.forEach(org => {
       const { organisation, domain_name, ca, ca_orderer, orderers, peers } = org;
         // Parse CA orderer
-        console.log('#######################################################"', ca_orderer)
-
         const { name: caName, engine: engineName, port: caPort } = ca;
-
         if (ca_orderer != undefined) {
             const {name, url, port} = ca_orderer;
             caEntityOrderer = new Ca(name, {
