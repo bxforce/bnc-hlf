@@ -86,8 +86,9 @@ program
   .description('create/start network')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .option('--no-orderer', 'bypass createChannel')
   .action(async cmd => {
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true);
+    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
   });
 
 program
