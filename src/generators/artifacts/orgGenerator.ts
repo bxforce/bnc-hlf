@@ -78,6 +78,10 @@ Organizations:
         try{
             const jsonFile = `${this.org.name}.json`;
             const artifactsPath = getArtifactsPath(this.network.options.networkConfigPath)
+            const artifactsExists = await SysWrapper.existsPath(artifactsPath);
+            if(!artifactsExists) {
+                await SysWrapper.createFolder(`${artifactsPath}`);
+            }
 
             const scriptContent = `
 export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH
