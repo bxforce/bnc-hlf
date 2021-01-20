@@ -210,6 +210,11 @@ mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org3
 
 scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/tlsca/* /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org3.bnc.com/tlsca/
 
+#Necessary for the approve
+mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org3.bnc.com/orderers/orderer4.bnc.com/msp/tlscacerts
+
+scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/msp/tlscacerts/* /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org3.bnc.com/orderers/orderer4.bnc.com/msp/tlscacerts/
+
 ````
 
 Now generate new org3 definition

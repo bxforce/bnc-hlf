@@ -11,6 +11,10 @@ chains:
         name: "ca1"
         port: 7054
         engine: "host1"
+      ca_orderer:
+        name: "ca.orderer1"
+        url: "ca.orderer1"
+        port: 9054
       orderers:
         - orderer: "orderer0"
           port: 7050
