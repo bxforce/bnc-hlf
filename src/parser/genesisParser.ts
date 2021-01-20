@@ -40,25 +40,12 @@ export class GenesisParser extends BaseParser {
         const {template_folder, consensus, channel, organisations} = genesisBlock;
         const networkConsensus = consensus as ConsensusType;
         const networkChannel = new Channel(channel);
-        
-        // Parse CA
-       /* const {type, url, port, settings} = ca;
-        const caEntity = new Ca('ca.orderer', {
-            number: 0,
-            port: port,
-            host: url,
-            user: 'admin',
-            password: 'adminpw',
-            isSecure: false,
-        });
 
-
-        */
         // parse the organization
         const orgs = [];
         const ordererOrganizations = [];
         for (const org of organisations) {
-            const {organisation: orgName, domain_name: orgDomain, ca_orderer, orderers, anchorPeer} = org;
+            const {organisation: orgName, domain_name: orgDomain, orderers, anchorPeer} = org;
 
             // get Anchor peer
             const {host_name: anchorHost, port: anchorPort} = anchorPeer;
@@ -92,28 +79,9 @@ export class GenesisParser extends BaseParser {
                     orderers: ords
                 })
             );
-            let caEntityOrderer;
-
-            // Parse CA orderer
-            if(ca_orderer != undefined){
-                const {name, url, port} = ca_orderer;
-                caEntityOrderer = new Ca(name, {  //
-                    number: 0,
-                    port: port,
-                    host: url,
-                    user: 'admin',
-                    password: 'adminpw',
-                    isSecure: false,
-                });
-            } else {
-                caEntityOrderer = null;
-            }
-
-
             let myOrdOrg = new OrdererOrganization(`ordererOrganization${orgName}`, {
                 domainName: orgDomain,
                 orgName: orgName,
-                ca: caEntityOrderer
             })
 
             myOrdOrg.orderers.push(...ords);
@@ -132,23 +100,7 @@ export class GenesisParser extends BaseParser {
             forDeployment: false,
         });
         network.organizations = orgs;
-
-        /*const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
-            domainName: orderer_domain,
-            ca: caEntity
-        });
-
-        for (const org of network.organizations) {
-            ordererOrganization.orderers.push(...org.orderers);
-        }
-
-        network.ordererOrganization = ordererOrganization;
-
-         */
-
         network.ordererOrganization = ordererOrganizations;
-
-        // network.ordererOrganization = ordererOrganization;
 
         // Raft consensus must be always secure
         if (network.options.consensus === ConsensusType.RAFT) {
