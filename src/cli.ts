@@ -59,6 +59,10 @@ export class CLI {
     await Orchestrator.generatePeersCredentials(deployConfigPath, hostsConfigPath);
   }
 
+  static async download(deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.download(deployConfigPath, hostsConfigPath);
+  }
+
   static async generateOrdererCredentials(genesisConfigFilePath: string) {
     await Orchestrator.generateOrdererCredentials(genesisConfigFilePath);
   }

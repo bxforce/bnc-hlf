@@ -147,6 +147,28 @@ export class Orchestrator {
         if (isGenerated) l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `); else e(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
     }
 
+    static async download(deploymentConfigFilePath: string, hostsConfigPath: string) {
+        // TODO check if files exists already for the same peers/organizations
+        l('[Peer Cred]: start parsing deployment file...');
+        const network = await Helper._parse(deploymentConfigFilePath, hostsConfigPath);
+        if (!network) return;
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        await SysWrapper.createFolder(path);
+
+        // Check if HLF binaries exists
+        const binariesFolderPath = getHlfBinariesPath(network.options.networkConfigPath, network.options.hyperledgerVersion);
+        const binariesFolderExists = await SysWrapper.existsFolder(binariesFolderPath);
+        if (!binariesFolderExists) {
+            l('[channel config]: start downloading HLF binaries...');
+            const isDownloaded = await Helper._downloadBinaries(`${network.options.networkConfigPath}/scripts`, network);
+            if (!isDownloaded) {
+                e('[channel config]: Error while downloading HLF binaries files');
+                return;
+            }
+            l('[channel config]: HLF binaries downloaded !!!');
+        }
+    }
+
     /**
      * Generate Crypto & Certificates credentials for orderers
      * @param genesisFilePath
