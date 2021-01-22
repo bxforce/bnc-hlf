@@ -146,7 +146,6 @@ export class Orchestrator {
         const orgCertsGenerator = new OrgCertsGenerator(`connection-profile-ca-${network.organizations[0].name}-client.yaml`, path, network, options);
         const isGenerated = await orgCertsGenerator.buildCertificate();
         if (isGenerated) l(`[Peer Cred]: credentials generated (${isGenerated}) !!! `); else e(`[Peer Cred]: credentials generated (${isGenerated}) !!! `);
-        console.log(network.organizations[0].ca)
     }
 
     /**
@@ -199,7 +198,6 @@ export class Orchestrator {
                 {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
             const isGenerated = await ordererGenerator.buildCertificate();
             l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
-            console.log(network.ordererOrganization[0].ca)
         } else {
             l('[Orderer Cred]: Generate orderer certs by the organization CA');
             l('[Orderer Cred]: start generating credentials...');
