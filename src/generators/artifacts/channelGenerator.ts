@@ -204,7 +204,6 @@ orderers:
       // update the provided channel
       let sig= await channelClient.signConfig(anchorConfigPath);
       const isUpdated = await channelClient.submitChannelUpdate(anchorConfigPath, [sig], channelName, this.network.organizations[0].mspName);
-      //  const isUpdated = await channelClient.updateChannel(channelName, this.network.organizations[0].mspName, anchorConfigPath);
       if(!isUpdated) {
         e(`Error channel (${channelName}) update !!!`);
         return false;

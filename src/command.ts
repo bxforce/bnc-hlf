@@ -76,7 +76,6 @@ program
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
     await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
     if (cmd.genesis) {
-      //await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
       await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
     }
   });
