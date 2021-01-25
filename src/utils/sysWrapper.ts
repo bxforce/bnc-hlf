@@ -20,7 +20,6 @@ import {exec} from 'shelljs';
 import memFs = require('mem-fs');
 import memFsEditor = require('mem-fs-editor');
 import {l} from './logs';
-import copy from 'recursive-copy';
 
 /**
  *
