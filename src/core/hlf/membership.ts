@@ -137,6 +137,17 @@ export class Membership extends ClientHelper {
     }
   }
 
+  async getUserIdentity(id){
+    // check if the admin account exists
+    const adminIdentity = await this.wallet.getIdentity(id);
+    if (!adminIdentity) {
+      d(`An identity of the admin user (${id}) does not exists in the wallet`);
+      d('Check if admin account is already enrolled');
+      return null;
+    }
+    return adminIdentity
+  }
+
   /**
    * Add a new user account
    * @param params

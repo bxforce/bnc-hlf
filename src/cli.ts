@@ -59,8 +59,8 @@ export class CLI {
     await Orchestrator.generatePeersCredentials(deployConfigPath, hostsConfigPath);
   }
 
-  static async generateOrdererCredentials(genesisConfigFilePath: string) {
-    await Orchestrator.generateOrdererCredentials(genesisConfigFilePath);
+  static async generateOrdererCredentials(deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.generateOrdererCredentials(deployConfigPath, hostsConfigPath);
   }
 
   static async createChannel(deployConfigPath: string, hostsConfigPath: string, channelName) {

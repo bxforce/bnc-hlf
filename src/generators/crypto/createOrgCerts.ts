@@ -33,6 +33,11 @@ import getOrganizationUsersPath = Utils.getOrganizationUsersPath;
 import { SysWrapper } from '../../utils/sysWrapper';
 import { d, e } from '../../utils/logs';
 
+
+import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
+import getOrdererMspRootPath = Utils.getOrdererMspRootPath;
+import getOrdererTlsRootPath = Utils.getOrdererTlsRootPath;
+
 import { ensureDir } from 'fs-extra'; // TODO: fix
 
 export interface AdminCAAccount {
@@ -191,7 +196,7 @@ certificateAuthorities:
       return false;
     }
   }
-
+  
   /**
    * Create folder needed for the MSP configuration for entities (user, peer, orderer)
    */
@@ -243,6 +248,7 @@ certificateAuthorities:
       return false;
     }
   }
+
 
   /**
    * File defining NoeOU configuration
@@ -392,4 +398,7 @@ NodeOUs:
       throw err;
     }
   }
+
+
+
 }

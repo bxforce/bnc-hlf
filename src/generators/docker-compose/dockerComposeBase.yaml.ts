@@ -62,7 +62,7 @@ services:
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
       - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/orderer/orderer.genesis.block
-      - ORDERER_GENERAL_LOCALMSPID=${this.network.ordererOrganization.mspName}
+      - ORDERER_GENERAL_LOCALMSPID=${this.network.ordererOrganization[0].mspName}
       - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
       # enabled TLS
       - ORDERER_GENERAL_TLS_ENABLED=${this.network.options.consensus === ConsensusType.RAFT ? true : this.options.org.isSecure}

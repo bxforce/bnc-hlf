@@ -90,7 +90,7 @@ export class Channels extends ClientHelper {
         d('Successfully created the channel.');
         return true;
       }
-      console.log(response);
+     
 
       e(` Failed to create the channel ${channelName}`);
       return false;
@@ -138,12 +138,6 @@ export class Channels extends ClientHelper {
         block: genesisBlock
       };
       const results = await channel.joinChannel(joinRequest);
-
-      d(this.peers)
-      d(this.client.newTransactionID())
-      d(genesisBlock)
-
-      d("#####")
 
       d(util.format('Join Channel R E S P O N S E : %j', results));
       if (results[0] && results[0].response && results[0].response.status === 200) {

@@ -10,17 +10,17 @@ chains:
       ca:
         name: "ca3"
         port: 9054
-        engine_name: "host1"
+        engine: "host3"
       orderers:
-        - orderer: "orderer5"
-          port: 12050
-          engine: "host1"
+        - orderer: "orderer4"
+          port: 11050
+          engine: "host2"
       peers:
         - peer: "peer0"
           port: 12051
-          engine: "host1"
+          engine: "host3"
 
 engines:
-  - name: "engine1"
+  - name: "engine3"
     type: "docker"
     url: "/var/run/docker.sock"

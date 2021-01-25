@@ -44,10 +44,11 @@ program
 program
   .command('enroll-orderers')
   .description('creates crypto material for the orderers')
-  .option('-g, --config <path>', 'Absolute Path to the genesis deployment  definition file', CONFIG_DEFAULT_PATH)
+  .option('-f, --config <path>', 'Absolute Path to the deployment  definition file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .action(async (cmd: any) => {
     if (cmd) {
-      await CLI.generateOrdererCredentials(cmd.config);
+      await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
     }
   });
 
@@ -73,8 +74,8 @@ program
   .option('-g, --genesis <path>', 'Absolute path to the genesis deployment definition file')
   .action(async cmd => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
+    await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
     if (cmd.genesis) {
-      await CLI.generateOrdererCredentials(cmd.genesis);
       await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
     }
   });
@@ -84,8 +85,9 @@ program
   .description('create/start network')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .option('--no-orderer', 'bypass createChannel')
   .action(async cmd => {
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true);
+    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
   });
 
 program
@@ -121,7 +123,7 @@ program
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
-    await CLI.generateOrdererCredentials(cmd.genesis);
+    await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
     await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
     await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true);
     await Utils.delay(DOCKER_DELAY);

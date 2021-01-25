@@ -80,6 +80,6 @@ set +x
    * @private
    */
   private _getOrdCsrFolder(): string {
-    return `${this.network.options.networkConfigPath}/csr/${this.network.ordererOrganization.fullName}`;
+    return `${this.network.options.networkConfigPath}/csr/${this.network.ordererOrganization[0].fullName}`;
   }
 }
