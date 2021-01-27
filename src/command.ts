@@ -229,6 +229,16 @@ channelCmd
         await CLI.submitCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.sigs, cmd.namech);
     });
 
+channelCmd
+    .command('add-orderer')
+    .description('adds an orderer')
+    .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .option('--systemChannel', 'adds to systemChanel')
+    .action(async (cmd) => {
+        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.systemChannel);
+    });
+
 
 const chaincodeCmd = program.command('chaincode');
 chaincodeCmd

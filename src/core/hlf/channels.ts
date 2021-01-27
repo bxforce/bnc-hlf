@@ -259,16 +259,18 @@ export class Channels extends ClientHelper {
     for(const peer of this.peers) {
       channel.addPeer(peer, orgMspId);
     }
-
+ 
     if (!channel) {
       e('Error retrieving the channel instance');
       return
     }
+
     try{
       var envelope = await channel.getChannelConfigFromOrderer();
       return envelope;
     }catch(err){
-      e('Error converting Binary to Json');
+      e('Error Getting channel Config');
+      console.log(err)
       return err;
     }
   }

@@ -28,6 +28,7 @@ import getPropertiesPath = Utils.getPropertiesPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getNewOrgRequestPath = Utils.getNewOrgRequestPath;
 import { Configtxlator } from '../../utils/configtxlator';
+import { CHANNEL_RAFT_ID } from '../../utils/constants';
 
 import { SysWrapper } from '../../utils/sysWrapper';
 import { e, l } from '../../utils/logs';
@@ -74,6 +75,7 @@ orderers:
         grpc-max-send-message-length: 40000
       tlsCACerts:
         path: ${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.network.organizations[0].fullName}/tlsca/tlsca.${this.network.ordererOrganization[0].domainName}-cert.pem
+  
   `;
 
   /**
@@ -296,6 +298,100 @@ orderers:
     }
   }
 
+
+
+  async addOrdererToSystemChannel(ordererJson, nameOrderer, port){
+    l(`Fetching latest channel definition on  (${CHANNEL_RAFT_ID}) !!!`);
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    const adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    try{
+      console.log(CHANNEL_RAFT_ID)
+      console.log(this.network.organizations[0].mspName)
+      let envelope = await channelClient.getLatestChannelConfigFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
+    const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
+      await configtxlator.createInitialConfigPb(envelope);
+      await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
+          let original = await configtxlator.getFile(configtxlator.names.initialJSON);
+          let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
+        //  console.log('modified before', JSON.stringify(modified))
+          //add TLS to consenters
+          modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
+          //add endpoint
+          let endpoint = `${nameOrderer}:${port}`
+          modified.channel_group.values.OrdererAddresses.value.addresses.push(endpoint)
+        //  console.log('modified after ', JSON.stringify(modified))
+
+
+
+
+
+     /* let newOrgDefinition = await SysWrapper.readFile(orgDefinitionPath);
+      let newOrgAnchorDefinition = await SysWrapper.readFile(anchorDefPAth);
+
+      let newOrgJsonDef = JSON.parse(newOrgDefinition);
+      let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition)
+
+      let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+
+      modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
+
+      let AnchorPeers = newOrgAnchorJson;
+
+      let target = modified.channel_group.groups.Application.groups.org3MSP.values;
+      let startAdded = {AnchorPeers, ...target}
+      modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
+      //save modified.json FILE
+      await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
+      //convert it to modified.pb
+      await configtxlator.convert(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, configtxlator.protobufType.config, configtxlator.convertType.encode)
+
+      //calculate delta between config.pb and modified.pb
+      await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, nameChannel);
+
+      //convert the delta.pb to json
+      await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, configtxlator.protobufType.update, configtxlator.convertType.decode)
+      //get the delta json file to add the header
+
+      let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
+
+      let config_update_as_envelope_json = {
+        "payload": {
+          "header": {
+            "channel_header": {
+              "channel_id": nameChannel,
+              "type": 2
+            }
+          },
+          "data": {
+            "config_update": deltaJSON
+          }
+        }
+      }
+      //save the new delta.json
+      await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
+      await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
+      //copy the final delta pb under artifacts
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, nameChannel)}/${configtxlator.names.finalPB}`)
+      await configtxlator.clean();
+
+      */
+
+    }catch (err) {
+      e(err);
+      e("ERROR generating new channel DEF")
+      return err;
+    }
+  }
+
   async signConfig(config){
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -370,6 +466,39 @@ orderers:
       const user = await channel.client.createUser({
         username: 'peer' + this.network.organizations[0].name + 'Admin',
         mspid: this.network.organizations[0].mspName,
+        cryptoContent: {
+          privateKeyPEM: adminKey,
+          signedCertPEM: adminCert
+        },
+        skipPersistence: false
+      });
+
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
+
+  private async _loadOrgAdminAccountOrderer(channel: Channels, organizationName: string): Promise<boolean> {
+    try {
+      // check if org admin account exist on wallet
+      const identity = await channel.wallet.getIdentity(`${organizationName}Admin`);
+
+      if(identity.type !== 'X.509') {
+        e(`Identity type in the current wallet not supported (type ${identity.type})`);
+        return false;
+      }
+
+      // cast the identity as X509 identity
+      const adminIdentity: X509Identity = identity as X509Identity;
+      const adminKey = adminIdentity.credentials.privateKey;
+      const adminCert = adminIdentity.credentials.certificate;
+
+      // Create user context
+      const user = await channel.client.createUser({
+        username: `${organizationName}Admin`,
+        mspid: `${organizationName}MSP`,
         cryptoContent: {
           privateKeyPEM: adminKey,
           signedCertPEM: adminCert

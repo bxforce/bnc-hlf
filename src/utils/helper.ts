@@ -107,6 +107,10 @@ export namespace Utils {
     return `${rootPath}/organizations/ordererOrganizations/${orgName}/orderers/${orderer.fullName}/tls`;
   }
 
+  export function getOrdererTlsCrt(rootPath: string, orgName: string, nameOrderer: string): string {
+    return `${rootPath}/organizations/ordererOrganizations/${orgName}/orderers/${nameOrderer}/tls/server.crt`;
+  }
+
   /**
    * Return the hyperledger fabric binaries full folder path
    * @param rootPath

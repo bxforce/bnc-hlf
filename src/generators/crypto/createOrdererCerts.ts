@@ -29,6 +29,7 @@ import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
 import getOrdererMspRootPath = Utils.getOrdererMspRootPath;
 import getOrdererTlsRootPath = Utils.getOrdererTlsRootPath;
 import getPropertiesPath = Utils.getPropertiesPath;
+import getPeerMspPath = Utils.getPeerMspPath;
 import { SysWrapper } from '../../utils/sysWrapper';
 import { d, e } from '../../utils/logs';
 import getFile = SysWrapper.getFile;
@@ -53,7 +54,33 @@ client:
     path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.ordererOrganization[0].fullName}
     cryptoStore:
       path: ${this.network.options.networkConfigPath}/wallets/organizations/${this.network.ordererOrganization[0].fullName}
+organizations:
+    ${this.network.organizations[0].name}:
+      mspid: ${this.network.organizations[0].mspName}
+      peers:
+      ${this.network.organizations[0].peers.map((peer, index) => `
+        - ${peer.name}.${this.network.organizations[0].fullName}`).join('')}
+peers:
+${this.network.organizations[0].peers.map((peer, index) => `
+  ${peer.name}.${this.network.organizations[0].fullName}:
+    url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${peer.name}.${this.network.organizations[0].fullName}:${peer.options.ports[0]}
+    grpcOptions:
+      ssl-target-name-override: ${peer.name}.${this.network.organizations[0].fullName}
+      request-timeout: 120001
+      grpc.keepalive_time_ms: 600000
+    tlsCACerts:
+      path: ${getPeerMspPath(this.network.options.networkConfigPath, this.network.organizations[0], peer)}/tlscacerts/tlsca.${this.network.organizations[0].fullName}-cert.pem
+`).join('')}
 
+orderers:
+    ${this.network.organizations[0].orderers[0].name}.${this.network.ordererOrganization[0].domainName}:
+      url: grpc${this.network.organizations[0].isSecure ? 's' : ''}://${this.network.organizations[0].orderers[0].fullName}:${this.network.ordererOrganization[0].orderers[0].options.ports[0]}
+      grpcOptions:
+        ssl-target-name-override: ${this.network.ordererOrganization[0].orderers[0].name}.${this.network.ordererOrganization[0].domainName}
+        grpc-max-send-message-length: 40000
+      tlsCACerts:
+        path: ${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.network.organizations[0].fullName}/tlsca/tlsca.${this.network.ordererOrganization[0].domainName}-cert.pem
+  
 certificateAuthorities:
   ${this.network.ordererOrganization[0].caName}:
     url: http${this.network.ordererOrganization[0].isSecure ? 's' : ''}://${this.network.ordererOrganization[0].ca.options.host}:${this.network.ordererOrganization[0].ca.options.port}
@@ -174,6 +201,9 @@ certificateAuthorities:
      await SysWrapper.createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
      await SysWrapper.createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, ordAdminRootCert);
 
+     console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFf", ordAdminRootCert)
+      console.log('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFff', ordAdminCert)
+
      d('Start register & enroll Orderers...');
      for (const orderer of this.network.ordererOrganization[0].orderers) {
        // get peer csr
@@ -181,10 +211,19 @@ certificateAuthorities:
        const csr = await certificateCsr.generateCsrHost(orderer);
 
        const ordererEnrollment = await this._generateOrdererMspFiles(orderer, membership, ordererMspId, csr);
-       if(ordererAdminEnrollment != null){
+       
+
+       if(ordererEnrollment != null){
          const ordererCert = ordererEnrollment.enrollment.certificate;
          const ordererKey = csr ? csr.key : ordererEnrollment.enrollment.key.toBytes();
+/*
+         console.log('NOOOOOOOOOOT NUUUUUUUUULLLLLLLLLLLLLLLLLLL')
+         console.log(ordererCert)
+         console.log(ordererKey)
+         console.log(ordAdminRootCert)
+         console.log(ordAdminCert)
 
+ */
          const baseOrdererPath = `${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers`;
          const ordererMspPath = `${baseOrdererPath}/${orderer.fullName}/msp`;
 
@@ -196,17 +235,18 @@ certificateAuthorities:
          // Generate TLS file if it's enabled
          if (this.network.ordererOrganization[0].isSecure || this.network.options.consensus === ConsensusType.RAFT) {
            await SysWrapper.copyFile(tlsCaCerts, `${ordererMspPath}/tlscacerts/tlsca.${this.network.ordererOrganization[0].domainName}-cert.pem`);
-
+          //  console.log('GOING TO GENERATEEEE TLSSSSSSSSSSSSSSSSS')
            const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret, csr);
            const ordererTlsCertificate = ordererTlsEnrollment.certificate;
            const ordererTlsKey = csr ? csr.key : ordererTlsEnrollment.key.toBytes();
-
+           // console.log('heeeeeeeeeeeeeere', ordererTlsCertificate)
            const ordererTlsPath = `${baseOrdererPath}/${orderer.fullName}/tls`;
            await SysWrapper.copyFile(tlsCaCerts, `${ordererTlsPath}/ca.crt`);
            await SysWrapper.createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
            await SysWrapper.createFile(`${ordererTlsPath}/server.key`, ordererTlsKey);
          }
        } else {
+         console.log('IN ELSEEEEEEEEEEEEEEEEEEEEE')
          d(`Already Enrolled ${orderer.fullName}`)
        }
 
@@ -418,6 +458,8 @@ certificateAuthorities:
       };
       const ordererEnrollmentResponse = await membership.addUser(params, mspId, csr);
       d(`Orderer ${orderer.name} is enrolled successfully`);
+
+      console.log('here is response', ordererEnrollmentResponse)
 
       return ordererEnrollmentResponse;
     } catch (err) {

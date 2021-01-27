@@ -28,11 +28,21 @@ import {Utils} from '../utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import getNewOrgRequestSignaturesPath = Utils.getNewOrgRequestSignaturesPath;
+import getOrdererTlsCrt = Utils.getOrdererTlsCrt;
 import { SysWrapper } from '../utils/sysWrapper';
+import { AdminCAAccount } from '../generators/crypto/createOrgCerts';
+import getPropertiesPath = Utils.getPropertiesPath;
+import { ClientConfig } from '../core/hlf/client';
+import { Membership, UserParams } from '../core/hlf/membership';
+import getFile = SysWrapper.getFile;
+var base64 = require('base-64');
+var utf8 = require('utf8');
+
 import {
     NETWORK_ROOT_PATH
 } from '../utils/constants';
 import { Helper } from './helper';
+var btoa = require('btoa');
 
 /**
  * Main tools orchestrator
@@ -227,6 +237,57 @@ export class ChannelOrchestrator {
             await channelGenerator.submitChannelUpdate(channelDef, allSignatures, channelName);
         }catch(err){
             e('ERROR submitting channel def')
+            e(err)
+            return ;
+        }
+    }
+
+    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, systemChannel){
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        try{
+            let name = "orderer7.bnc.com";
+            let port = "10050"
+            //Need TLS certificates of orderer + endpoint
+          /*  d('Initiate CA Client services');
+            let admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }
+            console.log(admin.name)
+            console.log(join(getPropertiesPath(path), 'connection-profile-orderer-client.yaml'))
+            const config: ClientConfig = {
+                networkProfile: join(getPropertiesPath(path), 'connection-profile-orderer-client.yaml'),          admin: {
+                    name: admin.name,
+                    secret: admin.password
+                }
+            };
+            const membership = new Membership(config);
+            console.log(network.ordererOrganization[0].caName)
+            await membership.initCaClient(network.ordererOrganization[0].caName);
+            
+           */
+
+            const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, name);
+            console.log(ordererTlsPath);
+            let tlsCrt = await getFile(ordererTlsPath);
+            console.log(Buffer.from(tlsCrt).toString('base64'));
+            let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
+            const ordererJsonConsenter = {
+                    "client_tls_cert": `${ordererTLSConverted}`,
+                    "host": `${name}`,
+                    "port": `${port}`,
+                    "server_tls_cert": `${ordererTLSConverted}`
+                }
+                
+            await channelGenerator.addOrdererToSystemChannel(ordererJsonConsenter, name, port);
+
+
+          //  await channelGenerator.addOrderer(orgDefinition, anchorDefinition, channelName)
+        }catch(err){
+            e('ERROR generating new channel DEF')
             e(err)
             return ;
         }

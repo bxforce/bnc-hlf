@@ -128,6 +128,10 @@ export class CLI {
     await ChannelOrchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName);
   }
 
+  static async addOrderer(deployConfigPath: string, hostsConfigPath: string, systemChannel){
+    await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, systemChannel);
+  }
+
   /****************************************************************************/
 
   static async upgradeChaincode() {
