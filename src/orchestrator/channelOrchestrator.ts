@@ -41,7 +41,6 @@ import {
     NETWORK_ROOT_PATH
 } from '../utils/constants';
 import { Helper } from './helper';
-var btoa = require('btoa');
 
 /**
  * Main tools orchestrator
