@@ -36,8 +36,6 @@ import getPropertiesPath = Utils.getPropertiesPath;
 import { ClientConfig } from '../core/hlf/client';
 import { Membership, UserParams } from '../core/hlf/membership';
 import getFile = SysWrapper.getFile;
-var base64 = require('base-64');
-var utf8 = require('utf8');
 
 import {
     NETWORK_ROOT_PATH
