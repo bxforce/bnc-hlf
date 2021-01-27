@@ -259,7 +259,7 @@ export class Channels extends ClientHelper {
     for(const peer of this.peers) {
       channel.addPeer(peer, orgMspId);
     }
- 
+
     if (!channel) {
       e('Error retrieving the channel instance');
       return
@@ -311,7 +311,6 @@ export class Channels extends ClientHelper {
       var envelope = fs.readFileSync(configUpdatePath);
       // extract the channel config bytes from the envelope to be signed
       var channelConfig = this.client.extractChannelConfig(envelope);
-
       let signature = this.client.signChannelConfig(channelConfig);
       return signature;
     }catch (err) {

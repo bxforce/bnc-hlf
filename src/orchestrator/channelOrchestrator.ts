@@ -28,6 +28,7 @@ import {Utils} from '../utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import getNewOrgRequestSignaturesPath = Utils.getNewOrgRequestSignaturesPath;
+import getAddOrdererSignaturesPath = Utils.getAddOrdererSignaturesPath;
 import getOrdererTlsCrt = Utils.getOrdererTlsCrt;
 import { SysWrapper } from '../utils/sysWrapper';
 import { AdminCAAccount } from '../generators/crypto/createOrgCerts';
@@ -193,7 +194,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async signCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, channelName) {
+    static async signCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
@@ -202,7 +203,12 @@ export class ChannelOrchestrator {
             const signature = await channelGenerator.signConfig(channelDef);
             //save the sig to a file
             var bufSig = Buffer.from(JSON.stringify(signature));
-            let pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, channelName)}/${network.organizations[0].name}_sign.json`
+            let pathSig;
+            if(isAddOrdererReq){
+                pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, channelName)}/${network.organizations[0].name}_sign.json`
+            } else {
+                pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, channelName)}/${network.organizations[0].name}_sign.json`
+            }
             await SysWrapper.createFile(pathSig, JSON.stringify(signature));
         }catch(err) {
             e('error signing channel definition')

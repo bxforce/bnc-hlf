@@ -213,8 +213,9 @@ channelCmd
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
     .requiredOption('-n, --namech <path>', 'name channel')
+    .option('--addOrderer', 'signging add orderer request')
     .action(async (cmd) => {
-        await CLI.signCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.namech);
+        await CLI.signCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.namech, cmd.addOrderer);
     });
 
 channelCmd
