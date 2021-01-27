@@ -226,8 +226,9 @@ channelCmd
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
     .requiredOption('-s, --sigs <update-path>', 'path to the signatures folder')
     .requiredOption('-n, --namech <path>', 'name channel')
+    .option('--addOrderer', 'signging add orderer request')
     .action(async (cmd) => {
-        await CLI.submitCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.sigs, cmd.namech);
+        await CLI.submitCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.sigs, cmd.namech, cmd.addOrderer);
     });
 
 channelCmd

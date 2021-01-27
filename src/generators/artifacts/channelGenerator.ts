@@ -395,13 +395,19 @@ orderers:
     }
   }
 
-  async signConfig(config){
+  async signConfig(config, isOrdererReq){
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
     await channelClient.init();
     // load the admin user into the client
-    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    let adminLoaded;
+    if(isOrdererReq){
+      adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+    } else {
+      adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    }
+
     if(!adminLoaded) {
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
       return false;
@@ -417,14 +423,22 @@ orderers:
     }
   }
 
-  async submitChannelUpdate(config, sigs, nameChannel){
+  async submitChannelUpdate(config, sigs, nameChannel, addOrdererReq){
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
     await channelClient.init();
-
+    
+    let adminLoaded;
     // load the admin user into the client
-    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    if(addOrdererReq){
+      adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+
+    } else {
+      adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+
+    }
+  
     if(!adminLoaded) {
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
       return false;

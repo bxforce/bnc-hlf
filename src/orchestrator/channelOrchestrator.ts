@@ -194,10 +194,17 @@ export class ChannelOrchestrator {
     static async signCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        let channelGenerator;
+        if(isAddOrdererReq){
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
 
-        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        }
+
         try{
-            const signature = await channelGenerator.signConfig(channelDef);
+            const signature = await channelGenerator.signConfig(channelDef, isAddOrdererReq);
             //save the sig to a file
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig;
@@ -214,11 +221,17 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async submitCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, signaturesFolder, channelName) {
+    static async submitCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, signaturesFolder, channelName, addOrererReq) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        let  channelGenerator;
+        if(addOrererReq){
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
 
-        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        }
 
         let allSignatures=[];
         let sigFiles = await SysWrapper.enumFilesInFolder(signaturesFolder)
@@ -237,7 +250,7 @@ export class ChannelOrchestrator {
             allSignatures.push(sig_obj_wrapped)
         }
         try{
-            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, channelName);
+            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, channelName, addOrererReq );
         }catch(err){
             e('ERROR submitting channel def')
             e(err)
