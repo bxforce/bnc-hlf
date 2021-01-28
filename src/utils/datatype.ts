@@ -37,6 +37,7 @@ export class DockerComposeYamlOptions {
   cliChaincodeRootPath?: string;
   cliScriptsRootPath?: string;
   command?: string;
+  singleOrderer?: boolean;
 }
 
 export class CSR {

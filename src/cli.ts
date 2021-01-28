@@ -97,8 +97,8 @@ export class CLI {
     await ChaincodeOrchestrator.deployChaincodeCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
-  static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
-    await Orchestrator.deployHlfServices(deployConfigPath, hostsConfigPath, skipDownload, enablePeers, enableOrderers);
+  static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true, singleOrderer?) {
+    await Orchestrator.deployHlfServices(deployConfigPath, hostsConfigPath, skipDownload, enablePeers, enableOrderers, singleOrderer);
   }
 
   static async stopHlfServices(deployConfigPath: string, hostsConfigPath: string, forceRemove: boolean) {
@@ -128,8 +128,12 @@ export class CLI {
     await ChannelOrchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName, addOrdererReq);
   }
 
-  static async addOrderer(deployConfigPath: string, hostsConfigPath: string, systemChannel){
-    await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, systemChannel);
+  static async addOrderer(deployConfigPath: string, hostsConfigPath: string, systemChannel, nameOrderer, portOrderer, nameChannel, addTLS?, addEndpoint?){
+    await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, systemChannel, nameOrderer, portOrderer, nameChannel, addTLS, addEndpoint);
+  }
+
+  static async generateNewGenesis(deployConfigPath: string, hostsConfigPath: string){
+    await ChannelOrchestrator.generateNewGenesis(deployConfigPath, hostsConfigPath);
   }
 
   /****************************************************************************/

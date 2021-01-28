@@ -85,9 +85,10 @@ program
   .description('create/start network')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('--no-orderer', 'bypass createChannel')
+  .option('--no-orderer', 'bypass createChannel')
+  .option('--singleOrderer', 'generate and start docker-compose of single orderer')
   .action(async cmd => {
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
+    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer, cmd.singleOrderer);
   });
 
 program
@@ -99,6 +100,15 @@ program
   .action(async (cmd: any) => {
     await CLI.stopHlfServices(cmd.config, cmd.hosts, cmd.rmi);
   });
+
+program
+    .command('generate-new-genesis')
+    .description('generates genesis for new orderers')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .action(async (cmd: any) => {
+        await CLI.generateNewGenesis(cmd.config, cmd.hosts);
+    });
 
 program
   .command('clear')
@@ -236,9 +246,13 @@ channelCmd
     .description('adds an orderer')
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('--systemChannel', 'adds to systemChanel')
+    .option('-n, --nameOrd <name-ord>', 'name orderer')
+    .option('-p, --portOrd <port-ord>', 'name orderer')
+    .option('-namech, --namech  <name-channel>', 'name channel')
+    .option('--addTLS', 'adds tls info to systemChanel')
+    .option('--addEndpoint', 'adds tls info to systemChanel')
     .action(async (cmd) => {
-        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.systemChannel);
+        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.systemChannel, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint);
     });
 
 

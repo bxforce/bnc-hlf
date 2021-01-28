@@ -35,13 +35,16 @@ enum TMPFILENAMES {
     modifiedPB = "modified.pb",
     deltaJSON = "delta.json",
     deltaPB = "delta.pb",
-    finalPB = "config_update_as_envelope_pb.pb"
+    finalPB = "config_update_as_envelope_pb.pb",
+    genesisJSON = "genesis.json",
+    genesisPB = "genesis.block"
 }
 
 enum PROTOBUFTYPE {
     config = "common.Config",
     update = "common.ConfigUpdate",
-    envelope= "common.Envelope"
+    envelope = "common.Envelope",
+    block = "common.Block"
 }
 
 enum CONVERTTYPE {
@@ -163,6 +166,13 @@ fi
         await createFile(`${this.tempPath}/${TMPFILENAMES.initialPB}`, data);
     }
 
+    async createInitialGENESISPB(block){
+
+        //save this file in tmp to be used later to convert it to JSON
+        // save config.json under /tmp
+        await createFile(`${this.tempPath}/${TMPFILENAMES.genesisPB}`, block);
+    }
+
     async clean() {
         try{
             await removePath(`${this.tempPath}/${TMPFILENAMES.initialPB}`)
@@ -171,6 +181,8 @@ fi
             await removePath(`${this.tempPath}/${TMPFILENAMES.modifiedPB}`)
             await removePath(`${this.tempPath}/${TMPFILENAMES.deltaJSON}`)
             await removePath(`${this.tempPath}/${TMPFILENAMES.deltaPB}`)
+            await removePath(`${this.tempPath}/${TMPFILENAMES.genesisPB}`)
+            await removePath(`${this.tempPath}/${TMPFILENAMES.genesisJSON}`)
         }catch(err){
             e('error removing tmp files')
            return err

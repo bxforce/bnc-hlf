@@ -88,6 +88,7 @@ export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
 export const CONFIG_DEFAULT_PATH = '/bnc/config/config.yaml';
 
 export const GENESIS_FILE_NAME = 'genesis.block';
+export const GENESIS_ORDERER_FILE_NAME = 'config_orderer.block';
 export const channelTimeout = 10000;
 export const updateTimeout = 60000;
 export const BNC_TOOL_NAME = 'BNC';

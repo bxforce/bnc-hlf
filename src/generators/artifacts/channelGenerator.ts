@@ -21,17 +21,20 @@ import { ClientConfig } from '../../core/hlf/client';
 import { Channels } from '../../core/hlf/channels';
 import { Network } from '../../parser/model/network';
 import { User } from '../../parser/model/user';
-import { DEFAULT_CA_ADMIN } from '../../utils/constants';
+import { DEFAULT_CA_ADMIN, GENESIS_FILE_NAME} from '../../utils/constants';
 import { Utils } from '../../utils/helper';
 import getPeerMspPath = Utils.getPeerMspPath;
 import getPropertiesPath = Utils.getPropertiesPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getNewOrgRequestPath = Utils.getNewOrgRequestPath;
 import getAddOrdererRequestPath = Utils.getAddOrdererRequestPath;
+import getArtifactsPath = Utils.getArtifactsPath;
 import { Configtxlator } from '../../utils/configtxlator';
-import { CHANNEL_RAFT_ID } from '../../utils/constants';
+import { CHANNEL_RAFT_ID, GENESIS_ORDERER_FILE_NAME } from '../../utils/constants';
 
 import { SysWrapper } from '../../utils/sysWrapper';
+import createFile = SysWrapper.createFile;
+import copyFile = SysWrapper.copyFile;
 import { e, l } from '../../utils/logs';
 
 /**
@@ -299,9 +302,61 @@ orderers:
     }
   }
 
+  async generateNewGenesis(path){
+    l(`Fetching latest channel definition on  (${CHANNEL_RAFT_ID}) !!!`);
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    const adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    let envelope = await channelClient.getLatestChannelConfigFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
+    //let blockGenesis = await channelClient.getGenesis(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
+    const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
+
+    await configtxlator.createInitialConfigPb(envelope);
+    await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
+    let latestSystemChannelCongJson = await configtxlator.getFile(configtxlator.names.initialJSON);
 
 
-  async addOrdererToSystemChannel(ordererJson, nameOrderer, port){
+
+    let blockGenesis = await SysWrapper.readFile(`${getArtifactsPath(path)}/${GENESIS_FILE_NAME}`)
+    //await configtxlator.createInitialGENESISPB(blockGenesis)
+    await SysWrapper.copyFile(`${getArtifactsPath(path)}/${GENESIS_FILE_NAME}`,`${configtxlator.tempPath}/${configtxlator.names.genesisPB}`)
+
+    await configtxlator.convert(configtxlator.names.genesisPB, configtxlator.names.genesisJSON, configtxlator.protobufType.block, configtxlator.convertType.decode)
+    let systemChannelCongJson = await configtxlator.getFile(configtxlator.names.genesisJSON);
+
+    let newJSON = systemChannelCongJson;
+    systemChannelCongJson.data.data[0].payload.data.config = latestSystemChannelCongJson;
+   // newJSON.data.data[0].payload.data.config = latestSystemChannelCongJson;
+
+    await configtxlator.saveFile(configtxlator.names.genesisJSON, JSON.stringify(newJSON))
+   // await SysWrapper.copyFile(newJSON,`${configtxlator.tempPath}/${configtxlator.names.genesisJSON}`)
+
+
+    await configtxlator.convert(configtxlator.names.genesisJSON, configtxlator.names.genesisPB, configtxlator.protobufType.block, configtxlator.convertType.encode)
+
+
+    await SysWrapper.copyFile(`${configtxlator.tempPath}/${configtxlator.names.genesisPB}`, `${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`)
+
+    await configtxlator.clean();
+
+    /*let data = envelope.config.toBuffer();
+    console.log(`${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`)
+    await createFile(`${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`, data);
+
+     */
+  }
+
+
+
+  async addOrdererToSystemChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint){
     l(`Fetching latest channel definition on  (${CHANNEL_RAFT_ID}) !!!`);
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -315,45 +370,29 @@ orderers:
     }
 
     try{
-      console.log(CHANNEL_RAFT_ID)
-      console.log(this.network.organizations[0].mspName)
       let envelope = await channelClient.getLatestChannelConfigFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
       const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
+
       await configtxlator.createInitialConfigPb(envelope);
       await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
       let original = await configtxlator.getFile(configtxlator.names.initialJSON);
       let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
-    //  console.log('modified before', JSON.stringify(modified))
-      //add TLS to consenters
-      modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
-      //add endpoint
-      let endpoint = `${nameOrderer}:${port}`
-      modified.channel_group.values.OrdererAddresses.value.addresses.push(endpoint)
-    //  console.log('modified after ', JSON.stringify(modified))
+      //console.log('modified before', JSON.stringify(modified))
+      if(addTLS){
+        //add TLS to consenters
+        console.log("adding tls")
+        modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
+
+      }
+      if (addEnpoint){
+        console.log('adding endpoint')
+        let endpoint = `${nameOrderer}:${port}`
+        modified.channel_group.values.OrdererAddresses.value.addresses.push(endpoint)
+      }
 
 
 
-
-
-     /* let newOrgDefinition = await SysWrapper.readFile(orgDefinitionPath);
-      let newOrgAnchorDefinition = await SysWrapper.readFile(anchorDefPAth);
-
-      let newOrgJsonDef = JSON.parse(newOrgDefinition);
-      let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition)
-
-      let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-
-      modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
-
-      let AnchorPeers = newOrgAnchorJson;
-
-      let target = modified.channel_group.groups.Application.groups.org3MSP.values;
-      let startAdded = {AnchorPeers, ...target}
-      modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
-      */
-
-
-
+      console.log('modified after ', JSON.stringify(modified))
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb

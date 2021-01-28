@@ -275,6 +275,33 @@ export class Channels extends ClientHelper {
     }
   }
 
+  async getGenesis(channelName, orgMspId: string) {
+  //Getting bock number 0 not the latest
+    let channel = this.client.newChannel(channelName);
+    channel.addOrderer(this.orderers[0]);
+    for(const peer of this.peers) {
+      channel.addPeer(peer, orgMspId);
+    }
+
+    if (!channel) {
+      e('Error retrieving the channel instance');
+      return
+    }
+
+    try{
+      let tx_id = this.client.newTransactionID();
+      let g_request = {
+        txId : 	tx_id
+      };
+      var block = await channel.getGenesisBlock(g_request);
+      return block;
+    }catch(err){
+      e('Error Getting channel Config');
+      console.log(err)
+      return err;
+    }
+  }
+
   /**
    * Load the list of orderer from the config file
    */

@@ -220,14 +220,14 @@ export class Orchestrator {
      * @param enablePeers
      * @param enableOrderers
      */
-    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
+    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true, singleOrderer?) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
             return;
         }
-        const organization: Organization = network.organizations[0];
+       const organization: Organization = network.organizations[0];
         l('[End] Blockchain configuration files parsed');
 
         // Assign & check root path
@@ -246,34 +246,49 @@ export class Orchestrator {
                 FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
                 FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
                 THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
-            }
+            },
+            singleOrderer: singleOrderer
         };
+        if(!singleOrderer){
+            l('Creating Peer base docker compose file');
+            const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
+            await peerBaseGenerator.createTemplateBase();
 
-        l('Creating Peer base docker compose file');
-        const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
-        await peerBaseGenerator.createTemplateBase();
+            l('Creating Docker network');
+            // TODO use localhost and default port for the default engine
+            const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+            await engine.createNetwork({Name: options.composeNetwork});
 
-        l('Creating Docker network');
-        // TODO use localhost and default port for the default engine
-        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
-        await engine.createNetwork({Name: options.composeNetwork});
+            if (enablePeers) {
+                l('Creating Peer container & deploy');
+                const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options, engine);
+                l(`'Creating Peers container template`);
+                await peerGenerator.createTemplatePeers();
+                l(`'Starting Peer containers`);
+                await peerGenerator.startPeers();
+            }
 
-        if (enablePeers) {
-            l('Creating Peer container & deploy');
-            const peerGenerator = new DockerComposePeerGenerator(`docker-compose-peers-${organization.name}.yaml`, options, engine);
-            l(`'Creating Peers container template`);
-            await peerGenerator.createTemplatePeers();
-            l(`'Starting Peer containers`);
-            await peerGenerator.startPeers();
-        }
+            if (enableOrderers) {
+                l('Creating Orderers Container & Deploy');
+                const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options, engine);
+                await ordererGenerator.createTemplateOrderers();
+                const ordererStarted = await ordererGenerator.startOrderers();
+                l(`Orderers started (${ordererStarted})`);
+            }
+        } else {
+            l('Creating Docker network');
+            // TODO use localhost and default port for the default engine
+            const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+            await engine.createNetwork({Name: options.composeNetwork});
 
-        if (enableOrderers) {
-            l('Creating Orderers Container & Deploy');
-            const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-orderers-${organization.name}.yaml`, options, engine);
+            l('Starting a single orderer')
+            let nameOrderer = network.organizations[0].orderers[0].name;
+            const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-${nameOrderer}-${organization.name}.yaml`, options, engine);
             await ordererGenerator.createTemplateOrderers();
             const ordererStarted = await ordererGenerator.startOrderers();
             l(`Orderers started (${ordererStarted})`);
         }
+
     }
 
     /**

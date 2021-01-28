@@ -16,7 +16,7 @@ limitations under the License.
 
 import { BaseGenerator } from '../base';
 import { Orderer } from '../../parser/model/orderer';
-import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME } from '../../utils/constants';
+import { ENABLE_CONTAINER_LOGGING, GENESIS_FILE_NAME, GENESIS_ORDERER_FILE_NAME } from '../../utils/constants';
 import { DockerComposeYamlOptions } from '../../utils/datatype';
 import { DockerEngine } from '../../utils/dockerAgent';
 import { Utils } from '../../utils/helper';
@@ -64,7 +64,7 @@ ${this.options.org.orderers.map(orderer => `
     networks:
       - ${this.options.composeNetwork}   
     volumes:
-      - ${getArtifactsPath(this.options.networkRootPath)}/${GENESIS_FILE_NAME}:/var/hyperledger/orderer/orderer.genesis.block
+      - ${getArtifactsPath(this.options.networkRootPath)}/${this.options.singleOrderer? GENESIS_ORDERER_FILE_NAME:GENESIS_FILE_NAME}:/var/hyperledger/orderer/orderer.genesis.block
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/msp:/var/hyperledger/orderer/msp
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/tls/:/var/hyperledger/orderer/tls
       - ${orderer.fullName}:/var/hyperledger/production/orderer

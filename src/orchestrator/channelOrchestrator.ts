@@ -258,7 +258,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, systemChannel){
+    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, systemChannel, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean){
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -270,22 +270,6 @@ export class ChannelOrchestrator {
             let name = "orderer7.bnc.com";
             let port = "10050"
             //Need TLS certificates of orderer + endpoint
-          /*  d('Initiate CA Client services');
-            let admin: AdminCAAccount = { name: 'admin', password: 'adminpw' }
-            console.log(admin.name)
-            console.log(join(getPropertiesPath(path), 'connection-profile-orderer-client.yaml'))
-            const config: ClientConfig = {
-                networkProfile: join(getPropertiesPath(path), 'connection-profile-orderer-client.yaml'),          admin: {
-                    name: admin.name,
-                    secret: admin.password
-                }
-            };
-            const membership = new Membership(config);
-            console.log(network.ordererOrganization[0].caName)
-            await membership.initCaClient(network.ordererOrganization[0].caName);
-            
-           */
-
             const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, name);
             console.log(ordererTlsPath);
             let tlsCrt = await getFile(ordererTlsPath);
@@ -293,20 +277,35 @@ export class ChannelOrchestrator {
             let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
             const ordererJsonConsenter = {
                     "client_tls_cert": `${ordererTLSConverted}`,
-                    "host": `${name}`,
-                    "port": `${port}`,
+                    "host": `${nameOrderer}`,
+                    "port": `${portOrderer}`,
                     "server_tls_cert": `${ordererTLSConverted}`
                 }
                 
-            await channelGenerator.addOrdererToSystemChannel(ordererJsonConsenter, name, port);
-
-
-          //  await channelGenerator.addOrderer(orgDefinition, anchorDefinition, channelName)
+            await channelGenerator.addOrdererToSystemChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint);
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)
             return ;
         }
+    }
+
+    static async generateNewGenesis(deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        try{
+            const channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+            await channelGenerator.generateNewGenesis(path);
+        }catch (err) {
+            e('Error generating new genesis')
+            e(err)
+            return ;
+        }
+
     }
     
 }
