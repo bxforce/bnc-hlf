@@ -249,10 +249,12 @@ channelCmd
     .option('-n, --nameOrd <name-ord>', 'name orderer')
     .option('-p, --portOrd <port-ord>', 'name orderer')
     .option('-namech, --namech  <name-channel>', 'name channel')
-    .option('--addTLS', 'adds tls info to systemChanel')
-    .option('--addEndpoint', 'adds tls info to systemChanel')
+    .option('--addTLS', 'adds tls info to channel')
+    .option('--addEndpoint', 'adds tls info to channel')
+    .option('--systemChannel', 'update the system channel')
     .action(async (cmd) => {
-        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.systemChannel, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint);
+        //add flag --systemChannel if present then its a system-channel else provide the name of the channel
+        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint, cmd.systemChannel);
     });
 
 

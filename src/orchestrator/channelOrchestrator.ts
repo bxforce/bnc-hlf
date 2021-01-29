@@ -36,6 +36,7 @@ import getPropertiesPath = Utils.getPropertiesPath;
 import { ClientConfig } from '../core/hlf/client';
 import { Membership, UserParams } from '../core/hlf/membership';
 import getFile = SysWrapper.getFile;
+import { CHANNEL_RAFT_ID } from '../utils/constants';
 
 import {
     NETWORK_ROOT_PATH
@@ -258,7 +259,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, systemChannel, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean){
+    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean){
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -267,11 +268,11 @@ export class ChannelOrchestrator {
         }
         const channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
         try{
-            let name = "orderer7.bnc.com";
-            let port = "10050"
+           // name = "orderer7.bnc.com";
+           // let port = "10050"
             //Need TLS certificates of orderer + endpoint
-            const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, name);
-            console.log(ordererTlsPath);
+            const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
+           // console.log(ordererTlsPath);
             let tlsCrt = await getFile(ordererTlsPath);
             console.log(Buffer.from(tlsCrt).toString('base64'));
             let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
@@ -281,8 +282,9 @@ export class ChannelOrchestrator {
                     "port": `${portOrderer}`,
                     "server_tls_cert": `${ordererTLSConverted}`
                 }
-                
-            await channelGenerator.addOrdererToSystemChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint);
+            let currentChannelName = systemChannel? CHANNEL_RAFT_ID:nameChannel;
+            console.log('#############currentchannel########################', currentChannelName)
+            await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName);
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)

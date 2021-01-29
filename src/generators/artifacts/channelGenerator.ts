@@ -356,8 +356,8 @@ orderers:
 
 
 
-  async addOrdererToSystemChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint){
-    l(`Fetching latest channel definition on  (${CHANNEL_RAFT_ID}) !!!`);
+  async addOrdererToChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint, channelName){
+    l(`Fetching latest channel definition on  (${channelName}) !!!`);
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
@@ -370,7 +370,7 @@ orderers:
     }
 
     try{
-      let envelope = await channelClient.getLatestChannelConfigFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
+      let envelope = await channelClient.getLatestChannelConfigFromOrderer(channelName, this.network.organizations[0].mspName);
       const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
 
       await configtxlator.createInitialConfigPb(envelope);
@@ -399,19 +399,19 @@ orderers:
       await configtxlator.convert(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, configtxlator.protobufType.config, configtxlator.convertType.encode)
    
        //calculate delta between config.pb and modified.pb
-       await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, CHANNEL_RAFT_ID);
+      await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, channelName);
   
        //convert the delta.pb to json
-       await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, configtxlator.protobufType.update, configtxlator.convertType.decode)
+      await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, configtxlator.protobufType.update, configtxlator.convertType.decode)
        //get the delta json file to add the header
   
-       let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
+      let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
 
       let config_update_as_envelope_json = {
         "payload": {
           "header": {
             "channel_header": {
-              "channel_id": CHANNEL_RAFT_ID,
+              "channel_id": channelName,
               "type": 2
             }
           },
@@ -424,7 +424,7 @@ orderers:
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
       //copy the final delta pb under artifacts
-      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getAddOrdererRequestPath(this.network.options.networkConfigPath, CHANNEL_RAFT_ID)}/${configtxlator.names.finalPB}`)
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getAddOrdererRequestPath(this.network.options.networkConfigPath, channelName)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
 
     }catch (err) {
