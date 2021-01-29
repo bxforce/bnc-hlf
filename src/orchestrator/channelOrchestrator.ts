@@ -224,7 +224,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async submitCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, signaturesFolder, channelName, addOrererReq) {
+    static async submitCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, signaturesFolder, channelName, addOrererReq, systemChannel) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let  channelGenerator;
@@ -253,7 +253,9 @@ export class ChannelOrchestrator {
             allSignatures.push(sig_obj_wrapped)
         }
         try{
-            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, channelName, addOrererReq );
+            let currentChannel = systemChannel? CHANNEL_RAFT_ID:channelName
+            console.log('currenchanneeel !!!! ', currentChannel)
+            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, currentChannel, addOrererReq );
         }catch(err){
             e('ERROR submitting channel def')
             e(err)

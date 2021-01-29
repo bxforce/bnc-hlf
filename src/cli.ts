@@ -124,8 +124,8 @@ export class CLI {
     await ChannelOrchestrator.signCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, channelName, isAddOrdererReq, isSystemChannel);
   }
 
-  static async submitCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, channelDef, signatures, channelName: string, addOrdererReq: string){
-    await ChannelOrchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName, addOrdererReq);
+  static async submitCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, channelDef, signatures, channelName: string, addOrdererReq: string, systemChannel){
+    await ChannelOrchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName, addOrdererReq, systemChannel);
   }
 
   static async addOrderer(deployConfigPath: string, hostsConfigPath: string, nameOrderer, portOrderer, nameChannel, addTLS?, addEndpoint?, systemChannel?){
