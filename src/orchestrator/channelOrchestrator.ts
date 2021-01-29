@@ -192,7 +192,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async signCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq) {
+    static async signCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq, isSystemChannel) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let channelGenerator;
@@ -209,10 +209,12 @@ export class ChannelOrchestrator {
             //save the sig to a file
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig;
+            let currentChannel = isSystemChannel? CHANNEL_RAFT_ID:channelName;
+            console.log('CUUUUUUREENT CHAAANNEEEEL', currentChannel)
             if(isAddOrdererReq){
-                pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, channelName)}/${network.organizations[0].name}_sign.json`
+                pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             } else {
-                pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, channelName)}/${network.organizations[0].name}_sign.json`
+                pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             }
             await SysWrapper.createFile(pathSig, JSON.stringify(signature));
         }catch(err) {
