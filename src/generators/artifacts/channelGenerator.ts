@@ -314,17 +314,35 @@ orderers:
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
       return false;
     }
+/*
+    let b = await channelClient.getLatestChannelBlockFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName)
+    console.log(b)
+    console.log("hohoh")
 
-    let envelope = await channelClient.getLatestChannelConfigFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
+    const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
+    await configtxlator.createBlockPb(b);
+
+    await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.block, configtxlator.convertType.decode)
+    let latestSystemChannelCongJson = await configtxlator.getFile(configtxlator.names.initialJSON);
+    
+ */
+
+  //  console.log(JSON.stringify(latestSystemChannelCongJson))
+
+    // let envelope = await channelClient.getLatestChannelConfigFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
     //let blockGenesis = await channelClient.getGenesis(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
+/*
     const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
 
     await configtxlator.createInitialConfigPb(envelope);
-    await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
+    await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.block, configtxlator.convertType.decode)
+
     let latestSystemChannelCongJson = await configtxlator.getFile(configtxlator.names.initialJSON);
 
+    console.log(JSON.stringify(latestSystemChannelCongJson))
 
-
+   */
+/*
     let blockGenesis = await SysWrapper.readFile(`${getArtifactsPath(path)}/${GENESIS_FILE_NAME}`)
     //await configtxlator.createInitialGENESISPB(blockGenesis)
     await SysWrapper.copyFile(`${getArtifactsPath(path)}/${GENESIS_FILE_NAME}`,`${configtxlator.tempPath}/${configtxlator.names.genesisPB}`)
@@ -347,6 +365,8 @@ orderers:
 
     await configtxlator.clean();
 
+ */
+
     /*let data = envelope.config.toBuffer();
     console.log(`${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`)
     await createFile(`${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`, data);
@@ -362,8 +382,23 @@ orderers:
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
     await channelClient.init();
+    let adminLoaded;
+    adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
 
-    const adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+
+
+    /* if(channelName == CHANNEL_RAFT_ID){
+       console.log('loading admin orderer')
+       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+
+     } else {
+       console.log('loading admin peer')
+       adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+
+     }
+
+     */
+
     if(!adminLoaded) {
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
       return false;
@@ -378,6 +413,8 @@ orderers:
       let original = await configtxlator.getFile(configtxlator.names.initialJSON);
       let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
       //console.log('modified before', JSON.stringify(modified))
+
+    //  console.log('before  ', JSON.stringify(modified))
       if(addTLS){
         //add TLS to consenters
         console.log("adding tls")
@@ -390,9 +427,9 @@ orderers:
         modified.channel_group.values.OrdererAddresses.value.addresses.push(endpoint)
       }
 
+     // console.log('after  ', JSON.stringify(modified))
 
-
-      console.log('modified after ', JSON.stringify(modified))
+     // console.log('modified after ', JSON.stringify(modified))
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
@@ -420,6 +457,8 @@ orderers:
           }
         }
       }
+
+      console.log('update', JSON.stringify(config_update_as_envelope_json))
       //save the new delta.json
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)

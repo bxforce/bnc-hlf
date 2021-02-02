@@ -37,8 +37,14 @@ import { ClientConfig } from '../core/hlf/client';
 import { Membership, UserParams } from '../core/hlf/membership';
 import getFile = SysWrapper.getFile;
 import { CHANNEL_RAFT_ID } from '../utils/constants';
+import { DockerEngine } from '../utils/dockerAgent';
+import getDockerComposePath = Utils.getDockerComposePath;
+import {DockerComposeYamlOptions} from '../utils/datatype';
+import { DockerComposeCliOrderer } from '../generators/docker-compose/dockerComposeCliOrderer.yaml';
 
 import {
+    BNC_NETWORK,
+    HLF_DEFAULT_VERSION,
     NETWORK_ROOT_PATH
 } from '../utils/constants';
 import { Helper } from './helper';
@@ -197,9 +203,11 @@ export class ChannelOrchestrator {
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let channelGenerator;
         if(isAddOrdererReq){
+            console.log("loading orderer connection profile")
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
 
         } else {
+            console.log("loading join channel connection profile")
             channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
 
         }
@@ -243,8 +251,8 @@ export class ChannelOrchestrator {
             let signature_header_buff = tmp.signature_header.buffer;
             let signature_buff = tmp.signature.buffer;
 
-            let sig_header_wrapped =  ByteBuffer.wrap(signature_header_buff.data);
-            let sig_wraped =  ByteBuffer.wrap(signature_buff.data);
+            let sig_header_wrapped = ByteBuffer.wrap(signature_header_buff.data);
+            let sig_wraped = ByteBuffer.wrap(signature_buff.data);
 
             let sig_obj_wrapped = {
                 signature_header:sig_header_wrapped,
@@ -270,7 +278,19 @@ export class ChannelOrchestrator {
         if (!isNetworkValid) {
             return;
         }
-        const channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        let channelGenerator;
+        channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+       /* if(systemChannel){
+            console.log('loading admin orderer')
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        } else {
+            console.log('loading peer admin')
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        }
+
+        */
+
         try{
            // name = "orderer7.bnc.com";
            // let port = "10050"
@@ -304,8 +324,44 @@ export class ChannelOrchestrator {
             return;
         }
         try{
-            const channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
-            await channelGenerator.generateNewGenesis(path);
+
+            const organization: Organization = network.organizations[0];
+            l('[End] Blockchain configuration files parsed');
+
+            // Assign & check root path
+            const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+            await SysWrapper.createFolder(path);
+
+            // Auto-create docker-compose folder if not exists
+            await SysWrapper.createFolder(getDockerComposePath(path));
+
+            const options: DockerComposeYamlOptions = {
+                networkRootPath: path,
+                composeNetwork: BNC_NETWORK,
+                org: network.organizations[0],
+                ord: network.ordererOrganization[0],
+                hosts: network.hosts,
+                envVars: {
+                    FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                    FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                    THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
+                }
+            };
+
+            console.log(network.ordererOrganization[0].mspName)
+
+            const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+            await engine.createNetwork({Name: options.composeNetwork});
+            const ordererCliGenerator = DockerComposeCliOrderer.init(`docker-compose-cli-orderer.yaml`, options, engine);
+            await ordererCliGenerator.createTemplateCliOrderer();
+            await ordererCliGenerator.startCli()
+            l(`'Starting orderer cli  container`);
+
+            // create a function to fetch in the cli the last config block and put it under
+            // artifacts with the name config_orderer.block
+            //CMD:
+           // peer channel fetch config config.pb -o orderer0.bnc.com:7050 -c system-channel --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/org1.bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem > ./channel-artifacts/config_orderer.block
+          
         }catch (err) {
             e('Error generating new genesis')
             e(err)

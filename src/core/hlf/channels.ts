@@ -275,6 +275,8 @@ export class Channels extends ClientHelper {
     }
   }
 
+  
+
   async getGenesis(channelName, orgMspId: string) {
   //Getting bock number 0 not the latest
     let channel = this.client.newChannel(channelName);

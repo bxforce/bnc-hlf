@@ -166,6 +166,11 @@ fi
         await createFile(`${this.tempPath}/${TMPFILENAMES.initialPB}`, data);
     }
 
+    async createBlockPb(block){
+        let data = block.toBuffer();
+        await createFile(`${this.tempPath}/${TMPFILENAMES.initialPB}`, data);
+    }
+
     async createInitialGENESISPB(block){
 
         //save this file in tmp to be used later to convert it to JSON
