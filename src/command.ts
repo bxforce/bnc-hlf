@@ -106,8 +106,9 @@ program
     .description('generates genesis for new orderers')
     .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .option('-o, --orderer <path>', 'Absolute path for new config file of orderer')
     .action(async (cmd: any) => {
-        await CLI.generateNewGenesis(cmd.config, cmd.hosts);
+        await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.orderer);
     });
 
 program

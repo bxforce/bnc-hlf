@@ -132,8 +132,9 @@ export class CLI {
     await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, nameOrderer, portOrderer, nameChannel, addTLS, addEndpoint, systemChannel);
   }
 
-  static async generateNewGenesis(deployConfigPath: string, hostsConfigPath: string){
+  static async generateNewGenesis(deployConfigPath: string, hostsConfigPath: string, deployOrdererConfigPath: string){
     await ChannelOrchestrator.generateNewGenesis(deployConfigPath, hostsConfigPath);
+    await Orchestrator.startSingleOrderer(deployOrdererConfigPath, hostsConfigPath);
   }
 
   /****************************************************************************/

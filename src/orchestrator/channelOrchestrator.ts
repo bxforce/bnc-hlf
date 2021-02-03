@@ -41,13 +41,14 @@ import { DockerEngine } from '../utils/dockerAgent';
 import getDockerComposePath = Utils.getDockerComposePath;
 import {DockerComposeYamlOptions} from '../utils/datatype';
 import { DockerComposeCliOrderer } from '../generators/docker-compose/dockerComposeCliOrderer.yaml';
-
+import { OrdererBootstrap } from '../core/hlf/ordererBootstrap';
 import {
     BNC_NETWORK,
     HLF_DEFAULT_VERSION,
     NETWORK_ROOT_PATH
 } from '../utils/constants';
 import { Helper } from './helper';
+import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
 
 /**
  * Main tools orchestrator
@@ -203,13 +204,9 @@ export class ChannelOrchestrator {
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let channelGenerator;
         if(isAddOrdererReq){
-            console.log("loading orderer connection profile")
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
-
         } else {
-            console.log("loading join channel connection profile")
             channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
-
         }
 
         try{
@@ -218,7 +215,6 @@ export class ChannelOrchestrator {
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig;
             let currentChannel = isSystemChannel? CHANNEL_RAFT_ID:channelName;
-            console.log('CUUUUUUREENT CHAAANNEEEEL', currentChannel)
             if(isAddOrdererReq){
                 pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             } else {
@@ -262,7 +258,6 @@ export class ChannelOrchestrator {
         }
         try{
             let currentChannel = systemChannel? CHANNEL_RAFT_ID:channelName
-            console.log('currenchanneeel !!!! ', currentChannel)
             await channelGenerator.submitChannelUpdate(channelDef, allSignatures, currentChannel, addOrererReq );
         }catch(err){
             e('ERROR submitting channel def')
@@ -280,25 +275,9 @@ export class ChannelOrchestrator {
         }
         let channelGenerator;
         channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
-       /* if(systemChannel){
-            console.log('loading admin orderer')
-            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
-        } else {
-            console.log('loading peer admin')
-            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
-
-        }
-
-        */
-
         try{
-           // name = "orderer7.bnc.com";
-           // let port = "10050"
-            //Need TLS certificates of orderer + endpoint
             const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
-           // console.log(ordererTlsPath);
             let tlsCrt = await getFile(ordererTlsPath);
-            console.log(Buffer.from(tlsCrt).toString('base64'));
             let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
             const ordererJsonConsenter = {
                     "client_tls_cert": `${ordererTLSConverted}`,
@@ -307,7 +286,6 @@ export class ChannelOrchestrator {
                     "server_tls_cert": `${ordererTLSConverted}`
                 }
             let currentChannelName = systemChannel? CHANNEL_RAFT_ID:nameChannel;
-            console.log('#############currentchannel########################', currentChannelName)
             await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName);
         }catch(err){
             e('ERROR generating new channel DEF')
@@ -348,7 +326,6 @@ export class ChannelOrchestrator {
                 }
             };
 
-            console.log(network.ordererOrganization[0].mspName)
 
             const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
             await engine.createNetwork({Name: options.composeNetwork});
@@ -356,12 +333,10 @@ export class ChannelOrchestrator {
             await ordererCliGenerator.createTemplateCliOrderer();
             await ordererCliGenerator.startCli()
             l(`'Starting orderer cli  container`);
+            const ordererBootstrap = new OrdererBootstrap(engine);
+            await ordererBootstrap.init(network.organizations[0].fullName);
+            await ordererBootstrap.createGenesis();
 
-            // create a function to fetch in the cli the last config block and put it under
-            // artifacts with the name config_orderer.block
-            //CMD:
-           // peer channel fetch config config.pb -o orderer0.bnc.com:7050 -c system-channel --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/org1.bnc.com/orderers/orderer0.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem > ./channel-artifacts/config_orderer.block
-          
         }catch (err) {
             e('Error generating new genesis')
             e(err)

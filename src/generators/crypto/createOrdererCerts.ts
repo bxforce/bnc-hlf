@@ -200,10 +200,6 @@ certificateAuthorities:
      await SysWrapper.createFile(`${ordOrgRootPath}/msp/admincerts/${this.network.ordererOrganization[0].adminUserFull}-cert.pem`, ordAdminCert);
      await SysWrapper.createFile(`${ordOrgRootPath}/msp/cacerts/ca.${domain}-cert.pem`, ordAdminRootCert);
      await SysWrapper.createFile(`${ordOrgRootPath}/ca/ca.${domain}-cert.pem`, ordAdminRootCert);
-
-     console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFf", ordAdminRootCert)
-      console.log('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFff', ordAdminCert)
-
      d('Start register & enroll Orderers...');
      for (const orderer of this.network.ordererOrganization[0].orderers) {
        // get peer csr
@@ -216,14 +212,6 @@ certificateAuthorities:
        if(ordererEnrollment != null){
          const ordererCert = ordererEnrollment.enrollment.certificate;
          const ordererKey = csr ? csr.key : ordererEnrollment.enrollment.key.toBytes();
-/*
-         console.log('NOOOOOOOOOOT NUUUUUUUUULLLLLLLLLLLLLLLLLLL')
-         console.log(ordererCert)
-         console.log(ordererKey)
-         console.log(ordAdminRootCert)
-         console.log(ordAdminCert)
-
- */
          const baseOrdererPath = `${this.network.options.networkConfigPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers`;
          const ordererMspPath = `${baseOrdererPath}/${orderer.fullName}/msp`;
 
@@ -235,18 +223,15 @@ certificateAuthorities:
          // Generate TLS file if it's enabled
          if (this.network.ordererOrganization[0].isSecure || this.network.options.consensus === ConsensusType.RAFT) {
            await SysWrapper.copyFile(tlsCaCerts, `${ordererMspPath}/tlscacerts/tlsca.${this.network.ordererOrganization[0].domainName}-cert.pem`);
-          //  console.log('GOING TO GENERATEEEE TLSSSSSSSSSSSSSSSSS')
            const ordererTlsEnrollment = await this._generateOrdererTlsFiles(orderer, membership, ordererEnrollment.secret, csr);
            const ordererTlsCertificate = ordererTlsEnrollment.certificate;
            const ordererTlsKey = csr ? csr.key : ordererTlsEnrollment.key.toBytes();
-           // console.log('heeeeeeeeeeeeeere', ordererTlsCertificate)
            const ordererTlsPath = `${baseOrdererPath}/${orderer.fullName}/tls`;
            await SysWrapper.copyFile(tlsCaCerts, `${ordererTlsPath}/ca.crt`);
            await SysWrapper.createFile(`${ordererTlsPath}/server.crt`, ordererTlsCertificate);
            await SysWrapper.createFile(`${ordererTlsPath}/server.key`, ordererTlsKey);
          }
        } else {
-         console.log('IN ELSEEEEEEEEEEEEEEEEEEEEE')
          d(`Already Enrolled ${orderer.fullName}`)
        }
 
@@ -458,9 +443,6 @@ certificateAuthorities:
       };
       const ordererEnrollmentResponse = await membership.addUser(params, mspId, csr);
       d(`Orderer ${orderer.name} is enrolled successfully`);
-
-      console.log('here is response', ordererEnrollmentResponse)
-
       return ordererEnrollmentResponse;
     } catch (err) {
       e(`Error enrolling the orderer ${orderer.name}`);

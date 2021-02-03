@@ -16,7 +16,7 @@ limitations under the License.
 
 import { BaseGenerator } from '../base';
 import { Peer } from '../../parser/model/peer';
-import { ENABLE_CONTAINER_LOGGING } from '../../utils/constants';
+import { ENABLE_CONTAINER_LOGGING, CHANNEL_RAFT_ID, GENESIS_ORDERER_FILE_NAME } from '../../utils/constants';
 import { DockerComposeYamlOptions } from '../../utils/datatype';
 import { DockerEngine } from '../../utils/dockerAgent';
 import { Utils } from '../../utils/helper';
@@ -35,6 +35,9 @@ export class DockerComposeCliOrderer extends BaseGenerator {
     contents = `
 version: '2'
 
+volumes:
+  ${this.options.org.orderers[0].fullName}:
+
 networks:
   ${this.options.composeNetwork}:
     external: true
@@ -51,6 +54,8 @@ services:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       #- FABRIC_LOGGING_SPEC=DEBUG
       - FABRIC_LOGGING_SPEC=INFO
+      - CONFIG_NAME=${GENESIS_ORDERER_FILE_NAME}
+      - SYSTEM_CHANNEL=${CHANNEL_RAFT_ID}
       - CC_ROOT_PATH=/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
       - CORE_PEER_ID=cli
       - CORE_PEER_ADDRESS=${this.options.org.peers[0].name}.${this.options.org.fullName}:${this.options.org.peers[0].options.ports[0]}
@@ -70,7 +75,7 @@ services:
       - /var/run/:/host/var/run/
       - ${this.options.networkRootPath}/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
-    
+      - ${this.options.org.orderers[0].fullName}:/var/hyperledger/production/orderer
     networks:
       - ${this.options.composeNetwork}
 ${this.options.hosts && this.options.hosts.length > 0 ?  `

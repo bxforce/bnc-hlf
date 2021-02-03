@@ -291,6 +291,51 @@ export class Orchestrator {
 
     }
 
+    static async startSingleOrderer(deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        if (!network) return;
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        l('[End] Blockchain configuration files parsed');
+
+        // Assign & check root path
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        await SysWrapper.createFolder(path);
+
+        // Auto-create docker-compose folder if not exists
+        await SysWrapper.createFolder(getDockerComposePath(path));
+
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            hosts: network.hosts,
+            envVars: {
+                FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
+            },
+            singleOrderer: true
+        };
+
+        l('Creating Docker network');
+        // TODO use localhost and default port for the default engine
+        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+        await engine.createNetwork({Name: options.composeNetwork});
+
+        l('Starting a single orderer')
+        let nameOrderer = network.organizations[0].orderers[0].name;
+        const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-${nameOrderer}-${organization.name}.yaml`, options, engine);
+        await ordererGenerator.createTemplateOrderers();
+        const ordererStarted = await ordererGenerator.startOrderers();
+        l(`Orderers started (${ordererStarted})`);
+
+
+    }
+
     /**
      * Stop all container of a blockchain
      * @param deployConfigPath the deployment configuration file

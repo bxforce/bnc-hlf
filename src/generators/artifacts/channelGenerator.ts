@@ -302,6 +302,8 @@ orderers:
     }
   }
 
+  /*
+
   async generateNewGenesis(path){
     l(`Fetching latest channel definition on  (${CHANNEL_RAFT_ID}) !!!`);
     // Initiate the channel entity
@@ -314,65 +316,10 @@ orderers:
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
       return false;
     }
-/*
-    let b = await channelClient.getLatestChannelBlockFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName)
-    console.log(b)
-    console.log("hohoh")
 
-    const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
-    await configtxlator.createBlockPb(b);
-
-    await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.block, configtxlator.convertType.decode)
-    let latestSystemChannelCongJson = await configtxlator.getFile(configtxlator.names.initialJSON);
-    
- */
-
-  //  console.log(JSON.stringify(latestSystemChannelCongJson))
-
-    // let envelope = await channelClient.getLatestChannelConfigFromOrderer(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
-    //let blockGenesis = await channelClient.getGenesis(CHANNEL_RAFT_ID, this.network.organizations[0].mspName);
-/*
-    const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
-
-    await configtxlator.createInitialConfigPb(envelope);
-    await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.block, configtxlator.convertType.decode)
-
-    let latestSystemChannelCongJson = await configtxlator.getFile(configtxlator.names.initialJSON);
-
-    console.log(JSON.stringify(latestSystemChannelCongJson))
+  }
 
    */
-/*
-    let blockGenesis = await SysWrapper.readFile(`${getArtifactsPath(path)}/${GENESIS_FILE_NAME}`)
-    //await configtxlator.createInitialGENESISPB(blockGenesis)
-    await SysWrapper.copyFile(`${getArtifactsPath(path)}/${GENESIS_FILE_NAME}`,`${configtxlator.tempPath}/${configtxlator.names.genesisPB}`)
-
-    await configtxlator.convert(configtxlator.names.genesisPB, configtxlator.names.genesisJSON, configtxlator.protobufType.block, configtxlator.convertType.decode)
-    let systemChannelCongJson = await configtxlator.getFile(configtxlator.names.genesisJSON);
-
-    let newJSON = systemChannelCongJson;
-    systemChannelCongJson.data.data[0].payload.data.config = latestSystemChannelCongJson;
-   // newJSON.data.data[0].payload.data.config = latestSystemChannelCongJson;
-
-    await configtxlator.saveFile(configtxlator.names.genesisJSON, JSON.stringify(newJSON))
-   // await SysWrapper.copyFile(newJSON,`${configtxlator.tempPath}/${configtxlator.names.genesisJSON}`)
-
-
-    await configtxlator.convert(configtxlator.names.genesisJSON, configtxlator.names.genesisPB, configtxlator.protobufType.block, configtxlator.convertType.encode)
-
-
-    await SysWrapper.copyFile(`${configtxlator.tempPath}/${configtxlator.names.genesisPB}`, `${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`)
-
-    await configtxlator.clean();
-
- */
-
-    /*let data = envelope.config.toBuffer();
-    console.log(`${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`)
-    await createFile(`${getArtifactsPath(path)}/${GENESIS_ORDERER_FILE_NAME}`, data);
-
-     */
-  }
 
 
 
@@ -384,20 +331,6 @@ orderers:
     await channelClient.init();
     let adminLoaded;
     adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
-
-
-
-    /* if(channelName == CHANNEL_RAFT_ID){
-       console.log('loading admin orderer')
-       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
-
-     } else {
-       console.log('loading admin peer')
-       adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
-
-     }
-
-     */
 
     if(!adminLoaded) {
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
@@ -412,24 +345,15 @@ orderers:
       await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
       let original = await configtxlator.getFile(configtxlator.names.initialJSON);
       let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
-      //console.log('modified before', JSON.stringify(modified))
-
-    //  console.log('before  ', JSON.stringify(modified))
       if(addTLS){
         //add TLS to consenters
-        console.log("adding tls")
         modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
 
       }
       if (addEnpoint){
-        console.log('adding endpoint')
         let endpoint = `${nameOrderer}:${port}`
         modified.channel_group.values.OrdererAddresses.value.addresses.push(endpoint)
       }
-
-     // console.log('after  ', JSON.stringify(modified))
-
-     // console.log('modified after ', JSON.stringify(modified))
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
@@ -457,8 +381,6 @@ orderers:
           }
         }
       }
-
-      console.log('update', JSON.stringify(config_update_as_envelope_json))
       //save the new delta.json
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
@@ -492,7 +414,6 @@ orderers:
     }
 
     try{
-      console.log('before sign')
       let sig= await channelClient.signConfig(config);
       return sig
     }catch(err){
