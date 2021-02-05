@@ -246,8 +246,7 @@ export class Orchestrator {
                 FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
                 FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
                 THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
-            },
-            singleOrderer: singleOrderer
+            }
         };
 
         l('Creating Peer base docker compose file');

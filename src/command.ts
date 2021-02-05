@@ -85,9 +85,16 @@ program
   .description('create/start network')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-o, --ordererConfig <path>', 'Absolute path for new config file of orderer')
   .option('--no-orderer', 'bypass createChannel')
+  .option('--addOrderer', 'signging add orderer request')
   .action(async cmd => {
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
+      if(cmd.addOrderer){
+          await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.ordererConfig);
+      }else{
+          await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
+      }
+
   });
 
 program
@@ -99,16 +106,6 @@ program
   .action(async (cmd: any) => {
     await CLI.stopHlfServices(cmd.config, cmd.hosts, cmd.rmi);
   });
-
-program
-    .command('generate-new-genesis')
-    .description('generates genesis for new orderers')
-    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-o, --orderer <path>', 'Absolute path for new config file of orderer')
-    .action(async (cmd: any) => {
-        await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.orderer);
-    });
 
 program
   .command('clear')
@@ -248,14 +245,13 @@ channelCmd
     .description('adds an orderer')
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-n, --nameOrd <name-ord>', 'name orderer')
+    .option('-o, --nameOrd <name-ord>', 'name orderer')
     .option('-p, --portOrd <port-ord>', 'name orderer')
-    .option('-namech, --namech  <name-channel>', 'name channel')
+    .option('-n, --namech  <name-channel>', 'name channel')
     .option('--addTLS', 'adds tls info to channel')
     .option('--addEndpoint', 'adds tls info to channel')
     .option('--systemChannel', 'update the system channel')
     .action(async (cmd) => {
-        //add flag --systemChannel if present then its a system-channel else provide the name of the channel
         await CLI.addOrderer(cmd.config, cmd.hosts, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint, cmd.systemChannel);
     });
 
