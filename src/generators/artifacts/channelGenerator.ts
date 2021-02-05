@@ -301,28 +301,7 @@ orderers:
       return err;
     }
   }
-
-  /*
-
-  async generateNewGenesis(path){
-    l(`Fetching latest channel definition on  (${CHANNEL_RAFT_ID}) !!!`);
-    // Initiate the channel entity
-    const clientConfig: ClientConfig = { networkProfile: this.filePath };
-    const channelClient = new Channels(clientConfig);
-    await channelClient.init();
-
-    const adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
-    if(!adminLoaded) {
-      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
-      return false;
-    }
-
-  }
-
-   */
-
-
-
+  
   async addOrdererToChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint, channelName){
     l(`Fetching latest channel definition on  (${channelName}) !!!`);
     // Initiate the channel entity

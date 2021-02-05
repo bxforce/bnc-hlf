@@ -86,9 +86,8 @@ program
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('--no-orderer', 'bypass createChannel')
-  .option('--singleOrderer', 'generate and start docker-compose of single orderer')
   .action(async cmd => {
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer, cmd.singleOrderer);
+    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
   });
 
 program

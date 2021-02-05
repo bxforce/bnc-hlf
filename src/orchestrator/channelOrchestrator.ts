@@ -302,7 +302,6 @@ export class ChannelOrchestrator {
             return;
         }
         try{
-
             const organization: Organization = network.organizations[0];
             l('[End] Blockchain configuration files parsed');
 
@@ -325,8 +324,6 @@ export class ChannelOrchestrator {
                     THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
                 }
             };
-
-
             const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
             await engine.createNetwork({Name: options.composeNetwork});
             const ordererCliGenerator = DockerComposeCliOrderer.init(`docker-compose-cli-orderer.yaml`, options, engine);
@@ -337,7 +334,7 @@ export class ChannelOrchestrator {
             await ordererBootstrap.init(network.organizations[0].fullName);
             await ordererBootstrap.createGenesis();
 
-        }catch (err) {
+        } catch (err) {
             e('Error generating new genesis')
             e(err)
             return ;
