@@ -85,9 +85,16 @@ program
   .description('create/start network')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('--no-orderer', 'bypass createChannel')
+  .option('-o, --ordererConfig <path>', 'Absolute path for new config file of orderer')
+  .option('--no-orderer', 'bypass createChannel')
+  .option('--addOrderer', 'signging add orderer request')
   .action(async cmd => {
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
+      if(cmd.addOrderer){
+          await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.ordererConfig);
+      }else{
+          await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
+      }
+
   });
 
 program
@@ -212,9 +219,11 @@ channelCmd
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
-    .requiredOption('-n, --namech <path>', 'name channel')
+    .option('-n, --namech <path>', 'name channel')
+    .option('--addOrderer', 'signging add orderer request')
+    .option('--systemChannel', 'using system channel')
     .action(async (cmd) => {
-        await CLI.signCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.namech);
+        await CLI.signCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.namech, cmd.addOrderer, cmd.systemChannel);
     });
 
 channelCmd
@@ -224,9 +233,26 @@ channelCmd
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
     .requiredOption('-s, --sigs <update-path>', 'path to the signatures folder')
-    .requiredOption('-n, --namech <path>', 'name channel')
+    .option('-n, --namech <path>', 'name channel')
+    .option('--addOrderer', 'signging add orderer request')
+    .option('--systemChannel', 'using system channel')
     .action(async (cmd) => {
-        await CLI.submitCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.sigs, cmd.namech);
+        await CLI.submitCustomChannelDef(cmd.config, cmd.hosts, cmd.channeldef, cmd.sigs, cmd.namech, cmd.addOrderer, cmd.systemChannel);
+    });
+
+channelCmd
+    .command('add-orderer')
+    .description('adds an orderer')
+    .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .option('-o, --nameOrd <name-ord>', 'name orderer')
+    .option('-p, --portOrd <port-ord>', 'name orderer')
+    .option('-n, --namech  <name-channel>', 'name channel')
+    .option('--addTLS', 'adds tls info to channel')
+    .option('--addEndpoint', 'adds tls info to channel')
+    .option('--systemChannel', 'update the system channel')
+    .action(async (cmd) => {
+        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint, cmd.systemChannel);
     });
 
 

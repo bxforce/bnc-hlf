@@ -28,11 +28,27 @@ import {Utils} from '../utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import getNewOrgRequestSignaturesPath = Utils.getNewOrgRequestSignaturesPath;
+import getAddOrdererSignaturesPath = Utils.getAddOrdererSignaturesPath;
+import getOrdererTlsCrt = Utils.getOrdererTlsCrt;
 import { SysWrapper } from '../utils/sysWrapper';
+import { AdminCAAccount } from '../generators/crypto/createOrgCerts';
+import getPropertiesPath = Utils.getPropertiesPath;
+import { ClientConfig } from '../core/hlf/client';
+import { Membership, UserParams } from '../core/hlf/membership';
+import getFile = SysWrapper.getFile;
+import { CHANNEL_RAFT_ID } from '../utils/constants';
+import { DockerEngine } from '../utils/dockerAgent';
+import getDockerComposePath = Utils.getDockerComposePath;
+import {DockerComposeYamlOptions} from '../utils/datatype';
+import { DockerComposeCliOrderer } from '../generators/docker-compose/dockerComposeCliOrderer.yaml';
+import { OrdererBootstrap } from '../core/hlf/ordererBootstrap';
 import {
+    BNC_NETWORK,
+    HLF_DEFAULT_VERSION,
     NETWORK_ROOT_PATH
 } from '../utils/constants';
 import { Helper } from './helper';
+import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
 
 /**
  * Main tools orchestrator
@@ -183,16 +199,27 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async signCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, channelName) {
+    static async signCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq, isSystemChannel) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        let channelGenerator;
+        if(isAddOrdererReq){
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        }
 
-        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
         try{
-            const signature = await channelGenerator.signConfig(channelDef);
+            const signature = await channelGenerator.signConfig(channelDef, isAddOrdererReq);
             //save the sig to a file
             var bufSig = Buffer.from(JSON.stringify(signature));
-            let pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, channelName)}/${network.organizations[0].name}_sign.json`
+            let pathSig;
+            let currentChannel = isSystemChannel? CHANNEL_RAFT_ID:channelName;
+            if(isAddOrdererReq){
+                pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
+            } else {
+                pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
+            }
             await SysWrapper.createFile(pathSig, JSON.stringify(signature));
         }catch(err) {
             e('error signing channel definition')
@@ -201,11 +228,17 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async submitCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, signaturesFolder, channelName) {
+    static async submitCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, channelDef, signaturesFolder, channelName, addOrererReq, systemChannel) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        let  channelGenerator;
+        if(addOrererReq){
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
 
-        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        }
 
         let allSignatures=[];
         let sigFiles = await SysWrapper.enumFilesInFolder(signaturesFolder)
@@ -214,8 +247,8 @@ export class ChannelOrchestrator {
             let signature_header_buff = tmp.signature_header.buffer;
             let signature_buff = tmp.signature.buffer;
 
-            let sig_header_wrapped =  ByteBuffer.wrap(signature_header_buff.data);
-            let sig_wraped =  ByteBuffer.wrap(signature_buff.data);
+            let sig_header_wrapped = ByteBuffer.wrap(signature_header_buff.data);
+            let sig_wraped = ByteBuffer.wrap(signature_buff.data);
 
             let sig_obj_wrapped = {
                 signature_header:sig_header_wrapped,
@@ -224,12 +257,89 @@ export class ChannelOrchestrator {
             allSignatures.push(sig_obj_wrapped)
         }
         try{
-            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, channelName);
+            let currentChannel = systemChannel? CHANNEL_RAFT_ID:channelName
+            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, currentChannel, addOrererReq );
         }catch(err){
             e('ERROR submitting channel def')
             e(err)
             return ;
         }
+    }
+
+    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean){
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        let channelGenerator;
+        channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        try{
+            const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
+            let tlsCrt = await getFile(ordererTlsPath);
+            let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
+            const ordererJsonConsenter = {
+                    "client_tls_cert": `${ordererTLSConverted}`,
+                    "host": `${nameOrderer}`,
+                    "port": `${portOrderer}`,
+                    "server_tls_cert": `${ordererTLSConverted}`
+                }
+            let currentChannelName = systemChannel? CHANNEL_RAFT_ID:nameChannel;
+            await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName);
+        }catch(err){
+            e('ERROR generating new channel DEF')
+            e(err)
+            return ;
+        }
+    }
+
+    static async generateNewGenesis(deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        try{
+            const organization: Organization = network.organizations[0];
+            l('[End] Blockchain configuration files parsed');
+
+            // Assign & check root path
+            const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+            await SysWrapper.createFolder(path);
+
+            // Auto-create docker-compose folder if not exists
+            await SysWrapper.createFolder(getDockerComposePath(path));
+
+            const options: DockerComposeYamlOptions = {
+                networkRootPath: path,
+                composeNetwork: BNC_NETWORK,
+                org: network.organizations[0],
+                ord: network.ordererOrganization[0],
+                hosts: network.hosts,
+                envVars: {
+                    FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                    FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                    THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
+                }
+            };
+            const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+            await engine.createNetwork({Name: options.composeNetwork});
+            const ordererCliGenerator = DockerComposeCliOrderer.init(`docker-compose-cli-orderer.yaml`, options, engine);
+            await ordererCliGenerator.createTemplateCliOrderer();
+            await ordererCliGenerator.startCli()
+            l(`'Starting orderer cli  container`);
+            const ordererBootstrap = new OrdererBootstrap(engine);
+            await ordererBootstrap.init(network.organizations[0].fullName);
+            await ordererBootstrap.createGenesis();
+
+        } catch (err) {
+            e('Error generating new genesis')
+            e(err)
+            return ;
+        }
+
     }
     
 }
