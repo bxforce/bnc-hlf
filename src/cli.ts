@@ -93,8 +93,8 @@ export class CLI {
   }
 
 
-  static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, compile = false) {
-    await ChaincodeOrchestrator.deployChaincodeCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
+  static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string) {
+    await ChaincodeOrchestrator.deployChaincodeCli(deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
   static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {

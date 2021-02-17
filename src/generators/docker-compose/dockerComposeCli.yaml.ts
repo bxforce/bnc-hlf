@@ -47,6 +47,12 @@ volumes:
         external: true
 `:``}
 
+${this.options.cliChaincodeRootPath.includes('/') && !this.options.cliScriptsRootPath.includes('/') ? `
+volumes:
+    ${this.options.cliScriptsRootPath}:
+        external: true
+`:``}
+
 services:
   cli.${this.options.org.fullName}:
     container_name: cli.${this.options.org.fullName}

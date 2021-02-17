@@ -53,8 +53,8 @@ export class CommitParser extends BaseParser {
         // Parsing chaincode definition
         const organizations: Organization[] = this.buildOrganisations(parsedYaml['chaincode']);
         // build the network instance
-        const { template_folder, channel, chaincode, root_path_chaincode, root_path_scripts, compilation_command, path_chaincode, path_scripts, endorsementPolicy, version } = parsedYaml['chaincode'];
-        const conf: CommitConfiguration = new CommitConfiguration(this.fullFilePath, channel, chaincode, root_path_chaincode, root_path_scripts, compilation_command, path_chaincode, path_scripts, version, endorsementPolicy);
+        const { template_folder, channel, chaincode, root_path_chaincode, root_path_scripts, lang_chaincode, env_chaincode, path_chaincode, path_scripts, endorsementPolicy, version } = parsedYaml['chaincode'];
+        const conf: CommitConfiguration = new CommitConfiguration(this.fullFilePath, channel, chaincode, root_path_chaincode, root_path_scripts, lang_chaincode, env_chaincode, path_chaincode, path_scripts, version, endorsementPolicy);
         conf.organizations = organizations;
         return conf;
     }

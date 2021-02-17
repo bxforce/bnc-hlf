@@ -7,8 +7,6 @@ PACKAGE_ID=$(</opt/gopath/src/github.com/hyperledger/fabric/peer/"package_${CC_N
 echo "$PACKAGE_ID"
 echo "$SEQUENCE"
 
-#CHANNEL_NAME=mychannel
-
 verifyResult() {
   if [ $1 -ne 0 ]; then
     echo "!!!!!!!!!!!!!!! "$2" !!!!!!!!!!!!!!!!"
@@ -72,10 +70,7 @@ checkApprovedForMyOrg() {
     else
       echo " PROCEED TO APPROVE"
       echo
-
     fi
-
-
 }
 
 #checkApprovedForMyOrg "\"$CORE_PEER_LOCALMSPID\": true"

@@ -1,12 +1,10 @@
 #!/bin/bash
 
 DELAY=3
+PEER_TARGETS=""
+
 # another container before giving up
 MAX_RETRY=3
-
-peerTargets=""
-
-
 
 queryCommitted() {
   EXPECTED_RESULT="Version: ${VERSION}, Sequence: ${SEQUENCE}, Endorsement Plugin: escc, Validation Plugin: vscc"
@@ -45,7 +43,7 @@ checkCommitReadiness() {
     echo "===================== Checking the commit readiness of the chaincode definition on $CORE_PEER_ADDRESS on channel '$CHANNEL_NAME'... ===================== "
     echo $1
     echo $2
-    peerTargets="$2"
+    PEER_TARGETS="$2"
     local rc=1
     local COUNTER=1
     # continue to poll
@@ -82,9 +80,9 @@ checkCommitReadiness() {
 commit() {
   set -x
   if [[ -z "${ENDORSEMENT}" ]]; then
-      peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE  ${peerTargets} >&log.txt
+      peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE  ${PEER_TARGETS} >&log.txt
   else
-      peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --signature-policy "${ENDORSEMENT}"  ${peerTargets} >&log.txt
+      peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile ${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --signature-policy "${ENDORSEMENT}"  ${PEER_TARGETS} >&log.txt
   fi
   res=$?
   set +x

@@ -68,14 +68,17 @@ export class Chaincode {
         }
     }
 
-    async installChaincode(v1,v2, path): Promise <boolean> {
+    async installChaincode(peerName, corePeerAdr, peerTlsRootCert, lang, env, path): Promise <boolean> {
         try {
             const cmd = [this.scriptsPath+"install.sh"]
             let envArray = [
-                `CORE_PEER_ADDRESS=${v1}`,
-                `CORE_PEER_TLS_ROOTCERT_FILE=${v2}`,
+                `PEER_NAME=${peerName}`,
+                `CORE_PEER_ADDRESS=${corePeerAdr}`,
+                `CORE_PEER_TLS_ROOTCERT_FILE=${peerTlsRootCert}`,
                 `CC_NAME=${this.name}`,
                 `VERSION=${this.version}`,
+                `CC_LANG=${lang}`,
+                `CC_ENV_PATH=${env}`,
                 `CC_PATH=${path}`
             ]
             let res = await this.executeCommand(cmd, envArray);

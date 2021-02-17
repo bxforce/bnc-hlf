@@ -138,7 +138,7 @@ program
     await Utils.delay(DOCKER_DELAY);
     await CLI.joinChannel(cmd.config, cmd.hosts, cmd.namech);
     await CLI.updateChannel(cmd.config, cmd.hosts, cmd.namech);
-    await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit, true);
+    await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit);
     await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade);
   });
 
@@ -305,16 +305,6 @@ chaincodeCmd
   .option('--force', 'option used to update chaincode level policy')
   .action(async (cmd) => {
     await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.force);
-  });
-
-chaincodeCmd
-  .command('compile')
-  .description('compile chaincode')
-  .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
-  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-  .action(async (cmd) => {
-    await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit, true);
   });
 
 chaincodeCmd

@@ -43,7 +43,7 @@ import { Helper } from './helper';
  */
 export class ChaincodeOrchestrator {
 
-    static async deployChaincodeCli(compile: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
+    static async deployChaincodeCli(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
@@ -72,7 +72,7 @@ export class ChaincodeOrchestrator {
             cliChaincodeRootPath: config.chaincodeRootPath,
             cliScriptsRootPath: config.scriptsRootPath
         };
-        if (compile) options.command = config.compilationCommand
+        //if (compile) options.command = config.compilationCommand
 
         l('Creating Peer base docker compose file');
         const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
@@ -108,9 +108,10 @@ export class ChaincodeOrchestrator {
         const chaincode = new Chaincode(docker, name, version, config.scriptsPath); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
         for(let peerElm of targets){
-            let corePeerAdr = `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
+            let peerName = `${peerElm.name}.${organization.fullName}`
+            let corePeerAdr = `${peerName}:${peerElm.options.ports[0]}`
             let peerTlsRootCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
-            await chaincode.installChaincode(corePeerAdr, peerTlsRootCert, config.chaincodePath);
+            await chaincode.installChaincode(peerName, corePeerAdr, peerTlsRootCert, config.chaincodeLang, config.chaincodeEnv, config.chaincodePath);
         }
     }
 
