@@ -108,11 +108,11 @@ export class ChaincodeOrchestrator {
         const {docker, organization} = await this.loadOrgEngine(deployConfigPath, hostsConfigPath)
         const chaincode = new Chaincode(docker, name, version, getScriptsPath(config.networkRootPath)); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
-        for(let peerElm of targets){
-            let peerName = `${peerElm.name}.${organization.fullName}`
-            let corePeerAdr = `${peerName}:${peerElm.options.ports[0]}`
-            let peerTlsRootCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
-            await chaincode.installChaincode(peerName, corePeerAdr, peerTlsRootCert, config.chaincodeLang, config.chaincodeEnv, config.chaincodePath);
+        for(let peer of targets){
+            let peerName = `${peer.name}.${organization.fullName}`
+            let peerAddress = `${peerName}:${peer.options.ports[0]}`
+            let peerTlsRootCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peer.name}.${organization.fullName}/tls/ca.crt`
+            await chaincode.installChaincode(organization.fullName, peerName, peerAddress, peerTlsRootCert, config.chaincodeLang, config.chaincodeEnv, config.chaincodePath);
         }
     }
 
@@ -218,6 +218,16 @@ export class ChaincodeOrchestrator {
         let peers = await this.getTargetCommitPeers(config)
         let args = '{\"Args\":['; params.forEach(x => { args += '\"'+x+'\",'; }); args = args.slice(0, -1); args += ']}';
         await chaincode.invokeChaincode(args, config.channelName, ordererCert, ordererAddress, peers);
+    }
+
+    static async queryChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, params): Promise<void> {
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
+        if (!config) return;
+        const {docker, organization} = await this.loadOrgEngine(deployConfigPath, hostsConfigPath);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, getScriptsPath(config.networkRootPath));
+        await chaincode.init(organization.fullName);
+        let args = '{\"Args\":['; params.forEach(x => { args += '\"'+x+'\",'; }); args = args.slice(0, -1); args += ']}';
+        await chaincode.queryChaincode(args, config.channelName);
     }
 
     private static async deployCli(name: string, targets: Peer[], version: string, chaincodeRootPath: string, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {

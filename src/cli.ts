@@ -93,8 +93,11 @@ export class CLI {
   }
 
   static async invokeChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, args?: string[]) {
-    l(args);
     await ChaincodeOrchestrator.invokeChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, args);
+  }
+
+  static async queryChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, args?: string[]) {
+    await ChaincodeOrchestrator.queryChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, args);
   }
   
   

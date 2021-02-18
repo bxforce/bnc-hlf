@@ -31,6 +31,11 @@ set -e
 packageChaincode() {
   if [ $CC_LANG = "external" ]
   then
+    if [ ! -f "$CC_ROOT_PATH/$CC_ENV_PATH" ]
+    then
+      mkdir -p $(dirname "$CC_ROOT_PATH/$CC_ENV_PATH")
+      echo -e "CHAINCODE_SERVER_ADDRESS=external.$ORG_NAME:9999\nCHAINCODE_ID=..." > "$CC_ROOT_PATH/$CC_ENV_PATH"
+    fi
     if [ ! -f "$CC_NAME.tar.gz" ]
     then
       set -x
@@ -302,7 +307,7 @@ queryCommitted() {
 queryCommitted
 `;
 
-    /* queryCommitted.sh contents */
+    /* invoke.sh contents */
     invoke = `
 #!/bin/bash
 invoke() {
@@ -311,6 +316,17 @@ invoke() {
     echo "$VALUE"
 }
 invoke
+`;
+
+    /* query.sh contents */
+    query = `
+#!/bin/bash
+query() {
+    peer chaincode query -c $CC_ARGS -n $CC_NAME -C $CHANNEL_NAME >&res.txt
+    VALUE=$(cat res.txt)
+    echo "$VALUE"
+}
+query
 `;
 
   /**
@@ -331,6 +347,7 @@ invoke
       SysWrapper.createScript(join(this.filepath, "commit.sh"), this.commit);
       SysWrapper.createScript(join(this.filepath, "queryCommitted.sh"), this.queryCommitted);
       SysWrapper.createScript(join(this.filepath, "invoke.sh"), this.invoke);
+      SysWrapper.createScript(join(this.filepath, "query.sh"), this.query);
       return true;
     } catch(err) {
       e(err);

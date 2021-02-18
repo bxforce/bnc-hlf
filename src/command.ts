@@ -128,6 +128,7 @@ program
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
+  .option('--no-chaincode', 'bypass chaincode')
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
     await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
@@ -139,7 +140,7 @@ program
     await CLI.joinChannel(cmd.config, cmd.hosts, cmd.namech);
     await CLI.updateChannel(cmd.config, cmd.hosts, cmd.namech);
     await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit);
-    await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade);
+    if (cmd.chaincode) await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade);
   });
 
 
@@ -316,6 +317,17 @@ chaincodeCmd
   .option('-i, --list <items>', 'comma separated list', x => { return x.split(','); })
   .action(async (cmd) => {
     await CLI.invokeChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list);
+  });
+
+chaincodeCmd
+  .command('query')
+  .description('query chaincode')
+  .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .option('-i, --list <items>', 'comma separated list', x => { return x.split(','); })
+  .action(async (cmd) => {
+    await CLI.queryChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list);
   });
 
 chaincodeCmd

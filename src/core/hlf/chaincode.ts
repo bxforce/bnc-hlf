@@ -68,12 +68,13 @@ export class Chaincode {
         }
     }
 
-    async installChaincode(peerName, corePeerAdr, peerTlsRootCert, lang, env, path): Promise <boolean> {
+    async installChaincode(orgName, peerName, peerAddress, peerTlsRootCert, lang, env, path): Promise <boolean> {
         try {
             const cmd = ["/bin/bash", this.scriptsPath+"/install.sh"]
             let envArray = [
+                `ORG_NAME=${orgName}`,
                 `PEER_NAME=${peerName}`,
-                `CORE_PEER_ADDRESS=${corePeerAdr}`,
+                `CORE_PEER_ADDRESS=${peerAddress}`,
                 `CORE_PEER_TLS_ROOTCERT_FILE=${peerTlsRootCert}`,
                 `CC_NAME=${this.name}`,
                 `VERSION=${this.version}`,
@@ -134,8 +135,6 @@ export class Chaincode {
                 `CC_NAME=${this.name}`,
                 `CC_ARGS=${args}`
             ]
-            console.log(cmd)
-            console.log(envArray)
             let res = await this.executeCommand(cmd, envArray);
             console.log(res)
             return true;
@@ -144,7 +143,24 @@ export class Chaincode {
             return false;
         }
     }
-    
+
+    async queryChaincode(args, channelName): Promise <boolean> {
+        try {
+            const cmd = ["/bin/bash", this.scriptsPath+"/query.sh"]
+            let envArray = [
+                `CHANNEL_NAME=${channelName}`,
+                `CC_NAME=${this.name}`,
+                `CC_ARGS=${args}`
+            ]
+            let res = await this.executeCommand(cmd, envArray);
+            console.log(res)
+            return true;
+        } catch(err) {
+            e(err);
+            return false;
+        }
+    }
+
     async getLastSequence(channelName): Promise<string> {
         try {
             const cmd = ["/bin/bash", this.scriptsPath+"/queryCommitted.sh"]
@@ -179,11 +195,10 @@ export class Chaincode {
 
         return new Promise(async (resolve, reject) => {
             return await exec.start(async (err, stream) => {
-                console.log(err);
-                if (err) return reject();
+                if (err) { console.log(err); return reject(); }
                 let message = '';
                 stream.on('data', data => message += data.toString());
-                console.log('Data:', message);
+                console.log('cli logs:', message);
                 stream.on('end', () => resolve(message));
             });
         });
