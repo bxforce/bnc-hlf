@@ -85,11 +85,16 @@ export module SysWrapper {
   }
   
   export async function execContent(content: any): Promise<void> {
-    if (exec(content,
-      {silent: false, shell: '/bin/bash'}).code !== 0) {
+    if (exec(content, {silent: false, shell: '/bin/bash'}).code !== 0) {
       l('Found error while running script!');
       throw new Error('Errors found in script, stopping execution');
     }
+  }
+  
+  export async function createScript(filePath: string, contents: string) {
+    await createFile(filePath, contents);
+    const command = `chmod a+x '${filePath}'`;
+    await execContent(command);
   }
 
   /** Copies a file

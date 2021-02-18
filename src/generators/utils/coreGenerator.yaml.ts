@@ -1,3 +1,29 @@
+/*
+Copyright 2020 IRT SystemX
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+import { BaseGenerator } from '../base';
+import { e, l } from '../../utils/logs';
+
+/**
+ * Class Responsible to generate core.yaml (it mainly adds the 'externalBuilders' section)
+ *
+ */
+export class CoreGenerator extends BaseGenerator {
+    /* core.yaml contents */
+    contents = `
 # Copyright IBM Corp. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -74,7 +100,6 @@ peer:
             # Timeout is the duration the client waits for a response from
             # ordering nodes before closing the connection
             timeout: 20s
-
 
     # Gossip related configuration
     gossip:
@@ -475,9 +500,9 @@ vm:
         # Parameters on creating docker container.
         # Container may be efficiently created using ipam & dns-server for cluster
         # NetworkMode - sets the networking mode for the container. Supported
-        # standard values are: `host`(default),`bridge`,`ipvlan`,`none`.
+        # standard values are: 'host'(default),'bridge','ipvlan','none'.
         # Dns - a list of DNS servers for the container to use.
-        # Note:  `Privileged` `Binds` `Links` and `PortBindings` properties of
+        # Note: 'Privileged' 'Binds' 'Links' and 'PortBindings' properties of
         # Docker Host Config are not supported and will not be used if set.
         # LogConfig - sets the logging driver (Type) and related options
         # (Config) for Docker. For more info,
@@ -503,8 +528,8 @@ chaincode:
 
     # The id is used by the Chaincode stub to register the executing Chaincode
     # ID with the Peer and is generally supplied through ENV variables
-    # the `path` form of ID is provided when installing the chaincode.
-    # The `name` is used for all other requests and can be any string.
+    # the 'path' form of ID is provided when installing the chaincode.
+    # The 'name' is used for all other requests and can be any string.
     id:
         path:
         name:
@@ -727,3 +752,30 @@ metrics:
 
         # prefix is prepended to all emitted statsd metrics
         prefix:
+`;
+
+  /**
+   * Constructor
+   * @param filename
+   * @param options
+   */
+  constructor(filename: string, private filepath: string) {
+    super(filename, filepath);
+  }
+
+  /**
+   * Save the docker compose template file
+   * @return true if successful, false otherwise
+   */
+  async generate(): Promise<Boolean> {
+    try {
+      await this.save();
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
+  
+}
+

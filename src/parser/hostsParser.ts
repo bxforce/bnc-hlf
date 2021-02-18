@@ -25,10 +25,10 @@ export class HostsParser extends BaseParser {
 
     /**
      * Constructor
-     * @param fullFilePath deployment configuration full path
+     * @param filePath deployment configuration full path
      */
-    constructor(public fullFilePath: string) {
-        super(fullFilePath);
+    constructor(public filePath: string) {
+        super(filePath);
     }
 
     /**

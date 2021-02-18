@@ -86,6 +86,8 @@ ${this.options.hosts && this.options.hosts.length > 0 ? `
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/msp:/etc/hyperledger/fabric/msp
       - ${this.options.networkRootPath}/organizations/peerOrganizations/${this.options.org.fullName}/peers/${peer.name}.${this.options.org.fullName}/tls:/etc/hyperledger/fabric/tls
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
+      - ${this.options.networkRootPath}/docker-compose/base/core.yaml:/etc/hyperledger/fabric/core.yaml
+      - ${this.options.cliBuildersScriptsRootPath}:/builders
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
     networks:

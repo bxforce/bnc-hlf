@@ -106,6 +106,4 @@ export const CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH = "volume_chaincode";
 export const CHAINCODE_DEFAULT_CHAINCODE_LANG = "golang"; // {golang,node,external}
 export const CHAINCODE_DEFAULT_CHAINCODE_ENV = "chaincode.env";
 export const CHAINCODE_DEFAULT_CHAINCODE_PATH = "abstore/go";
-export const CHAINCODE_DEFAULT_SCRIPTS_ROOT_PATH = "volume_scripts";
-export const CHAINCODE_DEFAULT_SCRIPTS_PATH = "./scripts/";
 

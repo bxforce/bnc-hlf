@@ -49,7 +49,7 @@ export class Chaincode {
 
     async checkCommitReadiness(arg, targets, sequence, nameChannel, endorsement?): Promise <boolean> {
         try {
-            const cmd = [this.scriptsPath+'commit.sh', `${arg}`, `${targets}`]
+            const cmd = ["/bin/bash", this.scriptsPath+'/commit.sh', `${arg}`, `${targets}`]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -70,7 +70,7 @@ export class Chaincode {
 
     async installChaincode(peerName, corePeerAdr, peerTlsRootCert, lang, env, path): Promise <boolean> {
         try {
-            const cmd = [this.scriptsPath+"install.sh"]
+            const cmd = ["/bin/bash", this.scriptsPath+"/install.sh"]
             let envArray = [
                 `PEER_NAME=${peerName}`,
                 `CORE_PEER_ADDRESS=${corePeerAdr}`,
@@ -104,7 +104,7 @@ export class Chaincode {
 
     async approve(sequence, channelName, endorsement?): Promise <boolean> {
         try {
-            const cmd = [this.scriptsPath+"approve.sh"]
+            const cmd = ["/bin/bash", this.scriptsPath+"/approve.sh"]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -125,7 +125,7 @@ export class Chaincode {
 
     async getLastSequence(channelName): Promise<string> {
         try {
-            const cmd = [this.scriptsPath+"queryCommitted.sh"]
+            const cmd = ["/bin/bash", this.scriptsPath+"/queryCommitted.sh"]
             let envArray = [
                 `CC_NAME=${this.name}`,
                 `VERSION=${this.version}`,
@@ -138,8 +138,8 @@ export class Chaincode {
         }
     }
 
-    async executeCommand(command,envArray? : any) {
-
+    async executeCommand(command, envArray? : any) {
+        
         let cmdObject = {
             Cmd: command,
             Env: [],

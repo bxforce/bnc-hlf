@@ -48,10 +48,12 @@ export class Network {
    * For example, currently we support only raft consensus protocol & fabric release 2.0 and above
    */
   validate(): boolean {
+    /*
     if(this.options.hyperledgerVersion !== HLF_DEFAULT_VERSION.FABRIC) {
       e(`This implementation supports currently only HLF ${HLF_DEFAULT_VERSION.FABRIC}`);
       return false;
     }
+    */
     if(this.options.consensus !== ConsensusType.RAFT) {
       e(`This implementation supports currently on consensus protocol: ${ConsensusType.RAFT}`);
       return false;
