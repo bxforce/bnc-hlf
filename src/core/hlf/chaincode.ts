@@ -123,6 +123,28 @@ export class Chaincode {
         }
     }
 
+    async invokeChaincode(args, channelName, ordererCert, ordererAddress, peers): Promise <boolean> {
+        try {
+            const cmd = ["/bin/bash", this.scriptsPath+"/invoke.sh"]
+            let envArray = [
+                `PEERS=${peers}`,
+                `ORDERER_ADDRESS=${ordererAddress}`,
+                `ORDERER_CERT=${ordererCert}`,
+                `CHANNEL_NAME=${channelName}`,
+                `CC_NAME=${this.name}`,
+                `CC_ARGS=${args}`
+            ]
+            console.log(cmd)
+            console.log(envArray)
+            let res = await this.executeCommand(cmd, envArray);
+            console.log(res)
+            return true;
+        } catch(err) {
+            e(err);
+            return false;
+        }
+    }
+    
     async getLastSequence(channelName): Promise<string> {
         try {
             const cmd = ["/bin/bash", this.scriptsPath+"/queryCommitted.sh"]

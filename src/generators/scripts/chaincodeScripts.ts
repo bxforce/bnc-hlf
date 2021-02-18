@@ -24,8 +24,7 @@ import { e, l } from '../../utils/logs';
  */
 export class ChaincodeScriptsGenerator {
     /* install.sh contents */
-    install = `
-#!/bin/bash
+    install = `#!/bin/bash
 
 set -e
 
@@ -104,8 +103,7 @@ queryInstalled
 `;
 
     /* approve.sh contents */
-    approve = `
-#!/bin/bash
+    approve = `#!/bin/bash
 
 echo "$CC_NAME"
 
@@ -185,8 +183,7 @@ approve
 `;
 
     /* commit.sh contents */
-    commit = `
-#!/bin/bash
+    commit = `#!/bin/bash
 
 DELAY=3
 PEER_TARGETS=""
@@ -296,14 +293,24 @@ commit
 `;
 
     /* queryCommitted.sh contents */
-    queryCommitted = `
-#!/bin/bash
+    queryCommitted = `#!/bin/bash
 queryCommitted() {
     peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name $CC_NAME >&query.txt
     VALUE=$(cat query.txt | grep -o 'Sequence: [0-9]')
     echo "$VALUE"
 }
 queryCommitted
+`;
+
+    /* queryCommitted.sh contents */
+    invoke = `
+#!/bin/bash
+invoke() {
+    peer chaincode invoke -c $CC_ARGS -n $CC_NAME -C $CHANNEL_NAME --waitForEvent -o $ORDERER_ADDRESS --cafile $ORDERER_CERT --tls $PEERS >&res.txt
+    VALUE=$(cat res.txt)
+    echo "$VALUE"
+}
+invoke
 `;
 
   /**
@@ -323,6 +330,7 @@ queryCommitted
       SysWrapper.createScript(join(this.filepath, "approve.sh"), this.approve);
       SysWrapper.createScript(join(this.filepath, "commit.sh"), this.commit);
       SysWrapper.createScript(join(this.filepath, "queryCommitted.sh"), this.queryCommitted);
+      SysWrapper.createScript(join(this.filepath, "invoke.sh"), this.invoke);
       return true;
     } catch(err) {
       e(err);

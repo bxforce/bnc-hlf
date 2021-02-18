@@ -126,7 +126,7 @@ program
   .option('--anchorTx', 'generate anchor peer update file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
-  .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
+  .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
@@ -263,7 +263,7 @@ chaincodeCmd
   .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-  .option('-p, --list <items>', 'comma separated list', x => { x.split(','); })
+  .option('-p, --list <items>', 'comma separated list', x => { return x.split(','); })
   .action(async (cmd) => {
     await CLI.installChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list);
   });
@@ -299,12 +299,23 @@ chaincodeCmd
   .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
-  .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { x.split(','); })
+  .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option used to update chaincode level policy')
   .option('--force', 'option used to update chaincode level policy')
   .action(async (cmd) => {
     await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.force);
+  });
+
+chaincodeCmd
+  .command('invoke')
+  .description('invoke chaincode')
+  .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_PATH)
+  .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+  .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
+  .option('-i, --list <items>', 'comma separated list', x => { return x.split(','); })
+  .action(async (cmd) => {
+    await CLI.invokeChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list);
   });
 
 chaincodeCmd

@@ -162,8 +162,8 @@ export class ChaincodeOrchestrator {
             finalArg1 += ";"
         }
 
-        let targets = await this.getTargetCommitPeers(commitConfigPath)
-
+        let targets = await this.getTargetCommitPeers(config)
+        
         let seq = await this.getLastSequence(config.chaincodeName, config.version, getScriptsPath(config.networkRootPath), config.channelName, deploymentConfigPath, hostsConfigPath);
         let lastSequence = seq.split(':');
         let finalSequence;
@@ -202,6 +202,22 @@ export class ChaincodeOrchestrator {
             await this.approveChaincodeCli(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, forceNew);
             await this.commitChaincode(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy);
         }
+    }
+    
+    static async invokeChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, params): Promise<void> {
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
+        if (!config) return;
+        const {docker, organization} = await this.loadOrgEngine(deployConfigPath, hostsConfigPath);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, getScriptsPath(config.networkRootPath));
+        await chaincode.init(organization.fullName);
+        const network: Network = await Helper._parse(deployConfigPath, hostsConfigPath);
+        if (!network) return;
+        let org = network.ordererOrganization[0];
+        let ordererAddress = `${org.orderers[0].fullName}:${org.orderers[0].options.ports[0]}`;
+        let ordererCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/${org.fullOrgName}/orderers/${org.orderers[0].fullName}/msp/tlscacerts/tlsca.${org.domainName}-cert.pem`;
+        let peers = await this.getTargetCommitPeers(config)
+        let args = '{\"Args\":['; params.forEach(x => { args += '\"'+x+'\",'; }); args = args.slice(0, -1); args += ']}';
+        await chaincode.invokeChaincode(args, config.channelName, ordererCert, ordererAddress, peers);
     }
 
     private static async deployCli(name: string, targets: Peer[], version: string, chaincodeRootPath: string, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
@@ -253,6 +269,23 @@ export class ChaincodeOrchestrator {
         await cliSingleton.startCli() // targets[0]
     }
 
+    private static async getTargetCommitPeers(config: CommitConfiguration){
+        const organizations: Organization[] = config.organizations;
+        let targets=''
+        organizations.forEach((org) => {
+            let nameOrg = org.name;
+            let domainName = org.domainName;
+            let fullName = nameOrg+'.'+domainName;
+            for(let singlePeer of org.peers){
+                let namePeer = singlePeer.name;
+                let portPeer = singlePeer.options.ports[0];
+                let pathToCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${fullName}/peers/${namePeer}.${fullName}/tls/ca.crt`
+                targets += `--peerAddresses ${namePeer}.${fullName}:${portPeer} --tlsRootCertFiles ${pathToCert} `
+            }
+        })
+        return targets;
+    }
+
     private static async getLastSequence(name, version, scriptsPath, channelName, configFilePath, hostsConfigPath) {
         l(' REQUEST to approve chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFilePath, hostsConfigPath)
@@ -271,27 +304,6 @@ export class ChaincodeOrchestrator {
             listOrgs.push(org.name);
         })
         return listOrgs;
-    }
-
-    private static async getTargetCommitPeers(commitConfigPath: string){
-        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
-        if (!config) return;
-        const organizations: Organization[] = config.organizations;
-        let targets=''
-        organizations.forEach((org) => {
-            let nameOrg = org.name;
-            let domainName = org.domainName;
-            let fullName = nameOrg+'.'+domainName;
-            for(let singlePeer of org.peers){
-                let namePeer = singlePeer.name;
-                let portPeer = singlePeer.options.ports[0];
-                let pathToCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${fullName}/peers/${namePeer}.${fullName}/tls/ca.crt`
-                targets += `--peerAddresses ${namePeer}.${fullName}:${portPeer} --tlsRootCertFiles ${pathToCert} `
-            }
-
-        })
-
-        return targets;
     }
 
     private static async getTargetPeers(targets: string[], deploymentConfigPath: string, hostsConfigPath: string) {
