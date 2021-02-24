@@ -40,12 +40,14 @@ import { CHANNEL_RAFT_ID } from '../utils/constants';
 import { DockerEngine } from '../utils/dockerAgent';
 import getDockerComposePath = Utils.getDockerComposePath;
 import {DockerComposeYamlOptions} from '../utils/datatype';
+import {ConfigTxBatchOptions} from '../utils/datatype';
 import { DockerComposeCliOrderer } from '../generators/docker-compose/dockerComposeCliOrderer.yaml';
 import { OrdererBootstrap } from '../core/hlf/ordererBootstrap';
 import {
     BNC_NETWORK,
     HLF_DEFAULT_VERSION,
-    NETWORK_ROOT_PATH
+    NETWORK_ROOT_PATH,
+    BATCH_DEFAULT_PARAMS
 } from '../utils/constants';
 import { Helper } from './helper';
 import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
@@ -63,7 +65,7 @@ export class ChannelOrchestrator {
      * Generate configtx yaml file
      * @param configGenesisFilePath
      */
-    static async generateConfigtx(configGenesisFilePath: string) {
+    static async generateConfigtx(configGenesisFilePath: string, batchTimeout?: string, maxMessageCount?: string, absoluteMaxBytes?: string, preferredMaxBytes?:string) {
         const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
@@ -85,8 +87,15 @@ export class ChannelOrchestrator {
             l('[channel config]: HLF binaries downloaded !!!');
         }
 
+        const options : ConfigTxBatchOptions ={
+            batchTimeout: batchTimeout? batchTimeout: BATCH_DEFAULT_PARAMS.batchTimeout,
+            maxMessageCount: maxMessageCount? maxMessageCount: BATCH_DEFAULT_PARAMS.maxMessageCount,
+            absoluteMaxBytes: absoluteMaxBytes? absoluteMaxBytes: BATCH_DEFAULT_PARAMS.absoluteMaxBytes,
+            preferredMaxBytes: preferredMaxBytes? preferredMaxBytes: BATCH_DEFAULT_PARAMS.preferredMaxBytes
+        }
+
         l('[configtx] Start generating configtx.yaml file...');
-        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network, options);
         await configTx.save();
         l('[configtx] Configtx.yaml file saved !!!');
     }
@@ -96,13 +105,20 @@ export class ChannelOrchestrator {
      * Generate the Channel configuration file
      * @param configGenesisFilePath
      */
-    static async generateChannelConfig(configGenesisFilePath: string) {
+    static async generateChannelConfig(configGenesisFilePath: string, batchTimeout?: string, maxMessageCount?: string, absoluteMaxBytes?: string, preferredMaxBytes?:string) {
         const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
+        const options : ConfigTxBatchOptions ={
+            batchTimeout: batchTimeout? batchTimeout: BATCH_DEFAULT_PARAMS.batchTimeout,
+            maxMessageCount: maxMessageCount? maxMessageCount: BATCH_DEFAULT_PARAMS.maxMessageCount,
+            absoluteMaxBytes: absoluteMaxBytes? absoluteMaxBytes: BATCH_DEFAULT_PARAMS.absoluteMaxBytes,
+            preferredMaxBytes: preferredMaxBytes? preferredMaxBytes: BATCH_DEFAULT_PARAMS.preferredMaxBytes
+        }
+        
         l('[channel config]: start generating channel configuration...');
-        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network, options);
 
         const gen = await configTx.generateConfigTx(network.channel.name);
         l(`[channel config]: configuration of channel ${network.channel.name} generated --> ${gen} !!!`);

@@ -108,3 +108,9 @@ export const CHAINCODE_DEFAULT_SCRIPTS_ROOT_PATH = "volume_scripts";
 export const CHAINCODE_DEFAULT_SCRIPTS_PATH = "./scripts/";
 export const CHAINCODE_DEFAULT_COMPILATION_COMMAND = "/bin/bash -c \"cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1\"";
 
+export const BATCH_DEFAULT_PARAMS = {
+  batchTimeout: '2s',
+  maxMessageCount: '50',
+  absoluteMaxBytes: '99 MB',
+  preferredMaxBytes: '512 KB'
+};
