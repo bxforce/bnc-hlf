@@ -34,10 +34,10 @@ export class DeploymentParser extends BaseParser {
 
   /**
    * Constructor
-   * @param fullFilePath deployment configuration full path
+   * @param filePath deployment configuration full path
    */
-  constructor(public fullFilePath: string) {
-    super(fullFilePath);
+  constructor(public filePath: string) {
+    super(filePath);
   }
 
   /**
@@ -54,7 +54,7 @@ export class DeploymentParser extends BaseParser {
 
     // build the network instance
     const { template_folder, fabric, consensus } = parsedYaml['chains'];
-    const network: Network = new Network(this.fullFilePath, {
+    const network: Network = new Network(this.filePath, {
       hyperledgerVersion: fabric != null ? fabric : HLF_DEFAULT_VERSION.FABRIC,
       hyperledgerCAVersion: HLF_DEFAULT_VERSION.CA,
       hyperledgerThirdpartyVersion : HLF_DEFAULT_VERSION.THIRDPARTY,

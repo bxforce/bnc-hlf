@@ -25,7 +25,10 @@ import {DockerComposeCaGenerator} from '../generators/docker-compose/dockerCompo
 import {DockerComposeCaOrdererGenerator} from '../generators/docker-compose/dockerComposeCaOrderer.yaml';
 import {DockerComposePeerGenerator} from '../generators/docker-compose/dockerComposePeer.yaml';
 import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
+import {ChaincodeScriptsGenerator} from '../generators/scripts/chaincodeScripts';
+import {BuildersScriptsGenerator} from '../generators/scripts/buildersScripts';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
+import {CoreGenerator} from '../generators/utils/coreGenerator.yaml';
 import {DockerComposeYamlOptions} from '../utils/datatype';
 import {ConfigTxBatchOptions} from '../utils/datatype';
 import {d, e, l} from '../utils/logs';
@@ -33,6 +36,7 @@ import {DockerEngine} from '../utils/dockerAgent';
 import {Utils} from '../utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getDockerComposePath = Utils.getDockerComposePath;
+import getScriptsPath = Utils.getScriptsPath;
 import { SysWrapper } from '../utils/sysWrapper';
 import {
     BNC_NETWORK,
@@ -260,7 +264,8 @@ export class Orchestrator {
                 FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
                 FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
                 THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
-            }
+            },
+            cliBuildersScriptsRootPath: getScriptsPath(path)+'/builders'
         };
 
         l('Creating Peer base docker compose file');
@@ -271,6 +276,14 @@ export class Orchestrator {
         // TODO use localhost and default port for the default engine
         const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
         await engine.createNetwork({Name: options.composeNetwork});
+
+        l('Creating Peer config');
+        const coreGenerator = new CoreGenerator(`base/core.yaml`, getDockerComposePath(options.networkRootPath));
+        coreGenerator.generate();
+
+        l('Creating Chaincode scripts');
+        (new ChaincodeScriptsGenerator(getScriptsPath(options.networkRootPath))).generate();
+        (new BuildersScriptsGenerator(getScriptsPath(options.networkRootPath)+'/builders')).generate();
 
         if (enablePeers) {
             l('Creating Peer container & deploy');
@@ -288,8 +301,6 @@ export class Orchestrator {
             const ordererStarted = await ordererGenerator.startOrderers();
             l(`Orderers started (${ordererStarted})`);
         }
-
-
     }
 
     static async startSingleOrderer(deploymentConfigPath: string, hostsConfigPath: string) {

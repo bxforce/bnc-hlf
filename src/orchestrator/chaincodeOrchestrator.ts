@@ -32,6 +32,8 @@ import {
     HLF_DEFAULT_VERSION,
     SEQUENCE
 } from '../utils/constants';
+import {Utils} from '../utils/helper';
+import getScriptsPath = Utils.getScriptsPath;
 import { Helper } from './helper';
 
 /**
@@ -43,7 +45,7 @@ import { Helper } from './helper';
  */
 export class ChaincodeOrchestrator {
 
-    static async deployChaincodeCli(compile: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
+    static async deployChaincodeCli(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
@@ -69,10 +71,9 @@ export class ChaincodeOrchestrator {
                 FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
                 THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
             },
-            cliChaincodeRootPath: config.chaincodeRootPath,
-            cliScriptsRootPath: config.scriptsRootPath
+            cliChaincodeRootPath: config.chaincodeRootPath
         };
-        if (compile) options.command = config.compilationCommand
+        //if (compile) options.command = config.compilationCommand
 
         l('Creating Peer base docker compose file');
         const peerBaseGenerator = new DockerComposeEntityBaseGenerator(options, network);
@@ -96,7 +97,7 @@ export class ChaincodeOrchestrator {
         let targetPeers = await this.getTargetPeers(targets, deployConfigPath, hostsConfigPath)
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        await ChaincodeOrchestrator.deployCli(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deployConfigPath, hostsConfigPath, commitConfigPath)
+        await ChaincodeOrchestrator.deployCli(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, deployConfigPath, hostsConfigPath, commitConfigPath)
         await ChaincodeOrchestrator.installChaincodeCli(config.chaincodeName, targetPeers, config.version, deployConfigPath, hostsConfigPath, commitConfigPath)
     }
 
@@ -105,12 +106,13 @@ export class ChaincodeOrchestrator {
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath); // TODO: fix choose between config and command variables
         if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deployConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, name, version, config.scriptsPath); // new Chaincode(docker, config.chaincodeName, config.version);
+        const chaincode = new Chaincode(docker, name, version, getScriptsPath(config.networkRootPath)); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
-        for(let peerElm of targets){
-            let corePeerAdr = `${peerElm.name}.${organization.fullName}:${peerElm.options.ports[0]}`
-            let peerTlsRootCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peerElm.name}.${organization.fullName}/tls/ca.crt`
-            await chaincode.installChaincode(corePeerAdr, peerTlsRootCert, config.chaincodePath);
+        for(let peer of targets){
+            let peerName = `${peer.name}.${organization.fullName}`
+            let peerAddress = `${peerName}:${peer.options.ports[0]}`
+            let peerTlsRootCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${organization.fullName}/peers/${peer.name}.${organization.fullName}/tls/ca.crt`
+            await chaincode.installChaincode(organization.fullName, peerName, peerAddress, peerTlsRootCert, config.chaincodeLang, config.chaincodeEnv, config.chaincodePath);
         }
     }
 
@@ -119,9 +121,9 @@ export class ChaincodeOrchestrator {
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, config.scriptsPath); // new Chaincode(docker, config.chaincodeName, config.version);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, getScriptsPath(config.networkRootPath)); // new Chaincode(docker, config.chaincodeName, config.version);
         await chaincode.init(organization.fullName);
-        let seq = await this.getLastSequence(config.chaincodeName, config.version, config.scriptsPath, config.channelName, deploymentConfigPath, hostsConfigPath);
+        let seq = await this.getLastSequence(config.chaincodeName, config.version, getScriptsPath(config.networkRootPath), config.channelName, deploymentConfigPath, hostsConfigPath);
         let lastSequence = seq.split(':');
         let finalSequence;
         if(! lastSequence[1] ){
@@ -149,7 +151,7 @@ export class ChaincodeOrchestrator {
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath);
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        const chaincode = new Chaincode(docker,config.chaincodeName, config.version, config.scriptsPath); // TODO add those args in command line
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, getScriptsPath(config.networkRootPath)); // TODO add those args in command line
         await chaincode.init(organization.fullName);
 
         let finalArg1= "";
@@ -160,9 +162,9 @@ export class ChaincodeOrchestrator {
             finalArg1 += ";"
         }
 
-        let targets = await this.getTargetCommitPeers(commitConfigPath)
-
-        let seq = await this.getLastSequence(config.chaincodeName, config.version, config.scriptsPath, config.channelName, deploymentConfigPath, hostsConfigPath);
+        let targets = await this.getTargetCommitPeers(config)
+        
+        let seq = await this.getLastSequence(config.chaincodeName, config.version, getScriptsPath(config.networkRootPath), config.channelName, deploymentConfigPath, hostsConfigPath);
         let lastSequence = seq.split(':');
         let finalSequence;
         if(! lastSequence[1]){
@@ -186,10 +188,10 @@ export class ChaincodeOrchestrator {
         let targetPeers = await this.getTargetPeers(targets, deploymentConfigPath, hostsConfigPath)
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
-        await this.deployCli(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, config.scriptsRootPath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
+        await this.deployCli(config.chaincodeName, targetPeers, config.version, config.chaincodeRootPath, deploymentConfigPath, hostsConfigPath, commitConfigPath)
         // test if is installed
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath)
-        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, config.scriptsPath);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, getScriptsPath(config.networkRootPath));
         await chaincode.init(organization.fullName);
         let res = await chaincode.isInstalled();
         if (res == "false") {
@@ -201,10 +203,36 @@ export class ChaincodeOrchestrator {
             await this.commitChaincode(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy);
         }
     }
+    
+    static async invokeChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, params): Promise<void> {
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
+        if (!config) return;
+        const {docker, organization} = await this.loadOrgEngine(deployConfigPath, hostsConfigPath);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, getScriptsPath(config.networkRootPath));
+        await chaincode.init(organization.fullName);
+        const network: Network = await Helper._parse(deployConfigPath, hostsConfigPath);
+        if (!network) return;
+        let org = network.ordererOrganization[0];
+        let ordererAddress = `${org.orderers[0].fullName}:${org.orderers[0].options.ports[0]}`;
+        let ordererCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/${org.fullOrgName}/orderers/${org.orderers[0].fullName}/msp/tlscacerts/tlsca.${org.domainName}-cert.pem`;
+        let peers = await this.getTargetCommitPeers(config)
+        let args = '{\"Args\":['; params.forEach(x => { args += '\"'+x+'\",'; }); args = args.slice(0, -1); args += ']}';
+        await chaincode.invokeChaincode(args, config.channelName, ordererCert, ordererAddress, peers);
+    }
 
-    private static async deployCli(name: string, targets: Peer[], version: string, chaincodeRootPath: string, scriptsRootPath: string, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
+    static async queryChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, params): Promise<void> {
+        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
+        if (!config) return;
+        const {docker, organization} = await this.loadOrgEngine(deployConfigPath, hostsConfigPath);
+        const chaincode = new Chaincode(docker, config.chaincodeName, config.version, getScriptsPath(config.networkRootPath));
+        await chaincode.init(organization.fullName);
+        let args = '{\"Args\":['; params.forEach(x => { args += '\"'+x+'\",'; }); args = args.slice(0, -1); args += ']}';
+        await chaincode.queryChaincode(args, config.channelName);
+    }
+
+    private static async deployCli(name: string, targets: Peer[], version: string, chaincodeRootPath: string, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise<void> {
         //let config = await this.getChaincodeParams(commitConfigPath);
-        //l(`[Chaincode] - Request to install  a chaincode (${config.chaincodeName})`); // config.chaincodeRootPath, config.scriptsRootPath
+        //l(`[Chaincode] - Request to install  a chaincode (${config.chaincodeName})`); // config.chaincodeRootPath
         l(`[Chaincode] - Request to install  a chaincode (${name})`);
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
@@ -230,8 +258,7 @@ export class ChaincodeOrchestrator {
                 FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
                 THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
             },
-            cliChaincodeRootPath: chaincodeRootPath,
-            cliScriptsRootPath: scriptsRootPath
+            cliChaincodeRootPath: chaincodeRootPath
         };
 
         l('Creating Peer base docker compose file');
@@ -252,6 +279,23 @@ export class ChaincodeOrchestrator {
         await cliSingleton.startCli() // targets[0]
     }
 
+    private static async getTargetCommitPeers(config: CommitConfiguration){
+        const organizations: Organization[] = config.organizations;
+        let targets=''
+        organizations.forEach((org) => {
+            let nameOrg = org.name;
+            let domainName = org.domainName;
+            let fullName = nameOrg+'.'+domainName;
+            for(let singlePeer of org.peers){
+                let namePeer = singlePeer.name;
+                let portPeer = singlePeer.options.ports[0];
+                let pathToCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${fullName}/peers/${namePeer}.${fullName}/tls/ca.crt`
+                targets += `--peerAddresses ${namePeer}.${fullName}:${portPeer} --tlsRootCertFiles ${pathToCert} `
+            }
+        })
+        return targets;
+    }
+
     private static async getLastSequence(name, version, scriptsPath, channelName, configFilePath, hostsConfigPath) {
         l(' REQUEST to approve chaincode')
         const {docker, organization} = await this.loadOrgEngine(configFilePath, hostsConfigPath)
@@ -270,27 +314,6 @@ export class ChaincodeOrchestrator {
             listOrgs.push(org.name);
         })
         return listOrgs;
-    }
-
-    private static async getTargetCommitPeers(commitConfigPath: string){
-        const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
-        if (!config) return;
-        const organizations: Organization[] = config.organizations;
-        let targets=''
-        organizations.forEach((org) => {
-            let nameOrg = org.name;
-            let domainName = org.domainName;
-            let fullName = nameOrg+'.'+domainName;
-            for(let singlePeer of org.peers){
-                let namePeer = singlePeer.name;
-                let portPeer = singlePeer.options.ports[0];
-                let pathToCert = `/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${fullName}/peers/${namePeer}.${fullName}/tls/ca.crt`
-                targets += `--peerAddresses ${namePeer}.${fullName}:${portPeer} --tlsRootCertFiles ${pathToCert} `
-            }
-
-        })
-
-        return targets;
     }
 
     private static async getTargetPeers(targets: string[], deploymentConfigPath: string, hostsConfigPath: string) {

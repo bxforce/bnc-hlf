@@ -39,11 +39,9 @@ networks:
   ${this.options.composeNetwork}:
     external: true
 
-${!this.options.cliChaincodeRootPath.includes('/') && !this.options.cliScriptsRootPath.includes('/') ? `
+${!this.options.cliChaincodeRootPath.includes('/') ? `
 volumes:
     ${this.options.cliChaincodeRootPath}:
-        external: true
-    ${this.options.cliScriptsRootPath}:
         external: true
 `:``}
 
@@ -77,8 +75,8 @@ services:
       - /var/run/:/host/var/run/
       - ${this.options.networkRootPath}/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ${this.options.networkRootPath}/scripts:${this.options.networkRootPath}/scripts
       - ${this.options.cliChaincodeRootPath}:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
-      - ${this.options.cliScriptsRootPath}:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
     networks:
       - ${this.options.composeNetwork}
 ${this.options.hosts && this.options.hosts.length > 0 ?  `

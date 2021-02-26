@@ -49,7 +49,7 @@ export class Chaincode {
 
     async checkCommitReadiness(arg, targets, sequence, nameChannel, endorsement?): Promise <boolean> {
         try {
-            const cmd = [this.scriptsPath+'commit.sh', `${arg}`, `${targets}`]
+            const cmd = ["/bin/bash", this.scriptsPath+'/commit.sh', `${arg}`, `${targets}`]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -68,14 +68,18 @@ export class Chaincode {
         }
     }
 
-    async installChaincode(v1,v2, path): Promise <boolean> {
+    async installChaincode(orgName, peerName, peerAddress, peerTlsRootCert, lang, env, path): Promise <boolean> {
         try {
-            const cmd = [this.scriptsPath+"install.sh"]
+            const cmd = ["/bin/bash", this.scriptsPath+"/install.sh"]
             let envArray = [
-                `CORE_PEER_ADDRESS=${v1}`,
-                `CORE_PEER_TLS_ROOTCERT_FILE=${v2}`,
+                `ORG_NAME=${orgName}`,
+                `PEER_NAME=${peerName}`,
+                `CORE_PEER_ADDRESS=${peerAddress}`,
+                `CORE_PEER_TLS_ROOTCERT_FILE=${peerTlsRootCert}`,
                 `CC_NAME=${this.name}`,
                 `VERSION=${this.version}`,
+                `CC_LANG=${lang}`,
+                `CC_ENV_PATH=${env}`,
                 `CC_PATH=${path}`
             ]
             let res = await this.executeCommand(cmd, envArray);
@@ -101,7 +105,7 @@ export class Chaincode {
 
     async approve(sequence, channelName, endorsement?): Promise <boolean> {
         try {
-            const cmd = [this.scriptsPath+"approve.sh"]
+            const cmd = ["/bin/bash", this.scriptsPath+"/approve.sh"]
             let envArray = [
                 `SEQUENCE=${sequence}`,
                 `CC_NAME=${this.name}`,
@@ -120,9 +124,46 @@ export class Chaincode {
         }
     }
 
+    async invokeChaincode(args, channelName, ordererCert, ordererAddress, peers): Promise <boolean> {
+        try {
+            const cmd = ["/bin/bash", this.scriptsPath+"/invoke.sh"]
+            let envArray = [
+                `PEERS=${peers}`,
+                `ORDERER_ADDRESS=${ordererAddress}`,
+                `ORDERER_CERT=${ordererCert}`,
+                `CHANNEL_NAME=${channelName}`,
+                `CC_NAME=${this.name}`,
+                `CC_ARGS=${args}`
+            ]
+            let res = await this.executeCommand(cmd, envArray);
+            console.log(res)
+            return true;
+        } catch(err) {
+            e(err);
+            return false;
+        }
+    }
+
+    async queryChaincode(args, channelName): Promise <boolean> {
+        try {
+            const cmd = ["/bin/bash", this.scriptsPath+"/query.sh"]
+            let envArray = [
+                `CHANNEL_NAME=${channelName}`,
+                `CC_NAME=${this.name}`,
+                `CC_ARGS=${args}`
+            ]
+            let res = await this.executeCommand(cmd, envArray);
+            console.log(res)
+            return true;
+        } catch(err) {
+            e(err);
+            return false;
+        }
+    }
+
     async getLastSequence(channelName): Promise<string> {
         try {
-            const cmd = [this.scriptsPath+"queryCommitted.sh"]
+            const cmd = ["/bin/bash", this.scriptsPath+"/queryCommitted.sh"]
             let envArray = [
                 `CC_NAME=${this.name}`,
                 `VERSION=${this.version}`,
@@ -135,8 +176,8 @@ export class Chaincode {
         }
     }
 
-    async executeCommand(command,envArray? : any) {
-
+    async executeCommand(command, envArray? : any) {
+        
         let cmdObject = {
             Cmd: command,
             Env: [],
@@ -154,11 +195,10 @@ export class Chaincode {
 
         return new Promise(async (resolve, reject) => {
             return await exec.start(async (err, stream) => {
-                console.log(err);
-                if (err) return reject();
+                if (err) { console.log(err); return reject(); }
                 let message = '';
                 stream.on('data', data => message += data.toString());
-                console.log('Data:', message);
+                console.log('cli logs:', message);
                 stream.on('end', () => resolve(message));
             });
         });

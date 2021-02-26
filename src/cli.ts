@@ -92,9 +92,17 @@ export class CLI {
     await ChaincodeOrchestrator.deployChaincode(targets, upgrade, policy, forceNew, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
+  static async invokeChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, args?: string[]) {
+    await ChaincodeOrchestrator.invokeChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, args);
+  }
 
-  static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, compile = false) {
-    await ChaincodeOrchestrator.deployChaincodeCli(compile, deployConfigPath, hostsConfigPath, commitConfigPath)
+  static async queryChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, args?: string[]) {
+    await ChaincodeOrchestrator.queryChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, args);
+  }
+  
+  
+  static async startFabricCli(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string) {
+    await ChaincodeOrchestrator.deployChaincodeCli(deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
   static async deployHlfServices(deployConfigPath: string, hostsConfigPath: string, skipDownload?: boolean, enablePeers = true, enableOrderers = true) {
@@ -143,10 +151,7 @@ export class CLI {
     l('[Upgrade Chaincode] Not yet implemented');
   }
 
-  static async invokeChaincode() {
-    l('[Invoke Chaincode] Not yet implemented');
-  }
-  
+
 /*
   static async enroll(type, id, secret, affiliation, mspID, caInfo, walletDirectoryName, ccpPath) {
     if(type == USER_TYPE.admin){

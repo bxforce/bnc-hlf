@@ -43,7 +43,6 @@ COPY src $HOME/src
 RUN npm run build && npm link
 
 ## Add default configs
-COPY scripts $HOME/scripts
 COPY tests/chaincode $HOME/chaincode
 COPY tests/demo/config.yaml $HOME/config/config.yaml
 COPY tests/single_machine/config-hosts.yaml $HOME/config/config-hosts.yaml

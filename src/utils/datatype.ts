@@ -34,8 +34,8 @@ export class DockerComposeYamlOptions {
     FABRIC_CA_VERSION?: string;
     THIRDPARTY_VERSION?: string;
   };
+  cliBuildersScriptsRootPath?: string;
   cliChaincodeRootPath?: string;
-  cliScriptsRootPath?: string;
   command?: string;
   singleOrderer?: boolean;
 }
