@@ -103,8 +103,7 @@ export const SEQUENCE = 1;
 export const BLOCK_SIZE = 50;
 
 export const CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH = "volume_chaincode";
-export const CHAINCODE_DEFAULT_CHAINCODE_PATH = "abstore/go";
-export const CHAINCODE_DEFAULT_SCRIPTS_ROOT_PATH = "volume_scripts";
-export const CHAINCODE_DEFAULT_SCRIPTS_PATH = "./scripts/";
-export const CHAINCODE_DEFAULT_COMPILATION_COMMAND = "/bin/bash -c \"cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1\"";
+export const CHAINCODE_DEFAULT_CHAINCODE_PATH = "abstore";
+export const CHAINCODE_DEFAULT_CHAINCODE_LANG = "golang"; // {golang,node,external}
+export const CHAINCODE_DEFAULT_CHAINCODE_ENV = "chaincode.env";
 

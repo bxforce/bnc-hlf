@@ -1,0 +1,26 @@
+chaincode:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  root_path_chaincode: "/tmp/hyperledger-fabric-network"
+  path_chaincode: ""
+  lang_chaincode: "external"
+  env_chaincode: "chaincode/chaincode.env"
+  channel: "mychannel"
+  chaincode: "mycc"
+  version: "1"
+  endorsementPolicy: "OR ('org1MSP.peer','org2MSP.peer')"
+  commit:
+    - organisation: "org1"
+      domain_name: "bnc.com"
+      peers:
+        - peer: "peer0"
+          host_name: "peer0.org1.bnc.com"
+          port: 7051
+
+## Notice:
+# ./bin/bnc run --no-chaincode
+# ./bin/bnc chaincode deploy -c /bnc/config/config-chaincode.yaml
+# docker build -t external-abstore tests/chaincode/external
+# docker run -d --name external.org1.bnc.com --env-file /tmp/hyperledger-fabric-network/chaincode/chaincode.env --network=bnc_network external-abstore
+# ./bin/bnc chaincode invoke -i "Init,a,100,b,100" 
+# ./bin/bnc chaincode query -i "query,a" 
+# ./bin/bnc chaincode invoke -i "invoke,a,b,10" 

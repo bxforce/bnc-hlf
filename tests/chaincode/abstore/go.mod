@@ -1,4 +1,4 @@
-module github.com/hyperledger/fabric-samples/chaincode/abstore/go
+module abstore
 
 go 1.13
 
