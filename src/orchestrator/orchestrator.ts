@@ -25,6 +25,7 @@ import {DockerComposeCaGenerator} from '../generators/docker-compose/dockerCompo
 import {DockerComposeCaOrdererGenerator} from '../generators/docker-compose/dockerComposeCaOrderer.yaml';
 import {DockerComposePeerGenerator} from '../generators/docker-compose/dockerComposePeer.yaml';
 import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
+import {DockerComposeCli} from '../generators/docker-compose/dockerComposeCli.yaml';
 import {ChaincodeScriptsGenerator} from '../generators/scripts/chaincodeScripts';
 import {BuildersScriptsGenerator} from '../generators/scripts/buildersScripts';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
@@ -41,7 +42,8 @@ import {
     BNC_NETWORK,
     DEFAULT_CA_ADMIN,
     HLF_DEFAULT_VERSION,
-    NETWORK_ROOT_PATH
+    NETWORK_ROOT_PATH,
+    ENABLE_CONTAINER_LOGGING
 } from '../utils/constants';
 import { Helper } from './helper';
 
@@ -224,7 +226,7 @@ export class Orchestrator {
      * @param enablePeers
      * @param enableOrderers
      */
-    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
+    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true, enableCA?: boolean) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const isNetworkValid = network.validate();
@@ -287,6 +289,26 @@ export class Orchestrator {
             const ordererStarted = await ordererGenerator.startOrderers();
             l(`Orderers started (${ordererStarted})`);
         }
+        console.log(enableCA)
+        if(enableCA){
+            // star cli also !
+            l('Start CA org');
+            const ca = new DockerComposeCaGenerator(`docker-compose-ca-${network.organizations[0].name}.yaml`, path, network, options, engine);
+            const caStarted = await ca.startOrgCa();
+            //start cli using the engine here and not using the generator under docker compose so we dnt have to pass chaincode commit file
+            l('starting cli container');
+            const serviceName =  `cli.${options.org.fullName}`;
+            l(`Starting CLI ${serviceName}...`);
+            await engine.composeOne(serviceName, { cwd: getDockerComposePath(path), config:  `docker-compose-cli-${options.org.name}.yaml`, log: ENABLE_CONTAINER_LOGGING });
+            l(`Service CLI ${serviceName} started successfully !!!`);
+            if (network.ordererOrganization[0].ca.options.isOrgCA == false){
+                //start CA orderer
+                l('Start CA orderer');
+                const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
+                const caStarted = await ca.startOrdererCa();
+            }
+        }
+
     }
 
     static async startSingleOrderer(deploymentConfigPath: string, hostsConfigPath: string) {

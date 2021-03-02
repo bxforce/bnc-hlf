@@ -88,11 +88,12 @@ program
   .option('-o, --ordererConfig <path>', 'Absolute path for new config file of orderer')
   .option('--no-orderer', 'bypass createChannel')
   .option('--addOrderer', 'signging add orderer request')
+    .option('--enableCA', 'starts the cas also ')
   .action(async cmd => {
       if(cmd.addOrderer){
           await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.ordererConfig);
       }else{
-          await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
+          await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer, cmd.enableCA);
       }
 
   });
@@ -129,11 +130,12 @@ program
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--no-chaincode', 'bypass chaincode')
+  .option('--enableCA', 'starts the CAs only needed after stopping all containers ')
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
     await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
     await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true);
+    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true, cmd.enableCA);
     await Utils.delay(DOCKER_DELAY);
     await CLI.createChannel(cmd.config, cmd.hosts, cmd.namech);
     await Utils.delay(DOCKER_DELAY);
