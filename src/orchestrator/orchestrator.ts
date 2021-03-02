@@ -370,12 +370,13 @@ export class Orchestrator {
 
             // loop on organization & peers && orderers
             for (const org of network.organizations) {
-                
+                console.log('into loop')
                 // build list of docker services/volumes to delete
                 const volumes: string[] = [];
                 const services: string[] = [];
                 
                 for (const peer of org.peers) {
+                    console.log('into peer loop')
                     services.push(`${peer.name}.${org.fullName}`);
                     services.push(`${peer.name}.${org.fullName}.couchdb`);
                     volumes.push(`${peer.name}.${org.fullName}`);
@@ -385,6 +386,7 @@ export class Orchestrator {
                 }
                 
                 for (const orderer of org.orderers) {
+                    console.log('into orderer loop')
                     services.push(`${orderer.name}.${org.domainName}`);
                     volumes.push(`${orderer.name}.${org.domainName}`);
                 }
@@ -396,24 +398,42 @@ export class Orchestrator {
                 //remove all cli containers
                 services.push(`cli.${org.fullName}`)
 
-                // Now check all container within all organization engine
-                for (const engine of org.engines) {
-                    const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
-                    const containerDeleted = await docker.stopContainerList(services, forceRemove);
-                    if (!containerDeleted) {
-                        e('Error while deleting the docker container for peer & orderer');
-                        return false;
-                    }
-
-                    // delete the network
-                    if (deleteNetwork) {
-                        // TODO API to delete network not yet implemented
-                    }
-
-                    if (deleteVolume) {
-                        // TODO API to delete volumes not yet implemented
-                    }
+                const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
+                const containerDeleted = await docker.stopContainerList(services, forceRemove);
+                if (!containerDeleted) {
+                    e('Error while deleting the docker container for peer & orderer');
+                    return false;
                 }
+
+                // delete the network
+                if (deleteNetwork) {
+                    // TODO API to delete network not yet implemented
+                }
+
+                if (deleteVolume) {
+                    // TODO API to delete volumes not yet implemented
+                }
+                // Now check all container within all organization engine
+                /*   for (const engine of org.engines) {
+                      console.log('here to stop', engine)
+                     const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
+                      const containerDeleted = await docker.stopContainerList(services, forceRemove);
+                      if (!containerDeleted) {
+                          e('Error while deleting the docker container for peer & orderer');
+                          return false;
+                      }
+
+                      // delete the network
+                      if (deleteNetwork) {
+                          // TODO API to delete network not yet implemented
+                      }
+
+                      if (deleteVolume) {
+                          // TODO API to delete volumes not yet implemented
+                      }
+
+
+                }*/
             }
 
             return true;
