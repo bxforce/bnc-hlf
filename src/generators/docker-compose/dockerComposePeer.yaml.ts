@@ -38,8 +38,9 @@ volumes:
 ${this.options.org.peers
     .map(peer => `
   ${peer.name}.${this.options.org.fullName}:
-    #external: true
-    ${peer.name}.${this.options.org.fullName}.couchdb:
+      #external: true
+  ${peer.name}.${this.options.org.fullName}.couchdb:
+      #external: true
 `).join('')}
 
 networks:
