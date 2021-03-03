@@ -68,6 +68,8 @@ ${this.options.org.orderers.map(orderer => `
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/msp:/var/hyperledger/orderer/msp
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/tls/:/var/hyperledger/orderer/tls
       - ${orderer.fullName}:/var/hyperledger/production/orderer
+      - ${orderer.fullName}:/etc/hyperledger/fabric
+      - ${orderer.fullName}:/var/hyperledger
     labels:
       - "bnc=hlf"
 ${this.options.hosts && this.options.hosts.length > 0 ? `
