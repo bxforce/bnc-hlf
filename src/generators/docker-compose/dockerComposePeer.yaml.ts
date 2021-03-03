@@ -108,6 +108,8 @@ ${this.options.hosts.map(host => `
     # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
     volumes:
       - ${peer.name}.${this.options.org.fullName}.couchdb:/opt/couchdb/data
+      - ${peer.name}.${this.options.org.fullName}:/etc/hyperledger/fabric
+      - ${peer.name}.${this.options.org.fullName}:/var/hyperledger
     environment:
       - COUCHDB_USER=${peer.name}User
       - COUCHDB_PASSWORD=${peer.name}Pwd
