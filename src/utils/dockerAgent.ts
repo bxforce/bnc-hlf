@@ -265,7 +265,7 @@ export class DockerEngine {
 
   async pruneImages() {
     console.log('here in prune images')
-    let opt = {"label": ["dev-peer*"]}
+    let opt = {"label": ["bnc"]}
     await this.engine.pruneImages(JSON.stringify(opt));
   }
 

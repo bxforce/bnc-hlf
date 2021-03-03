@@ -88,6 +88,7 @@ ${this.options.hosts && this.options.hosts.length > 0 ? `
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
       - ${this.options.networkRootPath}/docker-compose/base/core.yaml:/etc/hyperledger/fabric/core.yaml
       - ${this.options.cliBuildersScriptsRootPath}:/builders
+      - ${peer.name}.${this.options.org.fullName}.couchdb:/opt/couchdb/data
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
     networks:
