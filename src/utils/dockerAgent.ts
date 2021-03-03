@@ -181,12 +181,18 @@ export class DockerEngine {
       throw err;
     }
   }
-
   checkContainerName(serviceName: string, containerNames: string[]): boolean {
     for(const name of containerNames) {
       if(name === serviceName || name === `/${serviceName}`) {
         return true;
       }
+    }
+    return false;
+  }
+
+  checkVolumeName(volumeNames: string[], volumeName: string): boolean {
+    if(volumeNames.includes(volumeName)){
+      return true;
     }
     return false;
   }
@@ -243,6 +249,10 @@ export class DockerEngine {
     return volume;
   }
 
+  async pruneVolume(opts): Promise<any> {
+    await this.engine.pruneVolumes(opts)
+  }
+
   async listVolumes(options?: NetworkListOptions): Promise<DockerVolume[]> {
     let { Volumes } = await this.engine.listVolumes(options);
     let volumeList: DockerVolume[] = [];
@@ -253,6 +263,12 @@ export class DockerEngine {
     return volumeList;
   }
 
+  async pruneImages() {
+    console.log('here in prune images')
+    let opt = {"label": ["dev-peer*"]}
+    await this.engine.pruneImages(JSON.stringify(opt));
+  }
+
   async doesVolumeExist(name: string): Promise<Boolean> {
     const { Volumes } = await this.engine.listVolumes();
     const fVolume = Volumes.filter(volume => volume.Name === name);
@@ -260,6 +276,26 @@ export class DockerEngine {
   }
 
   // TODO implement delete volumes
+
+  async deleteVolumesList(volumesList: string[]): Promise<boolean> {
+    try {
+
+      const volumeInfo = await this.engine.listVolumes();
+      const arrayVolumes = volumeInfo.Volumes;
+      console.log('here in deleteVolumesList volume', arrayVolumes)
+      const foundVolumeInfos = arrayVolumes.filter(volume => this.checkVolumeName(volumesList, volume.Name));
+
+      for (let singleVolume of foundVolumeInfos) {
+         let volumeObj: DockerVolume = this.getVolume(singleVolume.Name);
+         console.log('volume to stop', volumeObj)
+         await volumeObj.remove();
+      }
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
 
   //Docker-compose Management
   composeUpAll(options?: IDockerComposeOptions): Promise<IDockerComposeResult> {
