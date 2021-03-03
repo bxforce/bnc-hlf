@@ -106,7 +106,7 @@ ${this.options.hosts.map(host => `
     # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
     # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
     volumes:
-    - ${peer.name}.${this.options.org.fullName}.couchdb:/opt/couchdb/data
+      - ${peer.name}.${this.options.org.fullName}.couchdb:/opt/couchdb/data
     environment:
       - COUCHDB_USER=${peer.name}User
       - COUCHDB_PASSWORD=${peer.name}Pwd
