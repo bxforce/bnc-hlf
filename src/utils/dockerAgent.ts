@@ -195,6 +195,34 @@ export class DockerEngine {
       throw err;
     }
   }
+
+  async stopAllContainers(remove: boolean): Promise<boolean> {
+    try {
+      // filter existing containers info
+      let listOpts = {
+        "filters": "{\"label\": [\"bnc\"]}"
+      };
+      const containersInfo = await this.engine.listContainers(listOpts);
+      //    const foundContainerInfos = containersInfo.filter(container => this.checkContainerName(serviceName, container.Names));
+
+      // retrieve container instance from one found and stop it
+      for (let containerInfo of containersInfo) {
+        const container: DockerContainer = this.getContainer(containerInfo.Id);
+        await container.stop();
+
+        if(remove) {
+          await container.remove();
+        }
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      throw err;
+    }
+  }
+
+
   checkContainerName(serviceName: string, containerNames: string[]): boolean {
     for(const name of containerNames) {
       if(name === serviceName || name === `/${serviceName}`) {
@@ -286,7 +314,6 @@ export class DockerEngine {
   findMyImage(myArray: string[]){
     const regex = new RegExp('dev-peer*');
     let found ;
-    console.log(myArray)
     for(let single of myArray){
       found = regex.test(single)
       if (found){
@@ -298,7 +325,6 @@ export class DockerEngine {
 
   async deleteDevPeerImages(options?: NetworkListOptions): Promise<boolean> {
     let Images: ImageInfo[]  = await this.engine.listImages(options);
-   // console.log('immm', Images)
     let myList: ImageInfo[] = []
 
     for( let myImage of Images){
@@ -309,7 +335,6 @@ export class DockerEngine {
     try{
       for (let singleImage of myList) {
         let imageObj: DockerImage = this.getImage(singleImage.Id);
-        console.log('volume to stop', imageObj)
         await imageObj.remove();
       }
       return true;
@@ -332,12 +357,10 @@ export class DockerEngine {
 
       const volumeInfo = await this.engine.listVolumes();
       const arrayVolumes = volumeInfo.Volumes;
-      console.log('here in deleteVolumesList volume', arrayVolumes)
       const foundVolumeInfos = arrayVolumes.filter(volume => this.checkVolumeName(volumesList, volume.Name));
 
       for (let singleVolume of foundVolumeInfos) {
          let volumeObj: DockerVolume = this.getVolume(singleVolume.Name);
-         console.log('volume to stop', volumeObj)
          await volumeObj.remove();
       }
       return true;

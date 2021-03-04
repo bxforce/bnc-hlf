@@ -290,7 +290,6 @@ export class Orchestrator {
             const ordererStarted = await ordererGenerator.startOrderers();
             l(`Orderers started (${ordererStarted})`);
         }
-        console.log(enableCA)
         if(enableCA){
             // star cli also !
             l('Start CA org');
@@ -371,13 +370,11 @@ export class Orchestrator {
 
             // loop on organization & peers && orderers
             for (const org of network.organizations) {
-                console.log('into loop')
                 // build list of docker services/volumes to delete
                 const volumes: string[] = [];
                 const services: string[] = [];
                 
                 for (const peer of org.peers) {
-                    console.log('into peer loop')
                     services.push(`${peer.name}.${org.fullName}`);
                     services.push(`${peer.name}.${org.fullName}.couchdb`);
                     volumes.push(`docker-compose_${peer.name}.${org.fullName}`);
@@ -390,7 +387,6 @@ export class Orchestrator {
                 }
                 
                 for (const orderer of org.orderers) {
-                    console.log('into orderer loop')
                     services.push(`${orderer.name}.${org.domainName}`);
                     volumes.push(`docker-compose_${orderer.name}.${org.domainName}`);
                     volumes.push(`docker-compose_${orderer.name}.${org.domainName}.fabric`);
@@ -403,20 +399,17 @@ export class Orchestrator {
 
                 //remove all cli containers
                 services.push(`cli.${org.fullName}`)
-              //  volumes.push(CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH)
+                volumes.push(CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH)
                 volumes.push(`docker-compose_cli.${org.fullName}`)
 
                 const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
                 let removeAll = forceRemove? true:false;
 
-                const containerDeleted = await docker.stopContainerList(services, removeAll);
+                const containerDeleted = await docker.stopAllContainers(removeAll);
                 if (!containerDeleted) {
                     e('Error while deleting the docker container for peer & orderer');
                     return false;
                 }
-                
-                console.log('delete volumes')
-                console.log('remove container ???', removeAll)
                 if(removeAll){
                     await docker.deleteVolumesList(volumes) // TODO remove forceRemove arg
                     //also remove unwanted images starting with dev-peer !

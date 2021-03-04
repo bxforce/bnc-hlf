@@ -118,6 +118,8 @@ ${this.options.hosts.map(host => `
     environment:
       - COUCHDB_USER=${peer.name}User
       - COUCHDB_PASSWORD=${peer.name}Pwd
+    labels:
+      - "bnc=hlf"
     networks:
       - ${this.options.composeNetwork}
 `).join('')}
