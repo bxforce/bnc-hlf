@@ -361,7 +361,9 @@ export class DockerEngine {
 
       for (let singleVolume of foundVolumeInfos) {
          let volumeObj: DockerVolume = this.getVolume(singleVolume.Name);
-         await volumeObj.remove();
+         await volumeObj.remove({
+           force: true
+         });
       }
       return true;
     } catch(err) {

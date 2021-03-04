@@ -375,31 +375,29 @@ export class Orchestrator {
                 const services: string[] = [];
                 
                 for (const peer of org.peers) {
-                    services.push(`${peer.name}.${org.fullName}`);
-                    services.push(`${peer.name}.${org.fullName}.couchdb`);
+                  //  services.push(`${peer.name}.${org.fullName}`);
+                  //  services.push(`${peer.name}.${org.fullName}.couchdb`);
                     volumes.push(`docker-compose_${peer.name}.${org.fullName}`);
                     volumes.push(`docker-compose_${peer.name}.${org.fullName}.fabric`);
                     volumes.push(`docker-compose_${peer.name}.${org.fullName}.root`);
                     volumes.push(`docker-compose_${peer.name}.${org.fullName}.couchdb`);
                     
                     //remove chaincode containers
-                    services.push(`dev-${peer.name}.${org.fullName}`) // FIX this
+                  //  services.push(`dev-${peer.name}.${org.fullName}`) // FIX this
                 }
                 
                 for (const orderer of org.orderers) {
-                    services.push(`${orderer.name}.${org.domainName}`);
+                //    services.push(`${orderer.name}.${org.domainName}`);
                     volumes.push(`docker-compose_${orderer.name}.${org.domainName}`);
                     volumes.push(`docker-compose_${orderer.name}.${org.domainName}.fabric`);
                     volumes.push(`docker-compose_${orderer.name}.${org.domainName}.root`);
                 }
                 
-                services.push(`${org.ca.name}.${org.name}`);
-                
-                services.push(`${network.ordererOrganization[0].caName}`);
-
+               // services.push(`${org.ca.name}.${org.name}`);
+               // services.push(`${network.ordererOrganization[0].caName}`);
                 //remove all cli containers
-                services.push(`cli.${org.fullName}`)
-                volumes.push(CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH)
+              //  services.push(`cli.${org.fullName}`)
+
                 volumes.push(`docker-compose_cli.${org.fullName}`)
 
                 const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
