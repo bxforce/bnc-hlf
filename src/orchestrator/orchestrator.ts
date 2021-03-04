@@ -381,6 +381,9 @@ export class Orchestrator {
                     services.push(`${peer.name}.${org.fullName}`);
                     services.push(`${peer.name}.${org.fullName}.couchdb`);
                     volumes.push(`docker-compose_${peer.name}.${org.fullName}`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.fabric`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.root`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.couchdb`);
                     
                     //remove chaincode containers
                     services.push(`dev-${peer.name}.${org.fullName}`) // FIX this
@@ -390,6 +393,8 @@ export class Orchestrator {
                     console.log('into orderer loop')
                     services.push(`${orderer.name}.${org.domainName}`);
                     volumes.push(`docker-compose_${orderer.name}.${org.domainName}`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}.fabric`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}.root`);
                 }
                 
                 services.push(`${org.ca.name}.${org.name}`);
@@ -399,6 +404,7 @@ export class Orchestrator {
                 //remove all cli containers
                 services.push(`cli.${org.fullName}`)
               //  volumes.push(CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH)
+                volumes.push(`docker-compose_cli.${org.fullName}`)
 
                 const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
                 let removeAll = forceRemove? true:false;
@@ -414,16 +420,9 @@ export class Orchestrator {
                 if(removeAll){
                     await docker.deleteVolumesList(volumes) // TODO remove forceRemove arg
                     //also remove unwanted images starting with dev-peer !
-                    await docker.pruneImages()
+                    await docker.deleteDevPeerImages();
                 }
-                
-                // delete the network
-                if (deleteNetwork) {
-                    // TODO API to delete network not yet implemented
-                }
-
             }
-
             return true;
         } catch (err) {
             e(err);

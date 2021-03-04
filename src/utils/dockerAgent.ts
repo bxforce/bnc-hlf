@@ -30,7 +30,10 @@ import {
   Network, NetworkCreateOptions,
   NetworkInspectInfo,
   Volume,
-  VolumeInspectInfo
+  VolumeInspectInfo,
+  Image,
+  ImageInfo,
+  ImageInspectInfo
 } from 'dockerode';
 import { IDockerComposeOptions, IDockerComposeResult } from 'docker-compose';
 import * as Dockerode from 'dockerode';
@@ -70,6 +73,13 @@ interface VolumeCreateOptions {
   Labels?: {};
 }
 
+interface ImageCreateOptions {
+  Name?: string;
+  Driver?: string;
+  DriverOpts?: {};
+  Labels?: {};
+}
+
 interface ContainerRemoveOptions {
   v: boolean;
   force: boolean;
@@ -77,6 +87,10 @@ interface ContainerRemoveOptions {
 }
 
 interface VolumeRemoveOptions {
+  force?: boolean;
+}
+
+interface ImageRemoveOptions {
   force?: boolean;
 }
 
@@ -249,6 +263,12 @@ export class DockerEngine {
     return volume;
   }
 
+  getImage(name: string): DockerImage {
+    let image = new DockerImage(this);
+    image.setImage(this.engine.getImage(name));
+    return image;
+  }
+  
   async pruneVolume(opts): Promise<any> {
     await this.engine.pruneVolumes(opts)
   }
@@ -263,10 +283,40 @@ export class DockerEngine {
     return volumeList;
   }
 
-  async pruneImages() {
-    console.log('here in prune images')
-    let opt = {"label": ["bnc"]}
-    await this.engine.pruneImages(JSON.stringify(opt));
+  findMyImage(myArray: string[]){
+    const regex = new RegExp('dev-peer*');
+    let found ;
+    console.log(myArray)
+    for(let single of myArray){
+      found = regex.test(single)
+      if (found){
+        break
+      }
+    }
+    return found
+  }
+
+  async deleteDevPeerImages(options?: NetworkListOptions): Promise<boolean> {
+    let Images: ImageInfo[]  = await this.engine.listImages(options);
+   // console.log('immm', Images)
+    let myList: ImageInfo[] = []
+
+    for( let myImage of Images){
+      if(this.findMyImage(myImage.RepoTags)){
+        myList.push(myImage)
+      }
+    }
+    try{
+      for (let singleImage of myList) {
+        let imageObj: DockerImage = this.getImage(singleImage.Id);
+        console.log('volume to stop', imageObj)
+        await imageObj.remove();
+      }
+      return true;
+    }catch (e) {
+      console.log(e)
+      return false;
+    }
   }
 
   async doesVolumeExist(name: string): Promise<Boolean> {
@@ -396,5 +446,23 @@ export class DockerVolume {
 
   setVolume(volume: Volume): void {
     this.volume = volume;
+  }
+}
+
+export class DockerImage {
+  image: Image;
+
+  constructor(public engine: DockerEngine, public options?: ImageCreateOptions) {}
+
+  remove(options?: ImageRemoveOptions): Promise<any> {
+    return this.image.remove(options);
+  }
+
+  inspect(): Promise<ImageInspectInfo> {
+    return this.image.inspect();
+  }
+  
+  setImage(image: Image): void {
+    this.image = image;
   }
 }
