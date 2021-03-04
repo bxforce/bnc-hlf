@@ -39,6 +39,10 @@ ${this.options.org.orderers
     .map(orderer => `
   ${orderer.name}.${this.options.org.domainName}:
     #external: true
+  ${orderer.fullName}.fabric:
+    #external: true
+  ${orderer.fullName}.root:
+    #external: true
 `).join('')}  
 
 networks:
@@ -68,8 +72,8 @@ ${this.options.org.orderers.map(orderer => `
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/msp:/var/hyperledger/orderer/msp
       - ${this.options.networkRootPath}/organizations/ordererOrganizations/${this.options.org.fullName}/orderers/${orderer.fullName}/tls/:/var/hyperledger/orderer/tls
       - ${orderer.fullName}:/var/hyperledger/production/orderer
-      - ${orderer.fullName}:/etc/hyperledger/fabric
-      - ${orderer.fullName}:/var/hyperledger
+      - ${orderer.fullName}.fabric:/etc/hyperledger/fabric
+      - ${orderer.fullName}.root:/var/hyperledger
     labels:
       - "bnc=hlf"
 ${this.options.hosts && this.options.hosts.length > 0 ? `

@@ -41,6 +41,10 @@ ${this.options.org.peers
       #external: true
   ${peer.name}.${this.options.org.fullName}.couchdb:
       #external: true
+  ${peer.name}.${this.options.org.fullName}.fabric:
+      #external: true
+  ${peer.name}.${this.options.org.fullName}.root:
+      #external: true
 `).join('')}
 
 networks:
@@ -90,8 +94,8 @@ ${this.options.hosts && this.options.hosts.length > 0 ? `
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
       - ${this.options.networkRootPath}/docker-compose/base/core.yaml:/etc/hyperledger/fabric/core.yaml
       - ${this.options.cliBuildersScriptsRootPath}:/builders
-      - ${peer.name}.${this.options.org.fullName}:/etc/hyperledger/fabric
-      - ${peer.name}.${this.options.org.fullName}:/var/hyperledger
+      - ${peer.name}.${this.options.org.fullName}.fabric:/etc/hyperledger/fabric
+      - ${peer.name}.${this.options.org.fullName}.root:/var/hyperledger
       
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
