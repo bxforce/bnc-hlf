@@ -107,3 +107,9 @@ export const CHAINCODE_DEFAULT_CHAINCODE_PATH = "abstore";
 export const CHAINCODE_DEFAULT_CHAINCODE_LANG = "golang"; // {golang,node,external}
 export const CHAINCODE_DEFAULT_CHAINCODE_ENV = "chaincode.env";
 
+export const BATCH_DEFAULT_PARAMS = {
+  batchTimeout: '2s',
+  maxMessageCount: '50',
+  absoluteMaxBytes: '99 MB',
+  preferredMaxBytes: '512 KB'
+};

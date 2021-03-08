@@ -24,6 +24,7 @@ import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import { SysWrapper } from '../../utils/sysWrapper';
+import {ConfigTxBatchOptions} from '../../utils/datatype';
 import { e } from '../../utils/logs';
 
 /**
@@ -119,11 +120,11 @@ ${org.orderers.map((ord, i) => `
         - ${ord.options.host}:${ord.options.ports[0]}
 `).join('')}
 `).join('')}     
-    BatchTimeout: 2s
+    BatchTimeout: ${this.options.batchTimeout}
     BatchSize:
-        MaxMessageCount: ${BLOCK_SIZE}
-        AbsoluteMaxBytes: 99 MB
-        PreferredMaxBytes: 512 KB
+        MaxMessageCount: ${this.options.maxMessageCount}
+        AbsoluteMaxBytes: ${this.options.absoluteMaxBytes}
+        PreferredMaxBytes: ${this.options.preferredMaxBytes}
     EtcdRaft:
         Consenters:
 ${this.network.organizations.map(org => `
@@ -201,7 +202,7 @@ ${this.network.organizations.map(org => `
    * @param path
    * @param network
    */
-  constructor(filename: string, path: string, private network: Network) {
+  constructor(filename: string, path: string, private network: Network, private options: ConfigTxBatchOptions) {
     super(filename, getArtifactsPath(path));
   }
 

@@ -37,8 +37,12 @@ program
   .option('--configTx', 'generate channel configuration file')
   .option('--anchorTx', 'generate anchor peer update file')
   .option('-g, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
+  .option('-batchTimeout, --batchTimeout <batchTimeout>', 'BatchTimeout')
+  .option('-maxMessageCount, --maxMessageCount <maxMessageCount>', 'MaxMessageCount')
+  .option('-absoluteMaxBytes, --absoluteMaxBytes <absoluteMaxBytes>', 'AbsoluteMaxBytes')
+  .option('-preferredMaxBytes, --preferredMaxBytes <preferredMaxBytes>', 'PreferredMaxBytes')
   .action(async cmd => {
-    await CLI.init(cmd.config, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
+    await CLI.init(cmd.config, cmd.genesisBlock, cmd.configTx, cmd.anchorTx, cmd.batchTimeout, cmd.maxMessageCount, cmd.absoluteMaxBytes, cmd.preferredMaxBytes);
   });
 
 program
@@ -63,6 +67,7 @@ program
     }
   });
 
+
 program
   .command('generate')
   .description("creates crypto material, genesis.block and configtx files")
@@ -72,13 +77,19 @@ program
   .option('-f, --config <path>', 'Absolute path to the deploy deployment definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-g, --genesis <path>', 'Absolute path to the genesis deployment definition file')
+  .option('-batchTimeout, --batchTimeout <batchTimeout>', 'BatchTimeout')
+  .option('-maxMessageCount, --maxMessageCount <maxMessageCount>', 'MaxMessageCount')
+  .option('-absoluteMaxBytes, --absoluteMaxBytes <absoluteMaxBytes>', 'AbsoluteMaxBytes')
+  .option('-preferredMaxBytes, --preferredMaxBytes <preferredMaxBytes>', 'PreferredMaxBytes')
   .action(async cmd => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
     await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
     if (cmd.genesis) {
-      await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
+        await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx, cmd.batchTimeout, cmd.maxMessageCount, cmd.absoluteMaxBytes, cmd.preferredMaxBytes);
     }
   });
+
+
 
 program
   .command('start')
@@ -129,10 +140,14 @@ program
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--no-chaincode', 'bypass chaincode')
+  .option('-batchTimeout, --batchTimeout <batchTimeout>', 'BatchTimeout')
+  .option('-maxMessageCount, --maxMessageCount <maxMessageCount>', 'MaxMessageCount')
+  .option('-absoluteMaxBytes, --absoluteMaxBytes <absoluteMaxBytes>', 'AbsoluteMaxBytes')
+  .option('-preferredMaxBytes, --preferredMaxBytes <preferredMaxBytes>', 'PreferredMaxBytes')
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
     await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
-    await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx);
+    await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx, cmd.batchTimeout, cmd.maxMessageCount, cmd.absoluteMaxBytes, cmd.preferredMaxBytes);
     await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true);
     await Utils.delay(DOCKER_DELAY);
     await CLI.createChannel(cmd.config, cmd.hosts, cmd.namech);

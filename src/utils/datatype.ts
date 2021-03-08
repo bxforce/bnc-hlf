@@ -40,6 +40,13 @@ export class DockerComposeYamlOptions {
   singleOrderer?: boolean;
 }
 
+export class ConfigTxBatchOptions {
+  batchTimeout?: string;
+  maxMessageCount?: string;
+  absoluteMaxBytes?: string;
+  preferredMaxBytes?:string
+}
+
 export class CSR {
   csr: string;
   key: string;

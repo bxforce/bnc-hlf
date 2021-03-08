@@ -30,6 +30,7 @@ import {BuildersScriptsGenerator} from '../generators/scripts/buildersScripts';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
 import {CoreGenerator} from '../generators/utils/coreGenerator.yaml';
 import {DockerComposeYamlOptions} from '../utils/datatype';
+import {ConfigTxBatchOptions} from '../utils/datatype';
 import {d, e, l} from '../utils/logs';
 import {DockerEngine} from '../utils/dockerAgent';
 import {Utils} from '../utils/helper';
@@ -41,7 +42,8 @@ import {
     BNC_NETWORK,
     DEFAULT_CA_ADMIN,
     HLF_DEFAULT_VERSION,
-    NETWORK_ROOT_PATH
+    NETWORK_ROOT_PATH,
+    BATCH_DEFAULT_PARAMS
 } from '../utils/constants';
 import { Helper } from './helper';
 
@@ -58,13 +60,19 @@ export class Orchestrator {
      * Generate the Genesis template file
      * @param configGenesisFilePath
      */
-    static async generateGenesis(configGenesisFilePath: string) {
+    static async generateGenesis(configGenesisFilePath: string, batchTimeout?: string, maxMessageCount?: string, absoluteMaxBytes?: string, preferredMaxBytes?:string) {
         const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
-
+        const options : ConfigTxBatchOptions ={
+            batchTimeout: batchTimeout? batchTimeout: BATCH_DEFAULT_PARAMS.batchTimeout,
+            maxMessageCount: maxMessageCount? maxMessageCount: BATCH_DEFAULT_PARAMS.maxMessageCount,
+            absoluteMaxBytes: absoluteMaxBytes? absoluteMaxBytes: BATCH_DEFAULT_PARAMS.absoluteMaxBytes,
+            preferredMaxBytes: preferredMaxBytes? preferredMaxBytes: BATCH_DEFAULT_PARAMS.preferredMaxBytes
+        }
+       
         l('[genesis]: start generating genesis block...');
-        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network, options);
         await configTx.save();
         const gen = await configTx.generateGenesisBlock();
 
@@ -75,13 +83,19 @@ export class Orchestrator {
      * Generate the anchor peer update
      * @param configGenesisFilePath
      */
-    static async generateAnchorPeer(configGenesisFilePath: string) {
+    static async generateAnchorPeer(configGenesisFilePath: string, batchTimeout?: string, maxMessageCount?: string, absoluteMaxBytes?: string, preferredMaxBytes?:string) {
         const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
-
+        const options : ConfigTxBatchOptions ={
+            batchTimeout: batchTimeout? batchTimeout: BATCH_DEFAULT_PARAMS.batchTimeout,
+            maxMessageCount: maxMessageCount? maxMessageCount: BATCH_DEFAULT_PARAMS.maxMessageCount,
+            absoluteMaxBytes: absoluteMaxBytes? absoluteMaxBytes: BATCH_DEFAULT_PARAMS.absoluteMaxBytes,
+            preferredMaxBytes: preferredMaxBytes? preferredMaxBytes: BATCH_DEFAULT_PARAMS.preferredMaxBytes
+        }
+       
         l('[anchor peer]: start generating anchor peer update...');
-        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network, options);
         const gen = await configTx.generateAnchorPeer(network.channel.name);
 
         l(`[anchor peer]: anchor peer generated --> ${gen} !!!`);
