@@ -27,28 +27,28 @@ import { ChannelOrchestrator } from './orchestrator/channelOrchestrator';
  */
 export class CLI {
 
-  static async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any) {
+  static async init(genesisConfigPath: string, genesis: boolean, configtx: boolean, anchortx: any, batchTimeout?: string, maxMessageCount?: string, absoluteMaxBytes?: string, preferredMaxBytes?:string) {
     l('Request Init command ...');
-    await ChannelOrchestrator.generateConfigtx(genesisConfigPath); // Generate the configtx.yaml file (mainly for genesis block)
+    await ChannelOrchestrator.generateConfigtx(genesisConfigPath, batchTimeout, maxMessageCount, absoluteMaxBytes, preferredMaxBytes); // Generate the configtx.yaml file (mainly for genesis block)
     if (!(genesis || configtx || anchortx)) {
       l('[Init]: generate all config files (genesis, configtx, anchortx)...');
-      await Orchestrator.generateGenesis(genesisConfigPath);
-      await ChannelOrchestrator.generateChannelConfig(genesisConfigPath);
-      await Orchestrator.generateAnchorPeer(genesisConfigPath);
+      await Orchestrator.generateGenesis(genesisConfigPath, batchTimeout, maxMessageCount, absoluteMaxBytes, preferredMaxBytes);
+      await ChannelOrchestrator.generateChannelConfig(genesisConfigPath, batchTimeout, maxMessageCount, absoluteMaxBytes, preferredMaxBytes);
+      await Orchestrator.generateAnchorPeer(genesisConfigPath, batchTimeout, maxMessageCount, absoluteMaxBytes, preferredMaxBytes);
     } else {
       if (genesis) {
         l('[Init]: generate genesis block ... ');
-        await Orchestrator.generateGenesis(genesisConfigPath);
+        await Orchestrator.generateGenesis(genesisConfigPath, batchTimeout, maxMessageCount, absoluteMaxBytes, preferredMaxBytes);
         l('[Init]: genesis block generated done !!! ');
       }
       if (configtx) {
         l('[Init]: generate channel config file... ');
-        await ChannelOrchestrator.generateChannelConfig(genesisConfigPath);
+        await ChannelOrchestrator.generateChannelConfig(genesisConfigPath, batchTimeout, maxMessageCount, absoluteMaxBytes, preferredMaxBytes);
         l('[Init]: channel configuration generated done !!! ');
       }
       if (anchortx) {
         l('[Init]: generate the anchor peer update file...');
-        await Orchestrator.generateAnchorPeer(genesisConfigPath);
+        await Orchestrator.generateAnchorPeer(genesisConfigPath, batchTimeout, maxMessageCount, absoluteMaxBytes, preferredMaxBytes);
         l('[Init]: anchor peer update generated done !!!');
       }
     }
