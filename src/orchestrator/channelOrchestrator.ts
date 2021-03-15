@@ -227,6 +227,7 @@ export class ChannelOrchestrator {
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let channelGenerator;
         if(isAddOrdererReq || isSystemChannel){
+            console.log('orderer loading connection profile')
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
         } else {
             channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
@@ -243,6 +244,7 @@ export class ChannelOrchestrator {
             } else {
                 pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             }
+            console.log('path sig', pathSig)
             await SysWrapper.createFile(pathSig, JSON.stringify(signature));
         }catch(err) {
             e('error signing channel definition')
@@ -255,7 +257,7 @@ export class ChannelOrchestrator {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let  channelGenerator;
-        if(addOrererReq){
+        if(addOrererReq || systemChannel){
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
 
         } else {
@@ -281,7 +283,7 @@ export class ChannelOrchestrator {
         }
         try{
             let currentChannel = systemChannel? CHANNEL_RAFT_ID:channelName
-            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, currentChannel, addOrererReq );
+            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, currentChannel, addOrererReq, systemChannel );
         }catch(err){
             e('ERROR submitting channel def')
             e(err)

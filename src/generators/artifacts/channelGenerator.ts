@@ -399,6 +399,7 @@ orderers:
     // load the admin user into the client
     let adminLoaded;
     if(isOrdererReq || isSystemChannel){
+      console.log('load orderer admin')
       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
     } else {
       adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
@@ -418,7 +419,7 @@ orderers:
     }
   }
 
-  async submitChannelUpdate(config, sigs, nameChannel, addOrdererReq){
+  async submitChannelUpdate(config, sigs, nameChannel, addOrdererReq, isSystemChannel){
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
@@ -426,7 +427,7 @@ orderers:
     
     let adminLoaded;
     // load the admin user into the client
-    if(addOrdererReq){
+    if(addOrdererReq || isSystemChannel){
       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
 
     } else {
