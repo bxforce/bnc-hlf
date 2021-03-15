@@ -226,7 +226,7 @@ export class ChannelOrchestrator {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let channelGenerator;
-        if(isAddOrdererReq){
+        if(isAddOrdererReq || isSystemChannel){
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
         } else {
             channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
