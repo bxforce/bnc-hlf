@@ -205,7 +205,14 @@ export class ChannelOrchestrator {
         if (!isNetworkValid) {
             return;
         }
-        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        let channelGenerator;
+        if(channelName){
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        }
+
         try{
             await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, channelName)
         }catch(err){
@@ -226,7 +233,7 @@ export class ChannelOrchestrator {
         }
 
         try{
-            const signature = await channelGenerator.signConfig(channelDef, isAddOrdererReq);
+            const signature = await channelGenerator.signConfig(channelDef, isAddOrdererReq, isSystemChannel);
             //save the sig to a file
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig;

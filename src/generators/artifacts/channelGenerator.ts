@@ -231,14 +231,24 @@ orderers:
     const channelClient = new Channels(clientConfig);
     await channelClient.init();
 
-    const adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    // if nameChannel undefined then load admin orderer to get the system channel instead
+    let adminLoaded;
+    if(!nameChannel){
+      console.log("loading orderer account to modify system channel")
+      adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+    } else {
+      adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    }
+
     if(!adminLoaded) {
       e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
       return false;
     }
+    
+    let currentChannelName = nameChannel? nameChannel: CHANNEL_RAFT_ID;
 
     try{
-      let envelope = await channelClient.getLatestChannelConfigFromOrderer(nameChannel, this.network.organizations[0].mspName);
+      let envelope = await channelClient.getLatestChannelConfigFromOrderer(currentChannelName, this.network.organizations[0].mspName);
       const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
       await configtxlator.createInitialConfigPb(envelope);
       await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
@@ -253,21 +263,28 @@ orderers:
       let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition)
 
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+      if(nameChannel){
+        modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
 
-      modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
+        let AnchorPeers = newOrgAnchorJson;
 
-      let AnchorPeers = newOrgAnchorJson;
+        let target = modified.channel_group.groups.Application.groups.org3MSP.values;
+        let startAdded = {AnchorPeers, ...target}
+        modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
+      } else {
+        // add into system channel
+      // console.log('modified', JSON.stringify(modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups)) //BncConsortium
+        modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups[`${newOrgMSP}`] = newOrgJsonDef;
+       // console.log('after', JSON.stringify(modified))
+      }
 
-      let target = modified.channel_group.groups.Application.groups.org3MSP.values;
-      let startAdded = {AnchorPeers, ...target}
-      modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
       await configtxlator.convert(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, configtxlator.protobufType.config, configtxlator.convertType.encode)
 
       //calculate delta between config.pb and modified.pb
-      await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, nameChannel);
+      await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, currentChannelName);
 
       //convert the delta.pb to json
       await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, configtxlator.protobufType.update, configtxlator.convertType.decode)
@@ -279,7 +296,7 @@ orderers:
         "payload": {
           "header": {
             "channel_header": {
-              "channel_id": nameChannel,
+              "channel_id": currentChannelName,
               "type": 2
             }
           },
@@ -292,7 +309,7 @@ orderers:
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
       //copy the final delta pb under artifacts
-      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, nameChannel)}/${configtxlator.names.finalPB}`)
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
 
     }catch (err) {
@@ -374,14 +391,14 @@ orderers:
     }
   }
 
-  async signConfig(config, isOrdererReq){
+  async signConfig(config, isOrdererReq, isSystemChannel){
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
     await channelClient.init();
     // load the admin user into the client
     let adminLoaded;
-    if(isOrdererReq){
+    if(isOrdererReq || isSystemChannel){
       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
     } else {
       adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);

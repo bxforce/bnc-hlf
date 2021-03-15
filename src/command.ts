@@ -224,7 +224,7 @@ channelCmd
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
     .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
-    .requiredOption('-n, --namech <path>', 'name channel')
+    .option('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
         await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.namech);
     });
