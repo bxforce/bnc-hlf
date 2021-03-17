@@ -21,6 +21,7 @@ import {Peer} from '../parser/model/peer';
 import {Network} from '../parser/model/network';
 import {ChannelGenerator} from '../generators/artifacts/channelGenerator';
 import {OrgGenerator} from '../generators/artifacts/orgGenerator';
+import {OrdererOrgGenerator} from '../generators/artifacts/ordererOrgGenerator';
 import {ConfigtxYamlGenerator} from '../generators/artifacts/configtxGenerator';
 import {ConnectionProfileGenerator} from '../generators/artifacts/clientGenerator';
 import {d, e, l} from '../utils/logs';
@@ -196,6 +197,10 @@ export class ChannelOrchestrator {
         //generate new org definition
         await configTxOrg.generateDefinition();
         await configTxOrg.generateAnchorDefinition();
+        // Generate the ordering organization definition
+        const configTxOrdererOrg = new OrdererOrgGenerator('configtx.yaml', path, network,  network.ordererOrganization[0])
+        await configTxOrdererOrg.save();
+        await configTxOrdererOrg.generateDefinition();
     }
 
     static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName) {

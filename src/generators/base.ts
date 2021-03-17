@@ -39,6 +39,7 @@ export abstract class BaseGenerator {
    * return the concatenation of the path & filename
    */
   get filePath(): string {
+    console.log('here', this.path)
     return join(this.path, this.filename);
   }
 
@@ -62,6 +63,7 @@ export abstract class BaseGenerator {
    * Store the file on the path location
    */
   save() {
+    console.log("in save" , this.filePath)
     return SysWrapper.createFile(this.filePath, this.contents);
   }
   
