@@ -204,7 +204,6 @@ export class ChannelOrchestrator {
         // Generating new orderer TLS information in JSON format
         let portOrderer = network.ordererOrganization[0].orderers[0].options.ports[0];
         let nameOrderer = `${ network.ordererOrganization[0].orderers[0].name}.${network.ordererOrganization[0].orderers[0].options.domainName}`
-        console.log("adding the new orderer", nameOrderer, port)
         const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
         let tlsCrt = await getFile(ordererTlsPath);
         let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
