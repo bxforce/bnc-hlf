@@ -124,8 +124,8 @@ export class CLI {
     await ChannelOrchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath);
   }
 
-  static async generateCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName: string) {
-    await ChannelOrchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, channelName);
+  static async generateCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, ordererOrgDefinition, channelName: string) {
+    await ChannelOrchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, ordererOrgDefinition, channelName);
   }
 
   static async signCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq, isSystemChannel){

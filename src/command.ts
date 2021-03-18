@@ -220,13 +220,14 @@ channelCmd
 channelCmd
     .command('generate-definition')
     .description('generates a sign able channel definition')
-    .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
+    .option('-f, --config <path>', 'Absolsign-definitionute path to the config deployment file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
     .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
+    .requiredOption('-r, --ordererdef <update-path>', 'path to the orderer def file')
     .option('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-        await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.namech);
+        await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.ordererdef, cmd.namech);
     });
 
 channelCmd

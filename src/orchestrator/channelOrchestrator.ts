@@ -201,9 +201,26 @@ export class ChannelOrchestrator {
         const configTxOrdererOrg = new OrdererOrgGenerator('configtx.yaml', path, network,  network.ordererOrganization[0])
         await configTxOrdererOrg.save();
         await configTxOrdererOrg.generateDefinition();
+        // Generating new orderer TLS information in JSON format
+        let portOrderer = network.ordererOrganization[0].orderers[0].options.ports[0];
+        let nameOrderer = `${ network.ordererOrganization[0].orderers[0].name}.${network.ordererOrganization[0].orderers[0].options.domainName}`
+        console.log("adding the new orderer", nameOrderer, port)
+        const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
+        let tlsCrt = await getFile(ordererTlsPath);
+        let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
+        const ordererJsonConsenter = {
+            "client_tls_cert": `${ordererTLSConverted}`,
+            "host": `${nameOrderer}`,
+            "port": `${portOrderer}`,
+            "server_tls_cert": `${ordererTLSConverted}`
+        }
+        //save the file
+        await SysWrapper.createFile(`${getArtifactsPath(path)}/orderer.json`, JSON.stringify(ordererJsonConsenter));
+
+
     }
 
-    static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName) {
+    static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, ordererOrgDefinition, channelName) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -219,7 +236,7 @@ export class ChannelOrchestrator {
         }
 
         try{
-            await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, channelName)
+            await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, ordererOrgDefinition, channelName)
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)

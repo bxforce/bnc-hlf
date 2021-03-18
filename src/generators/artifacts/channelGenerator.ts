@@ -224,7 +224,7 @@ orderers:
   }
 
 
-  async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, nameChannel){
+  async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, ordererOrgDefPath, nameChannel){
     l(`Fetching latest channel definition on  (${nameChannel}) !!!`);
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -258,11 +258,15 @@ orderers:
 
       let newOrgDefinition = await SysWrapper.readFile(orgDefinitionPath);
       let newOrgAnchorDefinition = await SysWrapper.readFile(anchorDefPAth);
+      let newOrdererOrgJsonDef = await SysWrapper.readFile(ordererOrgDefPath);
 
       let newOrgJsonDef = JSON.parse(newOrgDefinition);
-      let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition)
+      let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition);
+      let newOrdererOrgJSON = JSON.parse(newOrdererOrgJsonDef);
 
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+      let newOrdererOrgMSP = newOrdererOrgJSON.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+      console.log("waaaaw" , newOrdererOrgMSP)
       if(nameChannel){
         modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
 
@@ -276,6 +280,9 @@ orderers:
       // console.log('modified', JSON.stringify(modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups)) //BncConsortium
         modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups[`${newOrgMSP}`] = newOrgJsonDef;
        // console.log('after', JSON.stringify(modified))
+        //TODO also add the orderer org definition of org3
+        modified.channel_group.groups.Orderer.groups[`${newOrdererOrgMSP}`] = newOrdererOrgJSON;
+       // console.log('modified', JSON.stringify(modified))
       }
 
       //save modified.json FILE
