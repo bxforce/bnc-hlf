@@ -99,9 +99,10 @@ program
   .option('-o, --ordererConfig <path>', 'Absolute path for new config file of orderer')
   .option('--no-orderer', 'bypass createChannel')
   .option('--addOrderer', 'signging add orderer request')
+    .option('--noCli', 'without starting orderer cli for generating bootstrap')
   .action(async cmd => {
       if(cmd.addOrderer){
-          await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.ordererConfig);
+          await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.ordererConfig, cmd.noCli);
       }else{
           await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
       }
@@ -224,10 +225,11 @@ channelCmd
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
     .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
-    .requiredOption('-r, --ordererdef <update-path>', 'path to the orderer def file')
+    .requiredOption('-r, --ordererOrgdef <update-path>', 'path to the orderer organization def file')
+    .requiredOption('-j, --ordererdef <update-path>', 'path to the single orderer def file')
     .option('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-        await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.ordererdef, cmd.namech);
+        await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.ordererOrgdef, cmd.ordererdef, cmd.namech);
     });
 
 channelCmd

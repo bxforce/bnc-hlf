@@ -219,7 +219,7 @@ export class ChannelOrchestrator {
 
     }
 
-    static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, ordererOrgDefinition, channelName) {
+    static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, ordererOrgDefinition, ordererDef, channelName) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -235,7 +235,7 @@ export class ChannelOrchestrator {
         }
 
         try{
-            await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, ordererOrgDefinition, channelName)
+            await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, ordererOrgDefinition, ordererDef, channelName)
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)
