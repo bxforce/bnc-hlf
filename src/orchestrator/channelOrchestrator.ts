@@ -312,7 +312,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean){
+    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean, addOrdererOrg?){
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -324,15 +324,17 @@ export class ChannelOrchestrator {
         try{
             const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
             let tlsCrt = await getFile(ordererTlsPath);
+            console.log('here path to orderer new ', ordererTlsPath)
             let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
             const ordererJsonConsenter = {
                     "client_tls_cert": `${ordererTLSConverted}`,
                     "host": `${nameOrderer}`,
-                    "port": `${portOrderer}`,
+                    "port": parseInt(portOrderer),
                     "server_tls_cert": `${ordererTLSConverted}`
                 }
+                console.log(ordererJsonConsenter)
             let currentChannelName = systemChannel? CHANNEL_RAFT_ID:nameChannel;
-            await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName);
+            await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName, addOrdererOrg);
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)

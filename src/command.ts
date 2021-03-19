@@ -267,11 +267,12 @@ channelCmd
     .option('-o, --nameOrd <name-ord>', 'name orderer')
     .option('-p, --portOrd <port-ord>', 'name orderer')
     .option('-n, --namech  <name-channel>', 'name channel')
+    .option('-r --addOrdOrg <path>', 'path to the json file of the orderer org definition')
     .option('--addTLS', 'adds tls info to channel')
     .option('--addEndpoint', 'adds tls info to channel')
     .option('--systemChannel', 'update the system channel')
     .action(async (cmd) => {
-        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint, cmd.systemChannel);
+        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint, cmd.systemChannel, cmd.addOrdOrg);
     });
 
 

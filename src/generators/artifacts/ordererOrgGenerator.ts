@@ -44,7 +44,7 @@ export class OrdererOrgGenerator extends BaseGenerator {
     contents = `
 Organizations:  
   - &${this.ordOrg.name}
-    Name: ${this.ordOrg.mspName}
+    Name: ${this.ordOrg.name}
     ID: ${this.ordOrg.mspName}
     MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, `${this.ordOrg.orgName}.${this.ordOrg.domainName}`)}/msp
     Policies: &${this.ordOrg.name}POLICIES
@@ -97,7 +97,7 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 
-configtxgen --configPath ${this.path} -printOrg ${this.ordOrg.mspName}  > ${artifactsPath}/${jsonFile}
+configtxgen --configPath ${this.path} -printOrg ${this.ordOrg.name}  > ${artifactsPath}/${jsonFile}
 res=$?
 
 if [ $res -ne 0 ]; then

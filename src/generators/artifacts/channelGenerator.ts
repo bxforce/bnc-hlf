@@ -226,6 +226,7 @@ orderers:
 
   async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, ordererOrgDefPath, ordererDef, nameChannel){
     l(`Fetching latest channel definition on  (${nameChannel}) !!!`);
+
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
     const channelClient = new Channels(clientConfig);
@@ -268,27 +269,38 @@ orderers:
 
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
       let newOrdererOrgMSP = newOrdererOrgJSON.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-      console.log("waaaaw" , newOrdererOrgMSP)
+      let ordererOrgName = newOrdererOrgMSP.slice(0, str.length - 3);
       if(nameChannel){
+        console.log('Acting on application channel')
         modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
 
         let AnchorPeers = newOrgAnchorJson;
 
         let target = modified.channel_group.groups.Application.groups.org3MSP.values;
         let startAdded = {AnchorPeers, ...target}
+       // console.log('modified before', JSON.stringify(modified))
         modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
+        //TODO make the ordererOrgDef and the ordererDef optional
+
+        // add also the orderer organization to myapplication
+       // modified.channel_group.groups.Orderer.groups[`${newOrdererOrgMSP}`] = newOrdererOrgJSON;
+
+        //add the tls information to the application
+       // modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(newOrdererJSON)
+
       } else {
+
         // add into system channel
       // console.log('modified', JSON.stringify(modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups)) //BncConsortium
         modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups[`${newOrgMSP}`] = newOrgJsonDef;
        // console.log('after', JSON.stringify(modified))
         //TODO also add the orderer org definition of org3
-        modified.channel_group.groups.Orderer.groups[`${newOrdererOrgMSP}`] = newOrdererOrgJSON;
+        modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrdererOrgJSON;
         //add TLS also in System Channel
         modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(newOrdererJSON)
         
       }
-
+/*
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
@@ -323,6 +335,8 @@ orderers:
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
 
+ */
+
     }catch (err) {
       e(err);
       e("ERROR generating new channel DEF")
@@ -330,7 +344,7 @@ orderers:
     }
   }
   
-  async addOrdererToChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint, channelName){
+  async addOrdererToChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint, channelName, addOrdererOrg){
     l(`Fetching latest channel definition on  (${channelName}) !!!`);
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -355,6 +369,13 @@ orderers:
       if(addTLS){
         //add TLS to consenters
         modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
+        if(addOrdererOrg){
+          let newOrdererOrgJsonDef = await SysWrapper.readFile(addOrdererOrg);
+          let newOrdererOrgJSON = JSON.parse(newOrdererOrgJsonDef);
+          let newOrdererOrgMSP = newOrdererOrgJSON.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+          let ordererOrgName = newOrdererOrgMSP.slice(0, str.length - 3);
+          modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrdererOrgJSON;
+        }
 
       }
       if (addEnpoint){
