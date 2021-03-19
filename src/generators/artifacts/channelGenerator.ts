@@ -269,7 +269,7 @@ orderers:
 
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
       let newOrdererOrgMSP = newOrdererOrgJSON.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-      let ordererOrgName = newOrdererOrgMSP.slice(0, str.length - 3);
+      let ordererOrgName = newOrdererOrgMSP.slice(0, newOrdererOrgMSP.length - 3);
       if(nameChannel){
         console.log('Acting on application channel')
         modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
@@ -373,7 +373,7 @@ orderers:
           let newOrdererOrgJsonDef = await SysWrapper.readFile(addOrdererOrg);
           let newOrdererOrgJSON = JSON.parse(newOrdererOrgJsonDef);
           let newOrdererOrgMSP = newOrdererOrgJSON.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-          let ordererOrgName = newOrdererOrgMSP.slice(0, str.length - 3);
+          let ordererOrgName = newOrdererOrgMSP.slice(0, newOrdererOrgMSP.length - 3);
           modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrdererOrgJSON;
         }
 
