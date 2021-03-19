@@ -102,7 +102,7 @@ program
     .option('--noCli', 'without starting orderer cli for generating bootstrap')
   .action(async cmd => {
       if(cmd.addOrderer){
-          await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.ordererConfig, cmd.noCli);
+          await CLI.startNewOrderer(cmd.config, cmd.hosts, cmd.ordererConfig, cmd.noCli);
       }else{
           await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
       }
