@@ -169,6 +169,15 @@ program
         await CLI.generateNewOrgDefinition(cmd.config, cmd.hosts);
     });
 
+program
+    .command('generate-new-genesis')
+    .description('generates new genesis to bootstrap new orderer')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .action(async cmd => {
+        await CLI.generateNewGenesis(cmd.config, cmd.hosts);
+    });
+
 
 const channelCmd = program.command('channel');
 channelCmd

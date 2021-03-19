@@ -127,13 +127,16 @@ export class CLI {
   static async generateCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, ordererOrgDefinition, ordererDef, channelName: string) {
     if(!channelName){
       await ChannelOrchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, ordererOrgDefinition, ordererDef, channelName);
-      //generate the new genesis.block to be used by org3 to bootstrap new orderer
-      // look for config_orderer.block under artifacts
-      await ChannelOrchestrator.generateNewGenesis(deployConfigPath, hostsConfigPath);
     }else{
       await ChannelOrchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, ordererOrgDefinition, ordererDef, channelName);
     }
 
+  }
+
+  static async generateNewGenesis(deployConfigPath: string, hostsConfigPath: string) {
+    //generate the new genesis.block to be used by org3 to bootstrap new orderer
+    // look for config_orderer.block under artifacts
+    await ChannelOrchestrator.generateNewGenesis(deployConfigPath, hostsConfigPath);
   }
 
   static async signCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq, isSystemChannel){
