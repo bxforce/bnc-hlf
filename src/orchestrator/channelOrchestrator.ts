@@ -219,7 +219,7 @@ export class ChannelOrchestrator {
 
     }
 
-    static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, ordererOrgDefinition, ordererDef, channelName) {
+    static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -235,7 +235,32 @@ export class ChannelOrchestrator {
         }
 
         try{
-            await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, ordererOrgDefinition, ordererDef, channelName)
+            await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, channelName)
+        }catch(err){
+            e('ERROR generating new channel DEF')
+            e(err)
+            return ;
+        }
+    }
+
+
+    static async addNewOrdererOrganization(deploymentConfigPath: string, hostsConfigPath: string, ordererOrgPath, channelName) {
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        let channelGenerator;
+        if(channelName){
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        }
+
+        try{
+            await channelGenerator.addNewOrdererOrganization(ordererOrgPath, channelName)
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)
@@ -312,7 +337,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean, addOrdererOrg?){
+    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean){
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -334,7 +359,7 @@ export class ChannelOrchestrator {
                 }
                 console.log(ordererJsonConsenter)
             let currentChannelName = systemChannel? CHANNEL_RAFT_ID:nameChannel;
-            await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName, addOrdererOrg);
+            await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName);
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)

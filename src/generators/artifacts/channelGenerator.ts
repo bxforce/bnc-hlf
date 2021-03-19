@@ -224,7 +224,96 @@ orderers:
   }
 
 
-  async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, ordererOrgDefPath, ordererDef, nameChannel){
+  async addNewOrdererOrganization(orgDefinitionPath, nameChannel){
+    l(`Fetching latest channel definition on  (${nameChannel}) !!!`);
+
+    // Initiate the channel entity
+    const clientConfig: ClientConfig = { networkProfile: this.filePath };
+    const channelClient = new Channels(clientConfig);
+    await channelClient.init();
+
+    // if nameChannel undefined then load admin orderer to get the system channel instead
+    let adminLoaded;
+    if(!nameChannel){
+      console.log("loading orderer account to modify system channel")
+      adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
+    } else {
+      adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
+    }
+
+    if(!adminLoaded) {
+      e('[Channel]: Not able to load the admin account into the channel client instance -- exit !!!');
+      return false;
+    }
+
+    let currentChannelName = nameChannel? nameChannel: CHANNEL_RAFT_ID;
+
+    try{
+      let envelope = await channelClient.getLatestChannelConfigFromOrderer(currentChannelName, this.network.organizations[0].mspName);
+      const configtxlator = new Configtxlator(getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion), this.network.options.networkConfigPath);
+      await configtxlator.createInitialConfigPb(envelope);
+      await configtxlator.convert(configtxlator.names.initialPB, configtxlator.names.initialJSON, configtxlator.protobufType.config, configtxlator.convertType.decode)
+
+      let original = await configtxlator.getFile(configtxlator.names.initialJSON);
+      let modified = await configtxlator.getFile(configtxlator.names.initialJSON);
+
+      let newOrgDefinition = await SysWrapper.readFile(orgDefinitionPath);
+      let newOrgJsonDef = JSON.parse(newOrgDefinition);
+      let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
+      let ordererOrgName = newOrgMSP.slice(0, newOrgMSP.length - 3);
+      if(nameChannel){
+        console.log('Acting on application channel')
+        modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrgJsonDef;
+
+      } else {
+        console.log('manipulating system channel')
+        // add into system channel
+        modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrgJsonDef;
+      }
+
+      //save modified.json FILE
+      await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
+      //convert it to modified.pb
+      await configtxlator.convert(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, configtxlator.protobufType.config, configtxlator.convertType.encode)
+
+      //calculate delta between config.pb and modified.pb
+      await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, currentChannelName);
+
+      //convert the delta.pb to json
+      await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, configtxlator.protobufType.update, configtxlator.convertType.decode)
+      //get the delta json file to add the header
+
+      let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
+
+      let config_update_as_envelope_json = {
+        "payload": {
+          "header": {
+            "channel_header": {
+              "channel_id": currentChannelName,
+              "type": 2
+            }
+          },
+          "data": {
+            "config_update": deltaJSON
+          }
+        }
+      }
+      //save the new delta.json
+      await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
+      await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
+      //copy the final delta pb under artifacts
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+      await configtxlator.clean();
+
+    }catch (err) {
+      e(err);
+      e("ERROR generating new channel DEF")
+      return err;
+    }
+  }
+
+
+  async generateCustomChannelDef(orgDefinitionPath, anchorDefPAth, nameChannel){
     l(`Fetching latest channel definition on  (${nameChannel}) !!!`);
 
     // Initiate the channel entity
@@ -259,17 +348,11 @@ orderers:
 
       let newOrgDefinition = await SysWrapper.readFile(orgDefinitionPath);
       let newOrgAnchorDefinition = await SysWrapper.readFile(anchorDefPAth);
-      let newOrdererOrgJsonDef = await SysWrapper.readFile(ordererOrgDefPath);
-      let newOrdererJsonDef = await SysWrapper.readFile(ordererDef);
 
       let newOrgJsonDef = JSON.parse(newOrgDefinition);
       let newOrgAnchorJson = JSON.parse(newOrgAnchorDefinition);
-      let newOrdererOrgJSON = JSON.parse(newOrdererOrgJsonDef);
-      let newOrdererJSON = JSON.parse(newOrdererJsonDef);
-
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-      let newOrdererOrgMSP = newOrdererOrgJSON.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-      let ordererOrgName = newOrdererOrgMSP.slice(0, newOrdererOrgMSP.length - 3);
+
       if(nameChannel){
         console.log('Acting on application channel')
         modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
@@ -280,27 +363,11 @@ orderers:
         let startAdded = {AnchorPeers, ...target}
        // console.log('modified before', JSON.stringify(modified))
         modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
-        //TODO make the ordererOrgDef and the ordererDef optional
-
-        // add also the orderer organization to myapplication
-       // modified.channel_group.groups.Orderer.groups[`${newOrdererOrgMSP}`] = newOrdererOrgJSON;
-
-        //add the tls information to the application
-       // modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(newOrdererJSON)
 
       } else {
       console.log('manipulating system channel')
         // add into system channel
-      // console.log('modified', JSON.stringify(modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups)) //BncConsortium
         modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups[`${newOrgMSP}`] = newOrgJsonDef;
-       // console.log('after', JSON.stringify(modified))
-        //TODO also add the orderer org definition of org3
-        modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrdererOrgJSON;
-        //add TLS also in System Channel
-        modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(newOrdererJSON)
-
-        console.log("modified after", JSON.stringify(modified))
-        
       }
 
       //save modified.json FILE
@@ -344,7 +411,7 @@ orderers:
     }
   }
   
-  async addOrdererToChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint, channelName, addOrdererOrg){
+  async addOrdererToChannel(ordererJson, nameOrderer, port, addTLS, addEnpoint, channelName){
     l(`Fetching latest channel definition on  (${channelName}) !!!`);
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -369,14 +436,6 @@ orderers:
       if(addTLS){
         //add TLS to consenters
         modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
-        if(addOrdererOrg){
-          let newOrdererOrgJsonDef = await SysWrapper.readFile(addOrdererOrg);
-          let newOrdererOrgJSON = JSON.parse(newOrdererOrgJsonDef);
-          let newOrdererOrgMSP = newOrdererOrgJSON.policies.Admins.policy.value.identities[0].principal.msp_identifier;
-          let ordererOrgName = newOrdererOrgMSP.slice(0, newOrdererOrgMSP.length - 3);
-          modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrdererOrgJSON;
-        }
-
       }
       if (addEnpoint){
         let endpoint = `${nameOrderer}:${port}`

@@ -234,11 +234,9 @@ channelCmd
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
     .requiredOption('-a, --anchordef <update-path>', 'path to the anchor def file')
-    .requiredOption('-r, --ordererOrgdef <update-path>', 'path to the orderer organization def file')
-    .requiredOption('-j, --ordererdef <update-path>', 'path to the single orderer def file')
     .option('-n, --namech <path>', 'name channel')
     .action(async (cmd) => {
-        await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.ordererOrgdef, cmd.ordererdef, cmd.namech);
+        await CLI.generateCustomChannelDef(cmd.config, cmd.hosts, cmd.orgdef, cmd.anchordef, cmd.namech);
     });
 
 channelCmd
@@ -276,12 +274,23 @@ channelCmd
     .option('-o, --nameOrd <name-ord>', 'name orderer')
     .option('-p, --portOrd <port-ord>', 'name orderer')
     .option('-n, --namech  <name-channel>', 'name channel')
-    .option('-r --addOrdOrg <path>', 'path to the json file of the orderer org definition')
     .option('--addTLS', 'adds tls info to channel')
     .option('--addEndpoint', 'adds tls info to channel')
     .option('--systemChannel', 'update the system channel')
     .action(async (cmd) => {
-        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint, cmd.systemChannel, cmd.addOrdOrg);
+        await CLI.addOrderer(cmd.config, cmd.hosts, cmd.nameOrd, cmd.portOrd, cmd.namech, cmd.addTLS, cmd.addEndpoint, cmd.systemChannel);
+    });
+
+
+channelCmd
+    .command('add-new-orderer-org')
+    .description('adds an orderer')
+    .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .option('-o, --ordererOrgDef <path>', 'path tto the orderer org def')
+    .option('-n, --name <path>', 'name of the channel')
+    .action(async (cmd) => {
+        await CLI.addNewOrdererOrganization(cmd.config, cmd.hosts, cmd.ordererOrgDef, cmd.name);
     });
 
 
