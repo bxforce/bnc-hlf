@@ -289,7 +289,7 @@ orderers:
        // modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(newOrdererJSON)
 
       } else {
-
+      console.log('manipulating system channel')
         // add into system channel
       // console.log('modified', JSON.stringify(modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups)) //BncConsortium
         modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups[`${newOrgMSP}`] = newOrgJsonDef;
@@ -298,9 +298,11 @@ orderers:
         modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrdererOrgJSON;
         //add TLS also in System Channel
         modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(newOrdererJSON)
+
+        console.log("modified after", JSON.stringify(modified))
         
       }
-/*
+
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
@@ -334,8 +336,6 @@ orderers:
       //copy the final delta pb under artifacts
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
-
- */
 
     }catch (err) {
       e(err);

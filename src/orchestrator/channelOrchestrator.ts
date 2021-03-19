@@ -210,7 +210,7 @@ export class ChannelOrchestrator {
         const ordererJsonConsenter = {
             "client_tls_cert": `${ordererTLSConverted}`,
             "host": `${nameOrderer}`,
-            "port": `${portOrderer}`,
+            "port": parseInt(portOrderer),
             "server_tls_cert": `${ordererTLSConverted}`
         }
         //save the file
