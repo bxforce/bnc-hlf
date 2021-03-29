@@ -120,8 +120,8 @@ export class CLI {
   }
   
   
-  static async generateNewOrgDefinition(deployConfigPath: string, hostsConfigPath: string) {
-    await ChannelOrchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath);
+  static async generateNewOrgDefinition(deployConfigPath: string, hostsConfigPath: string, addOrderer?) {
+    await ChannelOrchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath, addOrderer);
   }
 
   static async generateCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName: string) {
@@ -142,8 +142,8 @@ export class CLI {
     await ChannelOrchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName, addOrdererReq, systemChannel);
   }
 
-  static async addOrderer(deployConfigPath: string, hostsConfigPath: string, nameOrderer, portOrderer, nameChannel, addTLS?, addEndpoint?, systemChannel?){
-    await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, nameOrderer, portOrderer, nameChannel, addTLS, addEndpoint, systemChannel);
+  static async addOrderer(deployConfigPath: string, hostsConfigPath: string, nameOrderer, portOrderer, nameChannel, addTLS?, addEndpoint?, systemChannel?, addOrdererOrg?){
+    await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, nameOrderer, portOrderer, nameChannel, addTLS, addEndpoint, systemChannel, addOrdererOrg);
   }
 
   static async addNewOrdererOrganization(deployConfigPath: string, hostsConfigPath: string, ordererOrgPath, nameChannel){

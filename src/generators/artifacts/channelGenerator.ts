@@ -225,7 +225,8 @@ orderers:
 
 
   async addNewOrdererOrganization(orgDefinitionPath, nameChannel){
-    l(`Fetching latest channel definition on  (${nameChannel}) !!!`);
+    l(`Fetching latest channel definition!!!`);
+    console.log(nameChannel)
 
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -271,6 +272,8 @@ orderers:
         modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrgJsonDef;
       }
 
+      console.log(JSON.stringify(modified))
+
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
@@ -304,6 +307,7 @@ orderers:
       //copy the final delta pb under artifacts
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
+      console.log('saved to path, ', `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
 
     }catch (err) {
       e(err);
@@ -363,6 +367,7 @@ orderers:
         let startAdded = {AnchorPeers, ...target}
        // console.log('modified before', JSON.stringify(modified))
         modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
+        console.log(JSON.stringify(modified))
 
       } else {
       console.log('manipulating system channel')
@@ -436,23 +441,25 @@ orderers:
       if(addTLS){
         //add TLS to consenters
         modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
+        console.log('here', JSON.stringify(modified))
       }
       if (addEnpoint){
         let endpoint = `${nameOrderer}:${port}`
         modified.channel_group.values.OrdererAddresses.value.addresses.push(endpoint)
       }
+      console.log("pooo", JSON.stringify(modified))
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
       await configtxlator.convert(configtxlator.names.modifiedJSON, configtxlator.names.modifiedPB, configtxlator.protobufType.config, configtxlator.convertType.encode)
-   
+
        //calculate delta between config.pb and modified.pb
       await configtxlator.calculateDeltaPB(configtxlator.names.initialPB, configtxlator.names.modifiedPB, configtxlator.names.deltaPB, channelName);
-  
+
        //convert the delta.pb to json
       await configtxlator.convert(configtxlator.names.deltaPB, configtxlator.names.deltaJSON, configtxlator.protobufType.update, configtxlator.convertType.decode)
        //get the delta json file to add the header
-  
+
       let deltaJSON = await configtxlator.getFile(configtxlator.names.deltaJSON);
 
       let config_update_as_envelope_json = {
@@ -474,6 +481,7 @@ orderers:
       //copy the final delta pb under artifacts
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getAddOrdererRequestPath(this.network.options.networkConfigPath, channelName)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
+      console.log('##################', `${getAddOrdererRequestPath(this.network.options.networkConfigPath, channelName)}/${configtxlator.names.finalPB}`)
 
     }catch (err) {
       e(err);
