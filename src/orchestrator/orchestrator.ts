@@ -45,7 +45,6 @@ import {
     HLF_DEFAULT_VERSION,
     NETWORK_ROOT_PATH,
     ENABLE_CONTAINER_LOGGING,
-    CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH
     BATCH_DEFAULT_PARAMS
 } from '../utils/constants';
 import { Helper } from './helper';
