@@ -70,13 +70,10 @@
     "fabric-network": "2.2.5",
     "fs-extra": "9.1.0",
     "js-yaml": "3.14.1",
-    "license-checker": "25.0.1",
     "mem-fs": "1.2.0",
     "mem-fs-editor": "6.0.0",
     "path": "0.12.7",
     "shelljs": "0.8.4",
-    "sudo-prompt": "9.2.1",
-    "yaml": "1.10.2",
     "yaml-validator": "2.2.0"
   },
   "devDependencies": {
