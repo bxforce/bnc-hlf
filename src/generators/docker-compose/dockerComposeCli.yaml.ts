@@ -43,7 +43,14 @@ ${!this.options.cliChaincodeRootPath.includes('/') ? `
 volumes:
     ${this.options.cliChaincodeRootPath}:
         external: true
-`:``}
+    cli.${this.options.org.fullName}:
+        #external: true
+`:`
+volumes:
+    cli.${this.options.org.fullName}:
+        #external: true
+`}
+
 
 services:
   cli.${this.options.org.fullName}:
@@ -77,6 +84,7 @@ services:
       - ${this.options.networkRootPath}/artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
       - ${this.options.networkRootPath}/scripts:${this.options.networkRootPath}/scripts
       - ${this.options.cliChaincodeRootPath}:/opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode
+      - cli.${this.options.org.fullName}:/etc/hyperledger/fabric
     networks:
       - ${this.options.composeNetwork}
 ${this.options.hosts && this.options.hosts.length > 0 ?  `

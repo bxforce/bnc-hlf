@@ -99,11 +99,12 @@ program
   .option('-o, --ordererConfig <path>', 'Absolute path for new config file of orderer')
   .option('--no-orderer', 'bypass createChannel')
   .option('--addOrderer', 'signging add orderer request')
+    .option('--enableCA', 'starts the cas also ')
   .action(async cmd => {
       if(cmd.addOrderer){
           await CLI.generateNewGenesis(cmd.config, cmd.hosts, cmd.ordererConfig);
       }else{
-          await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer);
+          await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, cmd.orderer, cmd.enableCA);
       }
 
   });
@@ -113,7 +114,8 @@ program
   .description('stop the blockchain')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-  .option('-R, --no-rmi', 'Do not remove docker images')
+  //.option('-R, --no-rmi', 'Do not remove docker images'
+      .option('-R, --rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await CLI.stopHlfServices(cmd.config, cmd.hosts, cmd.rmi);
   });
@@ -144,11 +146,12 @@ program
   .option('-maxMessageCount, --maxMessageCount <maxMessageCount>', 'MaxMessageCount')
   .option('-absoluteMaxBytes, --absoluteMaxBytes <absoluteMaxBytes>', 'AbsoluteMaxBytes')
   .option('-preferredMaxBytes, --preferredMaxBytes <preferredMaxBytes>', 'PreferredMaxBytes')
+  .option('--enableCA', 'starts the CAs only needed after stopping all containers ')
   .action(async (cmd: any) => {
     await CLI.generatePeersCredentials(cmd.config, cmd.hosts);
     await CLI.generateOrdererCredentials(cmd.config, cmd.hosts);
     await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx, cmd.batchTimeout, cmd.maxMessageCount, cmd.absoluteMaxBytes, cmd.preferredMaxBytes);
-    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true);
+    await CLI.deployHlfServices(cmd.config, cmd.hosts, !!cmd.skipDownload, true, true, cmd.enableCA);
     await Utils.delay(DOCKER_DELAY);
     await CLI.createChannel(cmd.config, cmd.hosts, cmd.namech);
     await Utils.delay(DOCKER_DELAY);

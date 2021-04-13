@@ -30,7 +30,10 @@ import {
   Network, NetworkCreateOptions,
   NetworkInspectInfo,
   Volume,
-  VolumeInspectInfo
+  VolumeInspectInfo,
+  Image,
+  ImageInfo,
+  ImageInspectInfo
 } from 'dockerode';
 import { IDockerComposeOptions, IDockerComposeResult } from 'docker-compose';
 import * as Dockerode from 'dockerode';
@@ -70,6 +73,13 @@ interface VolumeCreateOptions {
   Labels?: {};
 }
 
+interface ImageCreateOptions {
+  Name?: string;
+  Driver?: string;
+  DriverOpts?: {};
+  Labels?: {};
+}
+
 interface ContainerRemoveOptions {
   v: boolean;
   force: boolean;
@@ -77,6 +87,10 @@ interface ContainerRemoveOptions {
 }
 
 interface VolumeRemoveOptions {
+  force?: boolean;
+}
+
+interface ImageRemoveOptions {
   force?: boolean;
 }
 
@@ -182,11 +196,45 @@ export class DockerEngine {
     }
   }
 
+  async stopAllContainers(remove: boolean): Promise<boolean> {
+    try {
+      // filter existing containers info
+      let listOpts = {
+        "filters": "{\"label\": [\"bnc\"]}"
+      };
+      const containersInfo = await this.engine.listContainers(listOpts);
+      //    const foundContainerInfos = containersInfo.filter(container => this.checkContainerName(serviceName, container.Names));
+
+      // retrieve container instance from one found and stop it
+      for (let containerInfo of containersInfo) {
+        const container: DockerContainer = this.getContainer(containerInfo.Id);
+        await container.stop();
+
+        if(remove) {
+          await container.remove();
+        }
+      }
+
+      return true;
+    } catch(err) {
+      e(err);
+      throw err;
+    }
+  }
+
+
   checkContainerName(serviceName: string, containerNames: string[]): boolean {
     for(const name of containerNames) {
       if(name === serviceName || name === `/${serviceName}`) {
         return true;
       }
+    }
+    return false;
+  }
+
+  checkVolumeName(volumeNames: string[], volumeName: string): boolean {
+    if(volumeNames.includes(volumeName)){
+      return true;
     }
     return false;
   }
@@ -243,6 +291,16 @@ export class DockerEngine {
     return volume;
   }
 
+  getImage(name: string): DockerImage {
+    let image = new DockerImage(this);
+    image.setImage(this.engine.getImage(name));
+    return image;
+  }
+  
+  async pruneVolume(opts): Promise<any> {
+    await this.engine.pruneVolumes(opts)
+  }
+
   async listVolumes(options?: NetworkListOptions): Promise<DockerVolume[]> {
     let { Volumes } = await this.engine.listVolumes(options);
     let volumeList: DockerVolume[] = [];
@@ -253,6 +311,39 @@ export class DockerEngine {
     return volumeList;
   }
 
+  findMyImage(myArray: string[]){
+    const regex = new RegExp('dev-peer*');
+    let found ;
+    for(let single of myArray){
+      found = regex.test(single)
+      if (found){
+        break
+      }
+    }
+    return found
+  }
+
+  async deleteDevPeerImages(options?: NetworkListOptions): Promise<boolean> {
+    let Images: ImageInfo[]  = await this.engine.listImages(options);
+    let myList: ImageInfo[] = []
+
+    for( let myImage of Images){
+      if(this.findMyImage(myImage.RepoTags)){
+        myList.push(myImage)
+      }
+    }
+    try{
+      for (let singleImage of myList) {
+        let imageObj: DockerImage = this.getImage(singleImage.Id);
+        await imageObj.remove();
+      }
+      return true;
+    }catch (e) {
+      console.log(e)
+      return false;
+    }
+  }
+
   async doesVolumeExist(name: string): Promise<Boolean> {
     const { Volumes } = await this.engine.listVolumes();
     const fVolume = Volumes.filter(volume => volume.Name === name);
@@ -260,6 +351,26 @@ export class DockerEngine {
   }
 
   // TODO implement delete volumes
+
+  async deleteVolumesList(volumesList: string[]): Promise<boolean> {
+    try {
+
+      const volumeInfo = await this.engine.listVolumes();
+      const arrayVolumes = volumeInfo.Volumes;
+      const foundVolumeInfos = arrayVolumes.filter(volume => this.checkVolumeName(volumesList, volume.Name));
+
+      for (let singleVolume of foundVolumeInfos) {
+         let volumeObj: DockerVolume = this.getVolume(singleVolume.Name);
+         await volumeObj.remove({
+           force: true
+         });
+      }
+      return true;
+    } catch(err) {
+      e(err);
+      return false;
+    }
+  }
 
   //Docker-compose Management
   composeUpAll(options?: IDockerComposeOptions): Promise<IDockerComposeResult> {
@@ -360,5 +471,23 @@ export class DockerVolume {
 
   setVolume(volume: Volume): void {
     this.volume = volume;
+  }
+}
+
+export class DockerImage {
+  image: Image;
+
+  constructor(public engine: DockerEngine, public options?: ImageCreateOptions) {}
+
+  remove(options?: ImageRemoveOptions): Promise<any> {
+    return this.image.remove(options);
+  }
+
+  inspect(): Promise<ImageInspectInfo> {
+    return this.image.inspect();
+  }
+  
+  setImage(image: Image): void {
+    this.image = image;
   }
 }
