@@ -288,7 +288,9 @@ export class ChannelOrchestrator {
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig;
             let currentChannel = isSystemChannel? CHANNEL_RAFT_ID:channelName;
-            if(isAddOrdererReq){
+            console.log(isAddOrdererReq, isSystemChannel)
+            if(isAddOrdererReq || isSystemChannel){
+                console.log('path sig !!!')
                 pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             } else {
                 pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`

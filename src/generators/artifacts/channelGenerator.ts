@@ -262,6 +262,7 @@ orderers:
       let newOrgJsonDef = JSON.parse(newOrgDefinition);
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
       let ordererOrgName = newOrgMSP.slice(0, newOrgMSP.length - 3);
+      console.log("before", JSON.stringify(modified))
       if(nameChannel){
         console.log('Acting on application channel')
         modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrgJsonDef;
@@ -272,7 +273,7 @@ orderers:
         modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrgJsonDef;
       }
 
-      console.log(JSON.stringify(modified))
+      console.log("after", JSON.stringify(modified))
 
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
@@ -305,9 +306,12 @@ orderers:
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
       //copy the final delta pb under artifacts
-      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+    //  await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getAddOrdererRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+
+
       await configtxlator.clean();
-      console.log('saved to path, ', `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+      console.log('saved to path, ', `${getAddOrdererRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
 
     }catch (err) {
       e(err);
@@ -406,7 +410,14 @@ orderers:
       await configtxlator.saveFile(configtxlator.names.deltaJSON, JSON.stringify(config_update_as_envelope_json))
       await configtxlator.convert(configtxlator.names.deltaJSON, configtxlator.names.deltaPB, configtxlator.protobufType.envelope, configtxlator.convertType.encode)
       //copy the final delta pb under artifacts
-      await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+      if(nameChannel){
+        await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+        console.log('sent here', `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+      }else{
+        await configtxlator.copyFile(configtxlator.names.deltaPB, `${getAddOrdererRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+        console.log('sent here', `${getAddOrdererRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
+      }
+      
       await configtxlator.clean();
 
     }catch (err) {

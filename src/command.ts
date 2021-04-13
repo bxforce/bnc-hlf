@@ -165,7 +165,7 @@ program
     .description('generates new org definiton to be added to channel')
     .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('--addOrderer ', 'will generate new orderer json files')
+    .option('--addOrderer', 'will generate new orderer json files')
     .action(async cmd => {
         await CLI.generateNewOrgDefinition(cmd.config, cmd.hosts, cmd.addOrderer);
     });
