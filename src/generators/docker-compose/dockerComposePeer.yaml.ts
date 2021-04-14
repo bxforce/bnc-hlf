@@ -38,7 +38,13 @@ volumes:
 ${this.options.org.peers
     .map(peer => `
   ${peer.name}.${this.options.org.fullName}:
-    #external: true
+      #external: true
+  ${peer.name}.${this.options.org.fullName}.couchdb:
+      #external: true
+  ${peer.name}.${this.options.org.fullName}.fabric:
+      #external: true
+  ${peer.name}.${this.options.org.fullName}.root:
+      #external: true
 `).join('')}
 
 networks:
@@ -88,6 +94,9 @@ ${this.options.hosts && this.options.hosts.length > 0 ? `
       - ${peer.name}.${this.options.org.fullName}:/var/hyperledger/production
       - ${this.options.networkRootPath}/docker-compose/base/core.yaml:/etc/hyperledger/fabric/core.yaml
       - ${this.options.cliBuildersScriptsRootPath}:/builders
+      - ${peer.name}.${this.options.org.fullName}.fabric:/etc/hyperledger/fabric
+      - ${peer.name}.${this.options.org.fullName}.root:/var/hyperledger
+      
     depends_on:
       - ${peer.name}.${this.options.org.fullName}.couchdb
     networks:
@@ -104,9 +113,13 @@ ${this.options.hosts.map(host => `
     image: couchdb:2.3
     # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
     # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    volumes:
+      - ${peer.name}.${this.options.org.fullName}.couchdb:/opt/couchdb/data
     environment:
       - COUCHDB_USER=${peer.name}User
       - COUCHDB_PASSWORD=${peer.name}Pwd
+    labels:
+      - "bnc=hlf"
     networks:
       - ${this.options.composeNetwork}
 `).join('')}

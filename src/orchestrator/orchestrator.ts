@@ -25,6 +25,7 @@ import {DockerComposeCaGenerator} from '../generators/docker-compose/dockerCompo
 import {DockerComposeCaOrdererGenerator} from '../generators/docker-compose/dockerComposeCaOrderer.yaml';
 import {DockerComposePeerGenerator} from '../generators/docker-compose/dockerComposePeer.yaml';
 import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
+import {DockerComposeCli} from '../generators/docker-compose/dockerComposeCli.yaml';
 import {ChaincodeScriptsGenerator} from '../generators/scripts/chaincodeScripts';
 import {BuildersScriptsGenerator} from '../generators/scripts/buildersScripts';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
@@ -43,6 +44,7 @@ import {
     DEFAULT_CA_ADMIN,
     HLF_DEFAULT_VERSION,
     NETWORK_ROOT_PATH,
+    ENABLE_CONTAINER_LOGGING,
     BATCH_DEFAULT_PARAMS
 } from '../utils/constants';
 import { Helper } from './helper';
@@ -238,7 +240,7 @@ export class Orchestrator {
      * @param enablePeers
      * @param enableOrderers
      */
-    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
+    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true, enableCA?: boolean) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const isNetworkValid = network.validate();
@@ -301,6 +303,25 @@ export class Orchestrator {
             const ordererStarted = await ordererGenerator.startOrderers();
             l(`Orderers started (${ordererStarted})`);
         }
+        if(enableCA){
+            // star cli also !
+            l('Start CA org');
+            const ca = new DockerComposeCaGenerator(`docker-compose-ca-${network.organizations[0].name}.yaml`, path, network, options, engine);
+            const caStarted = await ca.startOrgCa();
+            //start cli using the engine here and not using the generator under docker compose so we dnt have to pass chaincode commit file
+            l('starting cli container');
+            const serviceName =  `cli.${options.org.fullName}`;
+            l(`Starting CLI ${serviceName}...`);
+            await engine.composeOne(serviceName, { cwd: getDockerComposePath(path), config:  `docker-compose-cli-${options.org.name}.yaml`, log: ENABLE_CONTAINER_LOGGING });
+            l(`Service CLI ${serviceName} started successfully !!!`);
+            if (network.ordererOrganization[0].ca.options.isOrgCA == false){
+                //start CA orderer
+                l('Start CA orderer');
+                const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
+                const caStarted = await ca.startOrdererCa();
+            }
+        }
+
     }
 
     static async startSingleOrderer(deploymentConfigPath: string, hostsConfigPath: string) {
@@ -362,52 +383,37 @@ export class Orchestrator {
 
             // loop on organization & peers && orderers
             for (const org of network.organizations) {
-                
-                // build list of docker services/volumes to delete
+                // build list of docker volumes to delete
                 const volumes: string[] = [];
-                const services: string[] = [];
                 
                 for (const peer of org.peers) {
-                    services.push(`${peer.name}.${org.fullName}`);
-                    services.push(`${peer.name}.${org.fullName}.couchdb`);
-                    volumes.push(`${peer.name}.${org.fullName}`);
-                    
-                    //remove chaincode containers
-                    services.push(`dev-${peer.name}.${org.fullName}`) // FIX this
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.fabric`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.root`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.couchdb`);
                 }
                 
                 for (const orderer of org.orderers) {
-                    services.push(`${orderer.name}.${org.domainName}`);
-                    volumes.push(`${orderer.name}.${org.domainName}`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}.fabric`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}.root`);
                 }
-                
-                services.push(`${org.ca.name}.${org.name}`);
-                
-                services.push(`${network.ordererOrganization[0].caName}`);
+                volumes.push(`docker-compose_cli.${org.fullName}`)
 
-                //remove all cli containers
-                services.push(`cli.${org.fullName}`)
+                const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
+                let removeAll = forceRemove? true:false;
 
-                // Now check all container within all organization engine
-                for (const engine of org.engines) {
-                    const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
-                    const containerDeleted = await docker.stopContainerList(services, forceRemove);
-                    if (!containerDeleted) {
-                        e('Error while deleting the docker container for peer & orderer');
-                        return false;
-                    }
-
-                    // delete the network
-                    if (deleteNetwork) {
-                        // TODO API to delete network not yet implemented
-                    }
-
-                    if (deleteVolume) {
-                        // TODO API to delete volumes not yet implemented
-                    }
+                const containerDeleted = await docker.stopAllContainers(removeAll);
+                if (!containerDeleted) {
+                    e('Error while deleting the docker container for peer & orderer');
+                    return false;
+                }
+                if(removeAll){
+                    await docker.deleteVolumesList(volumes) // TODO remove forceRemove arg
+                    //also remove unwanted images starting with dev-peer !
+                    await docker.deleteDevPeerImages();
                 }
             }
-
             return true;
         } catch (err) {
             e(err);
