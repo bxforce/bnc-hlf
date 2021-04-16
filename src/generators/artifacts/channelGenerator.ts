@@ -226,7 +226,6 @@ orderers:
 
   async addNewOrdererOrganization(orgDefinitionPath, nameChannel){
     l(`Fetching latest channel definition!!!`);
-    console.log(nameChannel)
 
     // Initiate the channel entity
     const clientConfig: ClientConfig = { networkProfile: this.filePath };
@@ -236,7 +235,6 @@ orderers:
     // if nameChannel undefined then load admin orderer to get the system channel instead
     let adminLoaded;
     if(!nameChannel){
-      console.log("loading orderer account to modify system channel")
       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
     } else {
       adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
@@ -262,18 +260,13 @@ orderers:
       let newOrgJsonDef = JSON.parse(newOrgDefinition);
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
       let ordererOrgName = newOrgMSP.slice(0, newOrgMSP.length - 3);
-      console.log("before", JSON.stringify(modified))
       if(nameChannel){
-        console.log('Acting on application channel')
         modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrgJsonDef;
 
       } else {
-        console.log('manipulating system channel')
         // add into system channel
         modified.channel_group.groups.Orderer.groups[`${ordererOrgName}`] = newOrgJsonDef;
       }
-
-      console.log("after", JSON.stringify(modified))
 
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
@@ -311,7 +304,6 @@ orderers:
 
 
       await configtxlator.clean();
-      console.log('saved to path, ', `${getAddOrdererRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
 
     }catch (err) {
       e(err);
@@ -332,7 +324,6 @@ orderers:
     // if nameChannel undefined then load admin orderer to get the system channel instead
     let adminLoaded;
     if(!nameChannel){
-      console.log("loading orderer account to modify system channel")
       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
     } else {
       adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);
@@ -362,19 +353,15 @@ orderers:
       let newOrgMSP= newOrgJsonDef.policies.Admins.policy.value.identities[0].principal.msp_identifier;
 
       if(nameChannel){
-        console.log('Acting on application channel')
         modified.channel_group.groups.Application.groups[`${newOrgMSP}`] = newOrgJsonDef;
 
         let AnchorPeers = newOrgAnchorJson;
 
         let target = modified.channel_group.groups.Application.groups.org3MSP.values;
         let startAdded = {AnchorPeers, ...target}
-       // console.log('modified before', JSON.stringify(modified))
         modified.channel_group.groups.Application.groups.org3MSP.values = startAdded
-        console.log(JSON.stringify(modified))
 
       } else {
-      console.log('manipulating system channel')
         // add into system channel
         modified.channel_group.groups.Consortiums.groups['BncConsortium'].groups[`${newOrgMSP}`] = newOrgJsonDef;
       }
@@ -412,10 +399,8 @@ orderers:
       //copy the final delta pb under artifacts
       if(nameChannel){
         await configtxlator.copyFile(configtxlator.names.deltaPB, `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
-        console.log('sent here', `${getNewOrgRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
       }else{
         await configtxlator.copyFile(configtxlator.names.deltaPB, `${getAddOrdererRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
-        console.log('sent here', `${getAddOrdererRequestPath(this.network.options.networkConfigPath, currentChannelName)}/${configtxlator.names.finalPB}`)
       }
       
       await configtxlator.clean();
@@ -452,13 +437,11 @@ orderers:
       if(addTLS){
         //add TLS to consenters
         modified.channel_group.groups.Orderer.values.ConsensusType.value.metadata.consenters.push(ordererJson)
-        console.log('here', JSON.stringify(modified))
       }
       if (addEnpoint){
         let endpoint = `${nameOrderer}:${port}`
         modified.channel_group.values.OrdererAddresses.value.addresses.push(endpoint)
       }
-      console.log("pooo", JSON.stringify(modified))
       //save modified.json FILE
       await configtxlator.saveFile(configtxlator.names.modifiedJSON, JSON.stringify(modified))
       //convert it to modified.pb
@@ -492,7 +475,6 @@ orderers:
       //copy the final delta pb under artifacts
       await configtxlator.copyFile(configtxlator.names.deltaPB, `${getAddOrdererRequestPath(this.network.options.networkConfigPath, channelName)}/${configtxlator.names.finalPB}`)
       await configtxlator.clean();
-      console.log('##################', `${getAddOrdererRequestPath(this.network.options.networkConfigPath, channelName)}/${configtxlator.names.finalPB}`)
 
     }catch (err) {
       e(err);
@@ -509,7 +491,6 @@ orderers:
     // load the admin user into the client
     let adminLoaded;
     if(isOrdererReq || isSystemChannel){
-      console.log('load orderer admin')
       adminLoaded = await this._loadOrgAdminAccountOrderer(channelClient, channelClient.client.getClientConfig().organization);
     } else {
       adminLoaded = await this._loadOrgAdminAccount(channelClient, channelClient.client.getClientConfig().organization);

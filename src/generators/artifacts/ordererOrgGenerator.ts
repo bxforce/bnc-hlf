@@ -71,9 +71,7 @@ ${this.ordOrg.orderers.map(org => `
      * @param network
      */
     constructor(filename: string, path: string, private network: Network, private ordOrg: OrdererOrganization) {
-
         super(filename, getOrdererOrganizationRootPath(path, `${ordOrg.orgName}.${ordOrg.domainName}`));
-        console.log('constructor', getOrdererOrganizationRootPath(path, `${ordOrg.orgName}.${ordOrg.domainName}`))
     }
 
     async generateDefinition(): Promise<boolean> {
@@ -84,7 +82,6 @@ ${this.ordOrg.orderers.map(org => `
             if(!artifactsExists) {
                 await SysWrapper.createFolder(`${artifactsPath}`);
             }
-            console.log('wooow', this.ordOrg.mspName, this.path)
 
             const scriptContent = `
 export PATH=${getHlfBinariesPath(this.network.options.networkConfigPath, this.network.options.hyperledgerVersion)}:${this.network.options.networkConfigPath}:$PATH

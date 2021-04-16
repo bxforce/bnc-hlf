@@ -276,7 +276,6 @@ export class ChannelOrchestrator {
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let channelGenerator;
         if(isAddOrdererReq || isSystemChannel){
-            console.log('orderer loading connection profile')
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
         } else {
             channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
@@ -288,14 +287,11 @@ export class ChannelOrchestrator {
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig;
             let currentChannel = isSystemChannel? CHANNEL_RAFT_ID:channelName;
-            console.log(isAddOrdererReq, isSystemChannel)
             if(isAddOrdererReq || isSystemChannel){
-                console.log('path sig !!!')
                 pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             } else {
                 pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             }
-            console.log('path sig', pathSig)
             await SysWrapper.createFile(pathSig, JSON.stringify(signature));
         }catch(err) {
             e('error signing channel definition')
@@ -356,7 +352,6 @@ export class ChannelOrchestrator {
             if(!addOrdererOrg){
                 const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
                 let tlsCrt = await getFile(ordererTlsPath);
-                console.log('here path to orderer new ', ordererTlsPath)
                 let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
                 ordererJsonConsenter = {
                     "client_tls_cert": `${ordererTLSConverted}`,
