@@ -1,9 +1,9 @@
 
 BNC takes as input 4 type of files:
-* config-deploy.yaml
-* config-genesis.yaml
-* config-chaincode.yaml
-* config-hosts.yaml
+    * config-deploy.yaml
+    * config-genesis.yaml
+    * config-chaincode.yaml
+    * config-hosts.yaml
 
 
 * genesis:
