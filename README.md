@@ -47,7 +47,13 @@ bnc new -f YOUR_CONFIFURATION_FILE
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request 😁 🎉
 
+## Process overview (two orgs example)
+
+![BNC](/docs/bnc.PNG)
+
+
 ## Tutorials
+* [input files](docs/input.md)
 * [Run single org on single machine](docs/single-org.md)
 * [Run two org on two machines](docs/two-org.md)
 
