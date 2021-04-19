@@ -52,7 +52,7 @@ bnc new -f YOUR_CONFIFURATION_FILE
 ![BNC](/docs/bnc.PNG)
 
 
-## Tutorials
+## Tutorials :books:
 * [input files](docs/input.md)
 * [Run single org on single machine](docs/single-org.md)
 * [Run two org on two machines](docs/two-org.md)
