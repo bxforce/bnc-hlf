@@ -47,7 +47,7 @@ bnc new -f YOUR_CONFIFURATION_FILE
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request 😁 🎉
 
-## Process overview (two orgs example)
+## Process overview (two orgs example) :bulb:
 
 ![BNC](/docs/bnc.PNG)
 
