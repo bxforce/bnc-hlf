@@ -25,13 +25,13 @@ sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/
 ### Run default demo
 
 ````aidl
-curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
+bnc run
 ````
 
 Clear BNC:
 
 ````aidl
-curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc clear
+bnc clear
 ````
 
 ### Run and Configure BNC
@@ -53,7 +53,7 @@ curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machi
 #### Step2: Build and run your app with BNC
 
 ````aidl
-curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run --config-folder $PWD/config
+bnc run --config-folder $PWD/config
 ````
 
 The command above will start a single organization with single peer and orderer.
@@ -63,7 +63,7 @@ It will deploy the default absotre chaincode embedded in the image.
 Clear BNC:
 
 ````aidl
-curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc clear
+bnc clear
 ````
 
 
