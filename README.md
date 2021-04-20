@@ -10,11 +10,16 @@ docker-compose 1.26.2
 
 ## Install BNC on Linux systems
 
+TODO
 
 ## Getting Started :rocket:
 
 
 ### Step1: Setup
+
+TODO
+
+### Step2: Create config files
 
 ````aidl
 mkdir config
@@ -26,12 +31,6 @@ curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machi
 
 ````aidl
 curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > /home/ubuntu/config/config-hosts.yaml
-````
-
-### Step2: Create config files
-
-````aidl
-curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
 ````
 
 ### Step3: Build and run your app with BNC
