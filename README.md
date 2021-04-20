@@ -5,47 +5,39 @@ Blockchain Network Composer for Hyperledger Fabric.
 BNC is the CLI deployment tools for Enterprise Blockchain projects.
 It supports mainly Hyperledger Blockchain umbrella.
 
-## Prerequisites
+## Run it :rocket:
 
-- tested with node v12.16.x
-- NPM
-- [Docker](https://www.docker.com/community-edition)
-- Linux host (tested with ubuntu 18.04) to execute Hyperledger Fabric binaries
+Create folder for your input files:
 
+````aidl
+mkdir my_config
+````
 
-## Usage and documentation
+````aidl
+export BNC_CONFIG_PATH=$PWD/my_config
+````
+Download input files:
 
-Please refer to the _**docs**_ section to get more details about tools description and usage
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > $BNC_CONFIG_PATH/config.yaml
+````
 
-## Version matching
-| Fabric node SDK | Fabric CA node SDK  | Fabric network node SDK  |
-| ------------- |:-------------:|:-------------:|
-| v1.4.8     | v2.1.0 | v2.1.0 |
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > $BNC_CONFIG_PATH/config-hosts.yaml
+````
 
-#### Hints - Tests
+Run BNC:
 
-Before executing the bnc-tool command, you need to run
+````aidl
+curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
+````
 
-```shell script
-npm link
-```
+Clear BNC:
 
-This command will install globally a symlink linking to your project so there's no need
-for you to re-run this when you update the code.
+````aidl
+curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc clear
+````
 
-One done, you can run the commands (for more information refer the command.ts file):
-
-```shell script
-bnc new -f YOUR_CONFIFURATION_FILE
-```
-
-## Contributing
-
-1. Fork it! 🍴
-2. Create your feature branch: `git checkout -b my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin my-new-feature`
-5. Submit a pull request 😁 🎉
 
 ## Process overview (two orgs example) :bulb:
 
@@ -63,8 +55,17 @@ These generated artifacts by org1 are shared with org2.
 
 ## Tutorials :books:
 * [input files](docs/input.md)
-* [Run single org on single machine](docs/single-org.md)
 * [Run two org on two machines](docs/two-org.md)
+
+
+## Contributing
+
+1. Fork it! 🍴
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request 😁 🎉
+
 
 ## Credits
 
