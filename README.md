@@ -7,6 +7,7 @@ It supports mainly Hyperledger Blockchain umbrella.
 
 ## Prerequisites
 docker-compose 1.26.2
+TODO
 
 ## Install BNC on Linux systems
 
