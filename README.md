@@ -22,13 +22,15 @@ sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/
 ## Getting Started :rocket:
 
 
-### Step1: Setup
+### Run default demo
 
 ````aidl
 curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
 ````
 
-### Step2: Create config files
+### Run and Configure BNC
+
+#### Step1: Create config files
 
 ````aidl
 mkdir config
@@ -42,7 +44,7 @@ curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machi
 curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > $PWD/config/config-hosts.yaml
 ````
 
-### Step3: Build and run your app with BNC
+#### Step2: Build and run your app with BNC
 
 ````aidl
 curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run --config-folder $PWD/config
