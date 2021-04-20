@@ -28,6 +28,12 @@ sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/
 curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
 ````
 
+Clear BNC:
+
+````aidl
+curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc clear
+````
+
 ### Run and Configure BNC
 
 #### Step1: Create config files
