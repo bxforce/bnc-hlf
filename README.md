@@ -26,7 +26,7 @@ mkdir config
 ````
 
 ````aidl
-curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > /home/ubuntu/config/config.yaml
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > $PWD/config/config.yaml
 ````
 
 ````aidl
