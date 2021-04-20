@@ -15,14 +15,18 @@ It supports mainly Hyperledger Blockchain umbrella.
 
 ## Install BNC on Linux systems
 
-TODO
+````aidl
+sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
+````
 
 ## Getting Started :rocket:
 
 
 ### Step1: Setup
 
+````aidl
 curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
+````
 
 ### Step2: Create config files
 
