@@ -7,11 +7,11 @@ It supports mainly Hyperledger Blockchain umbrella.
 
 ## Prerequisites
 
-    curl 
-    
-    [Install docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-fr)
-    
-    [Install docker-compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04-fr)
+curl 
+
+[Install docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-fr)
+
+[Install docker-compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04-fr)
 
 ## Install BNC on Linux systems
 
@@ -28,7 +28,7 @@ sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/
 bnc run
 ````
 
-Clear BNC:
+**Clear BNC:**
 
 ````aidl
 bnc clear
@@ -60,7 +60,7 @@ The command above will start a single organization with single peer and orderer.
 
 It will deploy the default absotre chaincode embedded in the image.
 
-Clear BNC:
+**Clear BNC:**
 
 ````aidl
 bnc clear
