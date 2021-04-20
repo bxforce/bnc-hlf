@@ -5,32 +5,17 @@ Blockchain Network Composer for Hyperledger Fabric.
 BNC is the CLI deployment tools for Enterprise Blockchain projects.
 It supports mainly Hyperledger Blockchain umbrella.
 
-## Run it :rocket:
-
-Create folder for your input files:
-
-````aidl
-mkdir my_config
-````
-
-````aidl
-export BNC_CONFIG_PATH=$PWD/my_config
-````
-Download input files:
-
-````aidl
-curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > $BNC_CONFIG_PATH/config.yaml
-````
-
-````aidl
-curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > $BNC_CONFIG_PATH/config-hosts.yaml
-````
+## Getting Started :rocket:
 
 Run BNC:
 
 ````aidl
 curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
 ````
+
+The command above will start a single organization with single peer and orderer.
+
+It will deploy the default absotre chaincode embedded in the image.
 
 Clear BNC:
 
