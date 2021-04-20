@@ -31,13 +31,13 @@ curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machi
 ````
 
 ````aidl
-curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > /home/ubuntu/config/config-hosts.yaml
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > $PWD/config/config-hosts.yaml
 ````
 
 ### Step3: Build and run your app with BNC
 
 ````aidl
-curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run --config-folder /home/ubuntu/config
+curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run --config-folder $PWD/config
 ````
 
 The command above will start a single organization with single peer and orderer.
