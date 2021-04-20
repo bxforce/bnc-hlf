@@ -6,8 +6,9 @@ BNC is the CLI deployment tools for Enterprise Blockchain projects.
 It supports mainly Hyperledger Blockchain umbrella.
 
 ## Prerequisites
-docker-compose 1.26.2
-TODO
+    * curl 
+    * [Install docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-fr)
+    * [Install docker-compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04-fr)
 
 ## Install BNC on Linux systems
 
