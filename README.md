@@ -6,9 +6,12 @@ BNC is the CLI deployment tools for Enterprise Blockchain projects.
 It supports mainly Hyperledger Blockchain umbrella.
 
 ## Prerequisites
-    * curl 
-    * [Install docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-fr)
-    * [Install docker-compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04-fr)
+
+    curl 
+    
+    [Install docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-fr)
+    
+    [Install docker-compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04-fr)
 
 ## Install BNC on Linux systems
 
@@ -19,7 +22,7 @@ TODO
 
 ### Step1: Setup
 
-TODO
+curl -sL https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc > bnc && chmod a+x bnc && ./bnc run
 
 ### Step2: Create config files
 
