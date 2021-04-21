@@ -90,11 +90,13 @@ curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machi
 
 Open the config.yaml file in the config directory with your favorite editor.
 
-In the chaincode section, notice we have attribute `root_path_chaincode: "volume_chaincode"`
+In the chaincode section, notice we have this attribute `root_path_chaincode: "volume_chaincode"`
 
 Instead of `_volume_chaincode_` put the absolute path to the folder e.g. `root_path_chaincode: "/home/ubuntu/bnc-hlf/tests/chaincode/"`
 
 Notice we have : _path_chaincode: "abstore"_ which is the folder containing your .go files.
+
+Notice we have : _lang_chaincode_ if chaincode is in golang leave it to "golang", if it is in nodeJS put: "node"
 
 
 #### Step3: Build and run your app with BNC
