@@ -66,6 +66,53 @@ It will deploy the default absotre chaincode embedded in the image.
 bnc clear
 ````
 
+### Run and Configure BNC with your own chaincode
+
+In this section we will explain how to provide your own chaincode.
+
+We will be running a single org on a single machine.
+
+#### Step1: Create config files
+
+````aidl
+mkdir config
+````
+
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > $PWD/config/config.yaml
+````
+
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > $PWD/config/config-hosts.yaml
+````
+
+#### Step2: Configure your own chaincode
+
+Open the config.yaml file in the config directory with your favorite editor.
+
+In the chaincode section, notice we have attribute `root_path_chaincode: "volume_chaincode"`
+
+Instead of `_volume_chaincode_` put the absolute path to the folder e.g. `root_path_chaincode: "/home/ubuntu/bnc-hlf/tests/chaincode/"`
+
+Notice we have : _path_chaincode: "abstore"_ which is the folder containing your .go files.
+
+
+#### Step3: Build and run your app with BNC
+
+````aidl
+bnc run --config-folder $PWD/config
+````
+
+The command above will start a single organization with single peer and orderer.
+
+It will deploy the default absotre chaincode embedded in the image.
+
+**Clear BNC:**
+
+````aidl
+bnc clear
+````
+
 
 ## Process overview (two orgs example) :bulb:
 
