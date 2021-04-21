@@ -47,7 +47,7 @@ export class Chaincode {
         this.container = await this.docker.getContainer(`cli.${name}`)
     }
 
-    async checkCommitReadiness(arg, targets, sequence, nameChannel, privateCollection, endorsement?): Promise <boolean> {
+    async checkCommitReadiness(arg, targets, sequence, nameChannel, privateCollection, env, path, endorsement?): Promise <boolean> {
         try {
             const cmd = ["/bin/bash", this.scriptsPath+'/commit.sh', `${arg}`, `${targets}`]
             let envArray = [
@@ -61,6 +61,8 @@ export class Chaincode {
             }
             if(privateCollection != null){
                 envArray.push(`PRIVATE_COLLECTION=${privateCollection}`)
+                envArray.push(`CC_ENV_PATH=${env}`)
+                envArray.push(`CC_PATH=${path}`)
             }
             let res = await this.executeCommand(cmd, envArray);
             console.log(res)
@@ -106,7 +108,7 @@ export class Chaincode {
         }
     }
 
-    async approve(sequence, channelName, privateCollection, endorsement?): Promise <boolean> {
+    async approve(sequence, channelName, privateCollection, env, path, endorsement?): Promise <boolean> {
         try {
             const cmd = ["/bin/bash", this.scriptsPath+"/approve.sh"]
             let envArray = [
@@ -120,6 +122,9 @@ export class Chaincode {
             }
             if(privateCollection != null){
                 envArray.push(`PRIVATE_COLLECTION=${privateCollection}`)
+                envArray.push(`CC_ENV_PATH=${env}`)
+                envArray.push(`CC_PATH=${path}`)
+
             }
             let res = await this.executeCommand(cmd, envArray);
             console.log(res)

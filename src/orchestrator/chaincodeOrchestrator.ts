@@ -137,13 +137,13 @@ export class ChaincodeOrchestrator {
             }
         }
         if(!policy){
-            await chaincode.approve(finalSequence, config.channelName, privateCollection);
+            await chaincode.approve(finalSequence, config.channelName, privateCollection, config.chaincodeEnv, config.chaincodePath);
         }else{
             if(! config.endorsementPolicy){
                 e('NO POLICY WAS DEFINED');
                 return
             }
-            await chaincode.approve(finalSequence, config.channelName, privateCollection, config.endorsementPolicy);
+            await chaincode.approve(finalSequence, config.channelName, privateCollection,config.chaincodeEnv, config.chaincodePath, config.endorsementPolicy);
         }
     }
 
@@ -176,13 +176,13 @@ export class ChaincodeOrchestrator {
         }
 
         if(!policy){
-            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, privateCollection);
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, privateCollection, config.chaincodeEnv, config.chaincodePath);
         } else {
             if(! config.endorsementPolicy){
                 e('NO POLICY DEFINED');
                 return
             }
-            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, privateCollection, config.endorsementPolicy);
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, privateCollection, config.chaincodeEnv, config.chaincodePath, config.endorsementPolicy);
         }
     }
 
