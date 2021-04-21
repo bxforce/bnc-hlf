@@ -99,13 +99,21 @@ Notice we have : _path_chaincode: "abstore"_ which is the folder containing your
 
 #### Step3: Build and run your app with BNC
 
+The following command will start the network and deploy the chaincode
+
 ````aidl
 bnc run --config-folder $PWD/config
 ````
 
-The command above will start a single organization with single peer and orderer.
+If you want to start your network first, and deploy your chaincode seperately, you can do it like this:
 
-It will deploy the default absotre chaincode embedded in the image.
+````aidl
+bnc run --no-chaincode --config-folder $PWD/config
+````
+
+````aidl
+bnc run chaincode deploy --config-folder $PWD/config
+````
 
 **Clear BNC:**
 
