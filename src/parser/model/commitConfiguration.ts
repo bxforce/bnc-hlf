@@ -29,6 +29,7 @@ export class commitOptions {
     chaincodePath: string;
     version: string;
     endorsementPolicy?: string;
+    privateData?: string;
 }
 
 export class CommitConfiguration {
@@ -43,7 +44,8 @@ export class CommitConfiguration {
                 public chaincodeEnv: string,
                 public chaincodePath: string,
                 public version: string,
-                public endorsementPolicy?: string) {
+                public endorsementPolicy?: string,
+                public privateData?: string) {
         this.networkRootPath = networkRootPath;
         this.channelName = channelName;
         this.chaincodeName = chaincodeName;
@@ -53,5 +55,6 @@ export class CommitConfiguration {
         this.chaincodePath = chaincodePath && chaincodePath.length > 0 ? chaincodePath : CHAINCODE_DEFAULT_CHAINCODE_PATH;
         this.version = version;
         this.endorsementPolicy = endorsementPolicy;
+        this.privateData = privateData;
     }
 }
