@@ -114,10 +114,6 @@ export class CLI {
     await Orchestrator.stopHlfServices(forceRemove, deployConfigPath, hostsConfigPath);
     l('Blockchain stopped !!!');
   }
-
-  static async cleanNetwork(deployConfigPath: string, hostsConfigPath: string, forceRemove: boolean) {
-    await Orchestrator.cleanDocker(forceRemove, deployConfigPath, hostsConfigPath);
-  }
   
   
   static async generateNewOrgDefinition(deployConfigPath: string, hostsConfigPath: string, addOrderer?) {

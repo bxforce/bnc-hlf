@@ -17,36 +17,63 @@ We will be using the following files to run two org:
 * [config-hosts.yaml](https://github.com/bxforce/bnc-hlf/tree/master/tests/multi_machine/config-hosts.yaml)         
 
 
-### Run two orgs on two hosts:
+### Install BNC on both hosts:
 First modify the config-hosts and put the ip of both your hosts
 
-In machine1:
-`docker pull bxforce/bnc-hlf:$BNC_HLF_VERSION`
+**In machine1:**
 
-`mkdir multi_machine`
+#### Step1: Install BNC
 
-`export BNC_CONFIG_PATH=$PWD/multi_machine`
+````aidl
+sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
+````
 
-Copy the files under tests/multi_machine in the folder you have just created.
+#### Step2: Create config files
 
-`mkdir -p bin; echo "docker run -it --rm --name bnc-hlf --network bnc_network -v \$BNC_CONFIG_PATH:/bnc/config -v /tmp/hyperledger-fabric-network:/tmp/hyperledger-fabric-network -v volume_chaincode:/bnc/chaincode -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf \$@" > bin/bnc'
-`
+````aidl
+mkdir config
+````
 
-In machine2:
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
+````
 
-`docker pull bxforce/bnc-hlf:$BNC_HLF_VERSION`
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
+````
 
-`mkdir multi_machine`
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/config-hosts.yaml > $PWD/config/config-hosts.yaml
+````
 
-`export BNC_CONFIG_PATH=$PWD/multi_machine`
 
-Copy the files under tests/multi_machine in the folder you have just created.
+**In machine2:**
 
-`mkdir -p bin; echo "docker run -it --rm --name bnc-hlf --network bnc_network -v \$BNC_CONFIG_PATH:/bnc/config -v /tmp/hyperledger-fabric-network:/tmp/hyperledger-fabric-network -v volume_chaincode:/bnc/chaincode -v /var/run/docker.sock:/var/run/docker.sock bnc-hlf \$@" > bin/bnc'
-`
+#### Step1: Install BNC
+
+````aidl
+sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
+````
+
+#### Step2: Create config files
+
+````aidl
+mkdir config
+````
+
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/config-deploy-org2.yaml > $PWD/config/config-deploy-org2.yaml
+````
+
+````aidl
+curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/config-hosts.yaml > $PWD/config/config-hosts.yaml
+````
+### Enroll peers and orderers on org2:
+
+
 Now we will start by generating crypto material for org2:
 
-`./bin/bnc generate -f /bnc/config/config-deploy-org2.yaml -h /bnc/config/config-hosts.yaml`
+`bnc generate -f /bnc/config/config-deploy-org2.yaml -h /bnc/config/config-hosts.yaml`
 
 In machine 1:
 

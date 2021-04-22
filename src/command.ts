@@ -115,20 +115,18 @@ program
   .description('stop the blockchain')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-  //.option('-R, --no-rmi', 'Do not remove docker images'
-      .option('-R, --rmi', 'Do not remove docker images')
+    .option('-R, --rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
     await CLI.stopHlfServices(cmd.config, cmd.hosts, cmd.rmi);
   });
 
 program
-  .command('clear')
+  .command('rm')
     .description('Removes all BNC containers and related volumes and the dev peer images')
   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-  .option('-R, --no-rmi', 'Do not remove docker images')
   .action(async (cmd: any) => {
-    await CLI.cleanNetwork(cmd.config, cmd.hosts, cmd.rmi); // if -R is not passed cmd.rmi is true
+      await CLI.stopHlfServices(cmd.config, cmd.hosts, true);
   });
 
 
@@ -302,7 +300,7 @@ channelCmd
     });
 
 
-const chaincodeCmd = program.command('chaincode');
+const chaincodeCmd = program.command('chaincode') .description('manages deployment of chaincode');
 chaincodeCmd
   .command('install')
   .description('install chaincode')
