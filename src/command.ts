@@ -123,6 +123,7 @@ program
 
 program
   .command('clear')
+    .description('Removes all BNC containers and related volumes and the dev peer images')
   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-R, --no-rmi', 'Do not remove docker images')
@@ -130,8 +131,10 @@ program
     await CLI.cleanNetwork(cmd.config, cmd.hosts, cmd.rmi); // if -R is not passed cmd.rmi is true
   });
 
+
 program
   .command('run')
+    .description('Starts the default network with single organization ')
   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-g, --genesis <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_PATH)
@@ -183,7 +186,7 @@ program
     });
 
 
-const channelCmd = program.command('channel');
+const channelCmd = program.command('channel').description('manages create/join/update channel ');
 channelCmd
   .command('create')
   .description('create channel if it does not exist')
