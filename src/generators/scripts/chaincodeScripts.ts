@@ -134,10 +134,10 @@ approve() {
             peer lifecycle chaincode approveformyorg -o $CORE_ORDERER_ID --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT  --signature-policy "\${ENDORSEMENT}" >&log.txt
         elif [[ -n "\${PRIVATE_COLLECTION}" && -z "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating private data policy___________________"
-            peer lifecycle chaincode approveformyorg -o $CORE_ORDERER_ID --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}"  >&log.txt     
+            peer lifecycle chaincode approveformyorg -o $CORE_ORDERER_ID --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION  >&log.txt     
         elif [[ -n "\${PRIVATE_COLLECTION}" && -n "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating endorsement and private data policy___________________"
-            peer lifecycle chaincode approveformyorg -o $CORE_ORDERER_ID --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}" --signature-policy "\${ENDORSEMENT}" >&log.txt     
+            peer lifecycle chaincode approveformyorg -o $CORE_ORDERER_ID --channelID $CHANNEL_NAME --name $CC_NAME --version $VERSION --package-id $PACKAGE_ID --sequence $SEQUENCE --tls --cafile $CORE_ORDERER_TLS_ROOTCERT --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION --signature-policy "\${ENDORSEMENT}" >&log.txt     
         fi
   fi
   cat log.txt
@@ -172,10 +172,10 @@ checkApprovedForMyOrg() {
             peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT}  --signature-policy "\${ENDORSEMENT}" --output json >&log.txt
         elif [[ -n "\${PRIVATE_COLLECTION}" && -z "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating private data policy___________________"
-            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}"  --output json >&log.txt
+            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION  --output json >&log.txt
         elif [[ -n "\${PRIVATE_COLLECTION}" && -n "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating endorsement and private data policy___________________"
-            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}" --signature-policy "\${ENDORSEMENT}" --output json >&log.txt
+            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION --signature-policy "\${ENDORSEMENT}" --output json >&log.txt
         fi
           
       fi
@@ -268,10 +268,10 @@ checkCommitReadiness() {
             peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT}  --signature-policy "\${ENDORSEMENT}" --output json >&log.txt
         elif [[ -n "\${PRIVATE_COLLECTION}" && -z "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating private data policy___________________"
-            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}"  --output json >&log.txt
+            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION  --output json >&log.txt
         elif [[ -n "\${PRIVATE_COLLECTION}" && -n "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating endorsement and private data policy___________________"
-            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}" --signature-policy "\${ENDORSEMENT}" --output json >&log.txt
+            peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION --signature-policy "\${ENDORSEMENT}" --output json >&log.txt
         fi
         
       fi
@@ -305,10 +305,10 @@ commit() {
             peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE  --signature-policy "\${ENDORSEMENT}" \${PEER_TARGETS} >&log.txt
         elif [[ -n "\${PRIVATE_COLLECTION}" && -z "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating private data policy___________________"
-            peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}"  \${PEER_TARGETS} >&log.txt
+            peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION  \${PEER_TARGETS} >&log.txt
         elif [[ -n "\${PRIVATE_COLLECTION}" && -n "\${ENDORSEMENT}" ]]; then 
             echo "______________________Updating endorsement and private data policy___________________"
-            peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --collections-config "\${CC_ROOT_PATH/CC_ENV_PATH/PRIVATE_COLLECTION}" --signature-policy "\${ENDORSEMENT}" \${PEER_TARGETS} >&log.txt
+            peer lifecycle chaincode commit -o $CORE_ORDERER_ID --tls --cafile \${CORE_ORDERER_TLS_ROOTCERT} --channelID mychannel --name $CC_NAME --version $VERSION --sequence $SEQUENCE --collections-config $CC_ROOT_PATH/$CC_PATH/$PRIVATE_COLLECTION --signature-policy "\${ENDORSEMENT}" \${PEER_TARGETS} >&log.txt
         fi
       
   fi
