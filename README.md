@@ -7,19 +7,13 @@ It supports mainly Hyperledger Blockchain umbrella.
 
 Using BNC everyone can easily:
     
-* Start a network with a configured number of peers/orderers.
-    
-* Deploy your chaincode
-    
-* Upgrade your chaincode
-    
-* Update the endorsement policy of your chaincode
-    
-* Add a new orderer to your running network.
-    
-* Add a new organization
+* Start a network with a configured number of organizations/peers/orderers.
 
-Tested on Ubuntu 20.04 LTS
+* Deploy, configure and channels
+    
+* Deploy, configure and upgrade chaincodes 
+    
+* Add a new organization or a new orderer to the network
 
 ## Prerequisites
 
@@ -39,24 +33,24 @@ sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/
 
 ### Run default demo
 
-The following command will start a network of a single orderer _orderer1.bnc.com_ , a single peer _peer1.org1.bnc.com_ and a ca _ca1_.
+The following command will start a network of a single orderer _orderer1.bnc.com_ , a single peer _peer1.org1.bnc.com_ and a certificate authority _ca1_.
 
-I will also deploy the default chaincode which is the abstore chaincode of fabric-samples.
+It will also deploy the default chaincode  which is the [abstore chaincode](https://github.com/hyperledger/fabric-samples/tree/main/chaincode/abstore) of fabric-samples.
 
-By running the following command without specifying `--config-folder $PWD` it will take the default config files:
-
-[demo files](https://github.com/bxforce/bnc-hlf/tree/master/tests/demo).
-
-We will see how you can use `--config-folder $PWD` to provide your own configuration files.
+To start the network run the following command:
 
 
 ````aidl
 bnc run
 ````
 
+By running the command above without specifying `--config-folder $PWD` it will take the default [config files](https://github.com/bxforce/bnc-hlf/tree/master/tests/demo).
+
+We will see how you can use `--config-folder` to provide your own configuration files.
+
 **Clear BNC:**
 
-The following command will remove all BNC containers and remove the related volumes and the dev-peer images.
+The following command will remove all BNC containers and remove the related volumes.
 
 
 ````aidl
@@ -69,10 +63,6 @@ bnc rm
 
 ````aidl
 curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > config.yaml
-````
-
-````aidl
-curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > config-hosts.yaml
 ````
 
 #### Step2: Build and run your app with BNC
@@ -88,7 +78,7 @@ It will deploy the default absotre chaincode embedded in the image.
 **Clear BNC:**
 
 ````aidl
-bnc rm
+bnc rm --config-folder $PWD
 ````
 
 ### Run and Configure BNC with your own chaincode
@@ -103,10 +93,6 @@ We will be running a single org on a single machine.
 curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > config.yaml
 ````
 
-````aidl
-curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config-hosts.yaml > config-hosts.yaml
-````
-
 #### Step2: Configure your own chaincode
 
 Open the config.yaml file in the config directory with your favorite editor.
@@ -118,6 +104,8 @@ Instead of `_volume_chaincode_` put the absolute path to the folder e.g. `root_p
 Notice we have : _path_chaincode: "abstore"_ which is the folder containing your .go files.
 
 Notice we have : _lang_chaincode_ if chaincode is in golang leave it to "golang", if it is in nodeJS put: "node"
+
+You can override the default chaincode configuration by passing the flag _-c_ as we will show later
 
 
 #### Step3: Build and run your app with BNC
@@ -138,10 +126,50 @@ bnc run  --config-folder $PWD --no-chaincode
 bnc chaincode deploy --config-folder $PWD
 ````
 
+Override the default chaincode configuration:
+
+````aidl
+bnc chaincode deploy --config-folder $PWD -c /bnc/config/config-chaincode.yaml
+````
+
+#### Step4: Check if its working
+
+````aidl
+docker ps
+````
+
+You should be able to see running the orderers/peers configured in the _config.yaml_ file and most importantly you
+
+should be able to see the _dev-peer_ containers of your chaincode.
+
+If you want to test your chaincode do the following: (this is testing fabric-samples abstore)
+
+`docker exec -it cli.org1.bnc.com bash`
+
+ ````shell script
+peer chaincode invoke -o orderer1.bnc.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/org1.bnc.com/orderers/orderer1.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer1.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer1.org1.bnc.com/tls/ca.crt -c '{"Args":["Init","a","100","b","100"]}' --waitForEvent
+````
+
+query chaincode 
+
+ ````shell script
+peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
+````
+
+call the invoke fct to move 10 from a to b
+
+ ````shell script
+peer chaincode invoke -o orderer1.bnc.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/org1.bnc.com/orderers/orderer1.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer1.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer1.org1.bnc.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}' --waitForEvent
+ ````
+
+#### Step5: Clear BNC
+
+The following command will remove all BNC containers and remove the related volumes.
+
 **Clear BNC:**
 
 ````aidl
-bnc rm
+bnc rm --config-folder $PWD
 ````
 
 

@@ -376,7 +376,7 @@ export class Orchestrator {
      * @param deleteVolume
      * @param forceRemove
      */
-    static async stopHlfServices(forceRemove: boolean, deploymentConfigPath: string, hostsConfigPath: string, deleteNetwork: boolean = false, deleteVolume: boolean = false): Promise<boolean> {
+    static async stopHlfServices(deploymentConfigPath: string, hostsConfigPath: string, forceRemove?: boolean): Promise<boolean> {
         try {
             const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
             if (!network) return;
