@@ -48,7 +48,7 @@ By running the command above without specifying `--config-folder $PWD` it will t
 
 We will see how you can use `--config-folder` to provide your own configuration files.
 
-**Clear BNC:**
+**Shutdown network:**
 
 The following command will remove all BNC containers and remove the related volumes.
 
@@ -75,7 +75,7 @@ The command above will start a single organization with single peer and orderer.
 
 It will deploy the default absotre chaincode embedded in the image.
 
-**Clear BNC:**
+**Shutdown network:**
 
 ````aidl
 bnc rm --config-folder $PWD
@@ -144,25 +144,25 @@ should be able to see the _dev-peer_ containers of your chaincode.
 
 If you want to test your chaincode do the following: (this is testing fabric-samples abstore)
 
-`docker exec -it cli.org1.bnc.com bash`
+
 
  ````shell script
-peer chaincode invoke -o orderer1.bnc.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/org1.bnc.com/orderers/orderer1.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer1.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer1.org1.bnc.com/tls/ca.crt -c '{"Args":["Init","a","100","b","100"]}' --waitForEvent
+bnc chaincode invoke --config-folder /home/ubuntu/config -i "Init,a,100,b,100"
 ````
 
 query chaincode 
 
  ````shell script
-peer chaincode query -C mychannel -n mycc -c '{"Args":["query","a"]}'
+bnc chaincode query --config-folder /home/ubuntu/config -i "query,a"
 ````
 
 call the invoke fct to move 10 from a to b
 
  ````shell script
-peer chaincode invoke -o orderer1.bnc.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/org1.bnc.com/orderers/orderer1.bnc.com/msp/tlscacerts/tlsca.bnc.com-cert.pem -C mychannel -n mycc --peerAddresses peer1.org1.bnc.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.bnc.com/peers/peer1.org1.bnc.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}' --waitForEvent
- ````
+bnc chaincode invoke --config-folder /home/ubuntu/config -i "invoke,a,b,10"
+````
 
-#### Step5: Clear BNC
+#### Step5: Shutdown network
 
 The following command will remove all BNC containers and remove the related volumes.
 
@@ -170,27 +170,12 @@ The following command will remove all BNC containers and remove the related volu
 bnc rm --config-folder $PWD
 ````
 
-
-## Process overview (two orgs example) :bulb:
-
-In the process below, we illustrate the process of starting a consortium blockchain with two organizations: org1 and org2.
-
-In this scenario, org1 is the organization in charge of creating the genesis block and the channel. 
-
-In order to generate the genesis block and the channel definition, org2 shares its orderers/peers certificates with org1.
-
-These generated artifacts by org1 are shared with org2.
-
-
-![BNC](/docs/bnc.PNG)
-
-
 ## Tutorials :books:
 * [input files](docs/input.md)
-* [Run two org on a single machine](docs/two-org.md)
-* [Run two org on two machines](docs/two-org.md)
-* [Add orderer to your running organization](docs/two-org.md)
-* [Add new organization to your network](docs/two-org.md)
+* [Run two org on a single machine](docs/two-org-single-machine.md)
+* [Run two org on two machines](docs/two-org-two-machine.md)
+* [Add orderer to your running organization](docs/add-orderer.md)
+* [Add new organization to your network](docs/add-org.md)
 
 
 ## Contributing
