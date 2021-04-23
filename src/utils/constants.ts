@@ -85,7 +85,9 @@ export const UNIX_DOCKER_SOCKET = '/var/run/docker.sock';
 export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
 
 /* default file containing the whole configuration */
-export const CONFIG_DEFAULT_PATH = '/bnc/config/config.yaml';
+//export const CONFIG_DEFAULT_PATH = '/bnc/config/config.yaml';
+export const CONFIG_DEFAULT_FOLDER = '/bnc/config/';
+export const CONFIG_DEFAULT_NAME = 'config.yaml';
 
 export const GENESIS_FILE_NAME = 'genesis.block';
 export const GENESIS_ORDERER_FILE_NAME = 'config_orderer.block';

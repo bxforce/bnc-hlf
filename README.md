@@ -50,7 +50,7 @@ We will see how you can use `--config-folder` to provide your own configuration 
 
 **Shutdown network:**
 
-The following command will remove all BNC containers and remove the related volumes.
+The following command will remove all containers and remove the related volumes.
 
 
 ````aidl
@@ -65,7 +65,7 @@ bnc rm
 curl https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/single_machine/config.yaml > config.yaml
 ````
 
-#### Step2: Build and run your app with BNC
+#### Step2: Build and run your app 
 
 ````aidl
 bnc run --config-folder $PWD 
@@ -81,7 +81,7 @@ It will deploy the default absotre chaincode embedded in the image.
 bnc rm --config-folder $PWD
 ````
 
-### Run and Configure BNC with your own chaincode
+### Run and configure your own chaincode
 
 In this section we will explain how to provide your own chaincode.
 
@@ -108,7 +108,7 @@ Notice we have : _lang_chaincode_ if chaincode is in golang leave it to "golang"
 You can override the default chaincode configuration by passing the flag _-c_ as we will show later
 
 
-#### Step3: Build and run your app with BNC
+#### Step3: Build and run your app
 
 The following command will start the network and deploy the chaincode
 
@@ -129,7 +129,7 @@ bnc chaincode deploy --config-folder $PWD
 Otherwise you can override the default [chaincode configuration](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-chaincode.yaml):
 
 ````aidl
-bnc chaincode deploy --config-folder $PWD -c /bnc/config/config-chaincode.yaml
+bnc chaincode deploy --config-folder $PWD -c config-chaincode.yaml
 ````
 
 #### Step4: Check if its working
@@ -147,31 +147,31 @@ If you want to test your chaincode do the following: (this is testing fabric-sam
 
 
  ````shell script
-bnc chaincode invoke --config-folder /home/ubuntu/config -i "Init,a,100,b,100"
+bnc chaincode invoke --config-folder $PWD -i "Init,a,100,b,100"
 ````
 
 query chaincode 
 
  ````shell script
-bnc chaincode query --config-folder /home/ubuntu/config -i "query,a"
+bnc chaincode query --config-folder $PWD -i "query,a"
 ````
 
 call the invoke fct to move 10 from a to b
 
  ````shell script
-bnc chaincode invoke --config-folder /home/ubuntu/config -i "invoke,a,b,10"
+bnc chaincode invoke --config-folder $PWD -i "invoke,a,b,10"
 ````
 
 #### Step5: Shutdown network
 
-The following command will remove all BNC containers and remove the related volumes.
+The following command will remove all containers and remove the related volumes.
 
 ````aidl
 bnc rm --config-folder $PWD
 ````
 
 ## Tutorials :books:
-* [input files](docs/input.md)
+
 * [Run two org on a single machine](docs/two-org-single-machine.md)
 * [Run two org on two machines](docs/two-org-two-machine.md)
 * [Add orderer to your running organization](docs/add-orderer.md)
