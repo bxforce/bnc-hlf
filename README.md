@@ -161,6 +161,7 @@ These generated artifacts by org1 are shared with org2.
 
 ## Tutorials :books:
 * [input files](docs/input.md)
+* [Run two org on a single machine](docs/two-org.md)
 * [Run two org on two machines](docs/two-org.md)
 
 
