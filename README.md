@@ -163,6 +163,8 @@ These generated artifacts by org1 are shared with org2.
 * [input files](docs/input.md)
 * [Run two org on a single machine](docs/two-org.md)
 * [Run two org on two machines](docs/two-org.md)
+* [Add orderer to your running organization](docs/two-org.md)
+* [Add new organization to your network](docs/two-org.md)
 
 
 ## Contributing
