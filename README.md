@@ -126,7 +126,7 @@ bnc run  --config-folder $PWD --no-chaincode
 bnc chaincode deploy --config-folder $PWD
 ````
 
-Override the default chaincode configuration:
+Otherwise you can override the default [chaincode configuration](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-chaincode.yaml):
 
 ````aidl
 bnc chaincode deploy --config-folder $PWD -c /bnc/config/config-chaincode.yaml
@@ -165,8 +165,6 @@ peer chaincode invoke -o orderer1.bnc.com:7050 --tls --cafile /opt/gopath/src/gi
 #### Step5: Clear BNC
 
 The following command will remove all BNC containers and remove the related volumes.
-
-**Clear BNC:**
 
 ````aidl
 bnc rm --config-folder $PWD
