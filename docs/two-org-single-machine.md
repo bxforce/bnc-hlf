@@ -55,13 +55,13 @@ bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml
 Now we will start by generating crypto material for org1:
 
 ````aidl
-bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -g config-genesis-org1-org2.yaml
+bnc generate --config-folder $PWD/config -f config-deploy-org1.yaml -g config-genesis-org1-org2.yaml
 ````
 
 ### Step4: Start peers/orderers of org2
 
 ````aidl
-bnc start --config-folder $PWD/config -f config-deploy-org2.yaml'
+bnc start --config-folder $PWD/config -f config-deploy-org2.yaml
 ````
 
 ### Step5: Start peers/orderers of org1
@@ -98,21 +98,27 @@ bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -c c
 
 ### Step10: TEST IT :fire:
 
+Org1 will do the first invoke
 
  ````shell script
-bnc chaincode invoke --config-folder /home/ubuntu/config -i "Init,a,100,b,100"
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "Init,a,100,b,100"
 ````
 
 query chaincode 
 
  ````shell script
-bnc chaincode query --config-folder /home/ubuntu/config -i "query,a"
+bnc chaincode query --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "query,a"
 ````
 
 call the invoke fct to move 10 from a to b
 
  ````shell script
-bnc chaincode invoke --config-folder /home/ubuntu/config -i "invoke,a,b,10"
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
+````
+Invoke as org2
+
+ ````shell script
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org2.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
 ````
 
 ### Step11: Shutdown network
