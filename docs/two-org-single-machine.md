@@ -47,7 +47,7 @@ curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/c
 Now we will start by generating crypto material for org2:
 
 ````aidl
-bnc generate --config-folder $PWD/config -f /bnc/config/config-deploy-org2.yaml 
+bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml 
 ````
 
 ### Step3: Enroll peers and orderers of org1
@@ -55,31 +55,31 @@ bnc generate --config-folder $PWD/config -f /bnc/config/config-deploy-org2.yaml
 Now we will start by generating crypto material for org1:
 
 ````aidl
-bnc generate --config-folder $PWD/config -f /bnc/config/config-deploy-org2.yaml -g /bnc/config/config-genesis-org1-org2.yaml
+bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -g config-genesis-org1-org2.yaml
 ````
 
 ### Step4: Start peers/orderers of org2
 
 ````aidl
-bnc start --config-folder $PWD/config -f /bnc/config/config-deploy-org2.yaml'
+bnc start --config-folder $PWD/config -f config-deploy-org2.yaml'
 ````
 
 ### Step5: Start peers/orderers of org1
 
 ````aidl
-bnc start --config-folder $PWD/config -f /bnc/config/config-deploy-org1.yaml
+bnc start --config-folder $PWD/config -f config-deploy-org1.yaml
 ````
 
 ### Step6: Create channel, join the channel and update anchor peer on org1:
 
 ````aidl
-bnc channel deploy --config-folder $PWD/config -f /bnc/config/config-deploy-org1.yaml 
+bnc channel deploy --config-folder $PWD/config -f config-deploy-org1.yaml 
 ````
 
 ### Step7: Join the channel and update anchor peer on org1:
 
 ````aidl
-bnc channel deploy --config-folder $PWD/config -f /bnc/config/config-deploy-org2.yaml --no-create
+bnc channel deploy --config-folder $PWD/config -f config-deploy-org2.yaml --no-create
 ````
 
 ### Step8: Deploy chaincode on org2:
@@ -87,13 +87,13 @@ bnc channel deploy --config-folder $PWD/config -f /bnc/config/config-deploy-org2
 The following command will install + approve + commit chaincode
 
 ````aidl
-bnc chaincode deploy --config-folder $PWD/config -f /bnc/config/config-deploy-org2.yaml -c /bnc/config/config-chaincode.yaml
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -c config-chaincode.yaml
 ````
 
 ### Step9: Deploy chaincode on org1:
 
 ````aidl
-bnc chaincode deploy --config-folder $PWD/config -f /bnc/config/config-deploy-org1.yaml -c /bnc/config/config-chaincode.yaml
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -c config-chaincode.yaml
 ````
 
 ### Step10: TEST IT :fire:
