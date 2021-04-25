@@ -27,11 +27,11 @@ PARAMS=""
 while [ $# -gt 0 ]; do
     key="$1"
     case "$key" in
-        -i|--config-folder)
+        --config-folder)
         shift
         CONFIG_FOLDER="$1"
         ;;
-        -o|--output-folder)
+        --output-folder)
         shift
         OUTPUT_FOLDER="$1"
         ;;
@@ -52,7 +52,7 @@ if [[ "$(docker images -q $BNC_DOCKER_IMAGE 2> /dev/null)" == "" ]] && [[ ! -z "
 fi
 
 ## Create network if needed
-if [[ -z "$(docker network ls -q -f name=$BNC_DOCKER_NETWORK)" ]]; then 
+if [[ -z "$(docker network ls -q -f name=$BNC_DOCKER_NETWORK)" ]]; then
     docker network create --driver=bridge $BNC_DOCKER_NETWORK;
 fi
 
