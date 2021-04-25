@@ -2,10 +2,10 @@
 
 For this tutorial, we will be using these files :
 
-* [config-deploy-org1.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-deploy-org1.yaml)
-* [config-deploy-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-deploy-org2.yaml)
-* [config-genesis-org1-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-genesis-org1-org2.yaml)
-* [config-chaincode.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-chaincode.yaml)
+* [config-deploy-org1.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-deploy-org1.yaml)
+* [config-deploy-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-deploy-org2.yaml)
+* [config-genesis-org1-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-genesis-org1-org2.yaml)
+* [config-chaincode.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-chaincode.yaml)
 
 Check the files to see the configuration of each organization.
 
