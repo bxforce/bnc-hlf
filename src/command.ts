@@ -85,7 +85,7 @@ program
     await CLI.generatePeersCredentials(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null);
     await CLI.generateOrdererCredentials(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null);
     if (cmd.genesis) {
-        await CLI.init(cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx, cmd.batchTimeout, cmd.maxMessageCount, cmd.absoluteMaxBytes, cmd.preferredMaxBytes);
+        await CLI.init(CONFIG_DEFAULT_FOLDER+cmd.genesis, cmd.genesisBlock, cmd.configTx, cmd.anchorTx, cmd.batchTimeout, cmd.maxMessageCount, cmd.absoluteMaxBytes, cmd.preferredMaxBytes);
     }
   });
 

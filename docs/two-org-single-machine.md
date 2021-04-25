@@ -114,3 +114,13 @@ call the invoke fct to move 10 from a to b
  ````shell script
 bnc chaincode invoke --config-folder /home/ubuntu/config -i "invoke,a,b,10"
 ````
+
+### Step11: Shutdown network
+
+ ````shell script
+bnc rm --config-folder /home/ubuntu/config1 -f config-deploy-org1.yaml
+````
+
+ ````shell script
+bnc rm --config-folder /home/ubuntu/config1 -f config-deploy-org2.yaml
+````
