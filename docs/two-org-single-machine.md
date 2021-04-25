@@ -101,32 +101,32 @@ bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -c c
 Org1 will do the first invoke
 
  ````shell script
-bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "Init,a,100,b,100"
+bnc chaincode invoke --config-folder $PWD/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "Init,a,100,b,100"
 ````
 
 query chaincode 
 
  ````shell script
-bnc chaincode query --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "query,a"
+bnc chaincode query --config-folder $PWD/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "query,a"
 ````
 
 call the invoke fct to move 10 from a to b
 
  ````shell script
-bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
+bnc chaincode invoke --config-folder $PWD/config -f config-deploy-org1.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
 ````
 Invoke as org2
 
  ````shell script
-bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org2.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
+bnc chaincode invoke --config-folder $PWD/config -f config-deploy-org2.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
 ````
 
 ### Step11: Shutdown network
 
  ````shell script
-bnc rm --config-folder /home/ubuntu/config1 -f config-deploy-org1.yaml
+bnc rm --config-folder $PWD/config -f config-deploy-org1.yaml
 ````
 
  ````shell script
-bnc rm --config-folder /home/ubuntu/config1 -f config-deploy-org2.yaml
+bnc rm --config-folder $PWD/config -f config-deploy-org2.yaml
 ````
