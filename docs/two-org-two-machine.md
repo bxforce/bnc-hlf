@@ -89,72 +89,117 @@ curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/tw
 
 Now we will start by generating crypto material for org2:
 
-`ssh $SSH_VM2 'bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml'`
+````aidl
+ssh $SSH_VM2 -t 'bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml'
+````
+
 
 ### Step4: Copy necessary certificates from machine2 of org2 to machine1 of org1:
 
-`sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network'`
+````aidl
+sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network; ssh $SSH_VM2 -t 'sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network'
+````
 
 Necessary for creating the configtx.yaml
 
-`mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer3.bnc.com/tls`
+````aidl
+mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer3.bnc.com/tls
+````
 
-`scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer3.bnc.com/tls/server.crt /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer3.bnc.com/tls/server.crt`
+````aidl
+scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer3.bnc.com/tls/server.crt /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer3.bnc.com/tls/server.crt
+````
 
-`mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls`
+````aidl
+mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls
+````
   
-`scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls/server.crt /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls/server.crt`
+````aidl
+scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls/server.crt /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls/server.crt
+````
 
 Necessary for genesis
 
-`scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/msp /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/msp`
+````aidl
+scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/msp /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/msp
+````
 
-`mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com`
+````aidl
+mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com
+````
   
-`scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/msp /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/msp`
+````aidl
+scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/msp /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/msp
+````
 
 This one is necessary for the invoke with CLI
   
-`mkdir -p -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls`
+````aidl
+mkdir -p -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls
+````
 
-`scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt`
+````aidl
+scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt
+````
 
 ### Step5: Enroll peers and orderers on org1:
 
-`bnc generate --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -g config-genesis-org1-org2.yaml`
+````aidl
+bnc generate --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -g config-genesis-org1-org2.yaml
+````
 
 ### Step6: Copy necessary artifacts to machine2:
 
 Now we will copy the peer tls peer cert that we will need for testing the invoke with CLI
 
-`ssh $SSH_VM2 -t 'mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com'`
+````aidl
+ssh $SSH_VM2 -t 'mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com'
+````
 
-`scp -r /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls`
+````aidl
+scp -r /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com/tls
+````
 
-`ssh $SSH_VM2 -t 'mkdir /tmp/hyperledger-fabric-network/artifacts'`
+````aidl
+ssh $SSH_VM2 -t 'mkdir /tmp/hyperledger-fabric-network/artifacts'
+````
 
-`scp -r /tmp/hyperledger-fabric-network/artifacts/* $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts`
+````aidl
+scp -r /tmp/hyperledger-fabric-network/artifacts/* $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts
+````
 
 ### Step7: Start peers and orderers on machine2:
 
-`ssh $SSH_VM2 -t 'bnc start --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml'`
+````aidl
+ssh $SSH_VM2 -t 'bnc start --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml'
+````
 
 ### Step8: Start peers and orderers on machine1:
 
-`bnc start --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml`
+````aidl
+bnc start --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml
+````
 
 ### Step9: Deploy channel by org1:
 
-`bnc channel deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml`
+````aidl
+bnc channel deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml
+````
 
 ### Step10: Join/update anchor peer channel by org2:
 
-`ssh $SSH_VM2 -t 'bnc channel deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml --no-create'`
+````aidl
+ssh $SSH_VM2 -t 'bnc channel deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml --no-create'
+````
 
 ### Step11: Deploy chaincode on org2:
 
-`ssh $SSH_VM2 -t 'bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h /config-hosts.yaml -c config-chaincode.yaml'`
+````aidl
+ssh $SSH_VM2 -t 'bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h /config-hosts.yaml -c config-chaincode.yaml'
+````
 
 ### Step12: Deploy chaincode on org1:
 
-`bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml`
+````aidl
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml
+````
