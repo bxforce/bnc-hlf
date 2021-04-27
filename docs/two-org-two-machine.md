@@ -9,9 +9,9 @@ In order to generate the genesis block and the channel definition, org2 shares i
 These generated artifacts by org1 are shared with org2.
 
 
-![BNC](/docs/bnc.PNG)
+![BNC](/docs/images/bnc.PNG)
 
-## Deploying two organizations on a two machine
+## Deploy two organizations on a two machines
 
 For this tutorial, we will be using these files :
 
@@ -38,9 +38,13 @@ First modify the config-hosts and put the ip of both your hosts
 export SSH_VM2=IP
 ````
 
+Install on the first machine of org1
+
 ````aidl
 sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
 ````
+
+Install on the second machine of org2
 
 ````aidl
 ssh $SSH_VM2 'sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc'
@@ -81,7 +85,7 @@ ssh $SSH_VM2 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/mu
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
+ssh $SSH_VM2 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
 ````
 
 ### Step3: Enroll peers and orderers on org2:
@@ -135,7 +139,7 @@ scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/
 This one is necessary for the invoke with CLI
   
 ````aidl
-mkdir -p -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls
+mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls
 ````
 
 ````aidl
@@ -162,6 +166,10 @@ scp -r /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.
 
 ````aidl
 ssh $SSH_VM2 -t 'mkdir /tmp/hyperledger-fabric-network/artifacts'
+````
+
+````aidl
+sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network; ssh $SSH_VM2 -t 'sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network'
 ````
 
 ````aidl
@@ -203,3 +211,46 @@ ssh $SSH_VM2 -t 'bnc chaincode deploy --config-folder $PWD/config -f config-depl
 ````aidl
 bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml
 ````
+
+### Step13: TEST IT :fire:
+
+Org1 will do the init transaction
+````aidl
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "Init,a,100,b,100"
+````
+
+Query a value:
+
+````aidl
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "query,a"
+````
+
+substract 10 from a:
+
+````aidl 
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
+````
+
+On machine2 of org2 you can invoke:
+````aidl
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org2.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
+````
+
+_Notes:_
+
+If you want to start your network with more than 2 organizations, you just need to modify these files:
+
+Add a new config-deploy.yaml file for your new organization
+
+modify the _config-genesis-org1-org2.yaml_ file to add the informations about your new organization
+
+modify _config-hosts.yaml_ file to add the IP of the host of your new organization and the respective peers/orderers
+
+
+
+
+
+
+
+
+
