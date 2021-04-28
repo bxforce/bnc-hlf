@@ -11,7 +11,7 @@ These generated artifacts by org1 are shared with org2.
 
 ![BNC](/docs/images/bnc.PNG)
 
-## Deploy two organizations on a two machines
+## Deploy two organizations on two machines
 
 For this tutorial, we will be using these files :
 
