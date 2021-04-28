@@ -32,7 +32,7 @@ _NOTE: we will be using ssh to access the second machine and execute our command
 
 First modify the config-hosts and put the ip of both your hosts
 
-#### Step1: Install BNC
+#### Install BNC
 
 ````aidl
 export SSH_VM2=IP
@@ -50,7 +50,7 @@ Install on the second machine of org2
 ssh $SSH_VM2 'sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc'
 ````
 
-#### Step2: Create config files
+#### Create config files
 
 ````aidl
 mkdir config
@@ -88,7 +88,7 @@ ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-
 ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
 ````
 
-### Step3: Enroll peers and orderers on org2:
+### Step1: Enroll peers and orderers on org2:
 
 
 Now we will start by generating crypto material for org2:
@@ -100,7 +100,7 @@ bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -h config-ho
 ````
 
 
-### Step4: Copy necessary certificates from machine2 of org2 to machine1 of org1:
+### Step2: Copy necessary certificates from machine2 of org2 to machine1 of org1:
 
 Because the CA container is creating the _/tmp/hyperledger-fabric-network_ folder with root privilege, we will do the following
 
@@ -153,13 +153,13 @@ mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bn
 scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls/ca.crt
 ````
 
-### Step5: Enroll peers and orderers on org1:
+### Step3: Enroll peers and orderers on org1:
 
 ````aidl
 bnc generate --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -g config-genesis-org1-org2.yaml
 ````
 
-### Step6: Copy necessary artifacts to machine2:
+### Step4: Copy necessary artifacts to machine2:
 
 Now we will copy the peer tls peer cert that we will need for testing the invoke with CLI
 
@@ -183,26 +183,26 @@ sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network; ssh $SSH_VM2 -t 'sudo
 scp -r /tmp/hyperledger-fabric-network/artifacts/* $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts
 ````
 
-### Step7: Start peers and orderers on machine2:
+### Step5: Start peers and orderers on machine2:
 
 On VM2 do : 
 ````aidl
 bnc start --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml
 ````
 
-### Step8: Start peers and orderers on machine1:
+### Step6: Start peers and orderers on machine1:
 
 ````aidl
 bnc start --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml
 ````
 
-### Step9: Deploy channel by org1:
+### Step7: Deploy channel by org1:
 
 ````aidl
 bnc channel deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml
 ````
 
-### Step10: Join/update anchor peer channel by org2:
+### Step8: Join/update anchor peer channel by org2:
 
 On VM2 do :
 
@@ -210,7 +210,13 @@ On VM2 do :
 bnc channel deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml --no-create
 ````
 
-### Step11: Deploy chaincode on org2:
+### Step9: Deploy chaincode on org1:
+
+````aidl
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml
+````
+
+### Step10: Deploy chaincode on org2:
 
 On VM2 do:
 
@@ -218,13 +224,7 @@ On VM2 do:
 bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h /config-hosts.yaml -c config-chaincode.yaml
 ````
 
-### Step12: Deploy chaincode on org1:
-
-````aidl
-bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml
-````
-
-### Step13: TEST IT :fire:
+### TEST IT :fire:
 
 Org1 will do the init transaction
 ````aidl
