@@ -176,7 +176,7 @@ bnc rm --config-folder $PWD
 * [Run two org on two machines](docs/two-org-two-machine.md)
 * [Add orderer to your running organization](docs/add-orderer.md)
 * [Add new organization to your network](docs/add-org.md)
-* [Run external chaincode](docs/two-org-two-machine.md) //change path https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/demo/config-chaincode.yaml
+* [Run external chaincode](docs/external-chaincode.md) 
 
 
 ## Contributing
