@@ -21,6 +21,7 @@ import {Peer} from '../parser/model/peer';
 import {Network} from '../parser/model/network';
 import {ChannelGenerator} from '../generators/artifacts/channelGenerator';
 import {OrgGenerator} from '../generators/artifacts/orgGenerator';
+import {OrdererOrgGenerator} from '../generators/artifacts/ordererOrgGenerator';
 import {ConfigtxYamlGenerator} from '../generators/artifacts/configtxGenerator';
 import {ConnectionProfileGenerator} from '../generators/artifacts/clientGenerator';
 import {d, e, l} from '../utils/logs';
@@ -179,7 +180,7 @@ export class ChannelOrchestrator {
         l(`[Channel] - Exit update channel request (${updated}) !!!`);
     }
     
-    static async generateNewOrgDefinition(deploymentConfigPath: string, hostsConfigPath: string) {
+    static async generateNewOrgDefinition(deploymentConfigPath: string, hostsConfigPath: string, addOrderer?) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         l('Validate input configuration file');
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
@@ -196,6 +197,29 @@ export class ChannelOrchestrator {
         //generate new org definition
         await configTxOrg.generateDefinition();
         await configTxOrg.generateAnchorDefinition();
+        // Generate the ordering organization definition
+        if(addOrderer){
+            const configTxOrdererOrg = new OrdererOrgGenerator('configtx.yaml', path, network,  network.ordererOrganization[0])
+            await configTxOrdererOrg.save();
+            await configTxOrdererOrg.generateDefinition();
+            // Generating new orderer TLS information in JSON format
+            let portOrderer = network.ordererOrganization[0].orderers[0].options.ports[0];
+            let nameOrderer = `${ network.ordererOrganization[0].orderers[0].name}.${network.ordererOrganization[0].orderers[0].options.domainName}`
+            const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
+            let tlsCrt = await getFile(ordererTlsPath);
+            let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
+            const ordererJsonConsenter = {
+                "client_tls_cert": `${ordererTLSConverted}`,
+                "host": `${nameOrderer}`,
+                "port": parseInt(portOrderer),
+                "server_tls_cert": `${ordererTLSConverted}`
+            }
+            //save the file
+            await SysWrapper.createFile(`${getArtifactsPath(path)}/orderer.json`, JSON.stringify(ordererJsonConsenter));
+        }
+
+
+
     }
 
     static async generateCustomChannelDef(deploymentConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName) {
@@ -205,9 +229,41 @@ export class ChannelOrchestrator {
         if (!isNetworkValid) {
             return;
         }
-        const channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+        let channelGenerator;
+        if(channelName){
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        }
+
         try{
             await channelGenerator.generateCustomChannelDef(orgDefinition, anchorDefinition, channelName)
+        }catch(err){
+            e('ERROR generating new channel DEF')
+            e(err)
+            return ;
+        }
+    }
+
+
+    static async addNewOrdererOrganization(deploymentConfigPath: string, hostsConfigPath: string, ordererOrgPath, channelName) {
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        let channelGenerator;
+        if(channelName){
+            channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
+
+        } else {
+            channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
+        }
+
+        try{
+            await channelGenerator.addNewOrdererOrganization(ordererOrgPath, channelName)
         }catch(err){
             e('ERROR generating new channel DEF')
             e(err)
@@ -219,19 +275,19 @@ export class ChannelOrchestrator {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let channelGenerator;
-        if(isAddOrdererReq){
+        if(isAddOrdererReq || isSystemChannel){
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
         } else {
             channelGenerator = new ChannelGenerator(`connection-profile-join-channel-${network.organizations[0].name}.yaml`, path, network);
         }
 
         try{
-            const signature = await channelGenerator.signConfig(channelDef, isAddOrdererReq);
+            const signature = await channelGenerator.signConfig(channelDef, isAddOrdererReq, isSystemChannel);
             //save the sig to a file
             var bufSig = Buffer.from(JSON.stringify(signature));
             let pathSig;
             let currentChannel = isSystemChannel? CHANNEL_RAFT_ID:channelName;
-            if(isAddOrdererReq){
+            if(isAddOrdererReq || isSystemChannel){
                 pathSig = `${getAddOrdererSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
             } else {
                 pathSig = `${getNewOrgRequestSignaturesPath(network.options.networkConfigPath, currentChannel)}/${network.organizations[0].name}_sign.json`
@@ -248,7 +304,7 @@ export class ChannelOrchestrator {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         let  channelGenerator;
-        if(addOrererReq){
+        if(addOrererReq || systemChannel){
             channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
 
         } else {
@@ -274,7 +330,7 @@ export class ChannelOrchestrator {
         }
         try{
             let currentChannel = systemChannel? CHANNEL_RAFT_ID:channelName
-            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, currentChannel, addOrererReq );
+            await channelGenerator.submitChannelUpdate(channelDef, allSignatures, currentChannel, addOrererReq, systemChannel );
         }catch(err){
             e('ERROR submitting channel def')
             e(err)
@@ -282,7 +338,7 @@ export class ChannelOrchestrator {
         }
     }
 
-    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean){
+    static async addOrderer (deploymentConfigPath: string, hostsConfigPath: string, nameOrderer: string, portOrderer: string, nameChannel: string, addTLS?: boolean, addEndpoint?: boolean, systemChannel?: boolean, addOrdererOrg?){
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         const isNetworkValid = network.validate();
@@ -290,17 +346,25 @@ export class ChannelOrchestrator {
             return;
         }
         let channelGenerator;
+        let ordererJsonConsenter;
         channelGenerator = new ChannelGenerator(`connection-profile-orderer-client.yaml`, path, network);
         try{
-            const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
-            let tlsCrt = await getFile(ordererTlsPath);
-            let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
-            const ordererJsonConsenter = {
+            if(!addOrdererOrg){
+                const ordererTlsPath = getOrdererTlsCrt(network.options.networkConfigPath, network.organizations[0].fullName, nameOrderer);
+                let tlsCrt = await getFile(ordererTlsPath);
+                let ordererTLSConverted = Buffer.from(tlsCrt).toString('base64');
+                ordererJsonConsenter = {
                     "client_tls_cert": `${ordererTLSConverted}`,
                     "host": `${nameOrderer}`,
-                    "port": `${portOrderer}`,
+                    "port": parseInt(portOrderer),
                     "server_tls_cert": `${ordererTLSConverted}`
                 }
+            } else {
+                let newOrdererOrgJsonDef = await SysWrapper.readFile(addOrdererOrg);
+                ordererJsonConsenter = JSON.parse(newOrdererOrgJsonDef);
+            }
+
+
             let currentChannelName = systemChannel? CHANNEL_RAFT_ID:nameChannel;
             await channelGenerator.addOrdererToChannel(ordererJsonConsenter, nameOrderer, portOrderer, addTLS, addEndpoint, currentChannelName);
         }catch(err){
