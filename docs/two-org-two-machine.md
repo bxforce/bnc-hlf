@@ -268,10 +268,59 @@ If you want to start your network with more than 2 organizations, you just need 
 * Modify _config-hosts.yaml_ file to add the IP of the host of your new organization and the respective peers/orderers
 
 
+## Change Policy of chaincode :star:
+
+**If an endorsement policy is not explicitly specified during the approval step, the default Endorsement policy "MAJORITY Endorsement"**
+
+After running the tutorial above, the policy is by default the majority. Meaning by default, for a transaction to be considered valid you need to
+
+specify one target peer of each organization.
+
+In order to change policy of your chaincode, you need to specify it in your _config-chaincode.yaml_ using : 
+
+_endorsementPolicy: "OR ('org1MSP.peer','org2MSP.peer')"_
+
+Channel members can approve a chaincode definition with a new endorsement policy and commit it to the channel.
+
+````aidl
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml --policy
+````
+
+````aidl
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml -c config-chaincode.yaml --policy
+````
+
+_Note_:
+
+The _bnc deploy_ command can actually be executed in 3 steps:
+
+````aidl
+bnc chaincode install --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml
+````
+
+````aidl
+bnc chaincode approve --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml --policy
+````
+
+````aidl
+bnc chaincode commit --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml --policy
+````
+
+## Upgrade chaincode :star:
+
+To Upgrade your chaincode you will be using the fabric lifecycle process (install/ approve/ commit)
 
 
+First, modify in _config-chaincode.yaml_ the path to your new chaincode and the version.
 
 
+````aidl
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c config-chaincode.yaml --upgrade
+````
+
+````aidl
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml -c config-chaincode.yaml --upgrade
+````
 
 
 
