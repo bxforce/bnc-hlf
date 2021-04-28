@@ -240,11 +240,11 @@ _Notes:_
 
 If you want to start your network with more than 2 organizations, you just need to modify these files:
 
-Add a new config-deploy.yaml file for your new organization
+* Add a new config-deploy.yaml file for your new organization
 
-modify the _config-genesis-org1-org2.yaml_ file to add the informations about your new organization
+* Modify the _config-genesis-org1-org2.yaml_ file to add the description of your new organization
 
-modify _config-hosts.yaml_ file to add the IP of the host of your new organization and the respective peers/orderers
+* Modify _config-hosts.yaml_ file to add the IP of the host of your new organization and the respective peers/orderers
 
 
 
