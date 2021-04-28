@@ -34,6 +34,8 @@ First modify the config-hosts and put the ip of both your hosts
 
 #### Install 
 
+From VM1 of org1 do the following:
+
 ````aidl
 export SSH_VM2=IP
 ````
@@ -51,6 +53,8 @@ ssh $SSH_VM2 'sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/imp
 ````
 
 #### Create config files
+
+From VM1 of org1 do the following:
 
 ````aidl
 mkdir config
@@ -105,6 +109,8 @@ bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -h config-ho
 Because the CA container is creating the _/tmp/hyperledger-fabric-network_ folder with root privilege, we will do the following
 
 command to be able to copy files between both organizations.
+
+From VM1 of org1 do the following:
 
 ````aidl
 sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network; ssh $SSH_VM2 -t 'sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network'
@@ -162,6 +168,8 @@ bnc generate --config-folder $PWD/config -f config-deploy-org1.yaml -h config-ho
 ### Step4: Copy necessary artifacts to machine2:
 
 Now we will copy the peer tls peer cert that we will need for testing the invoke with CLI
+
+From VM1 of org1 do the following: 
 
 ````aidl
 ssh $SSH_VM2 -t 'mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com/peers/peer0.org1.bnc.com'

@@ -99,7 +99,7 @@ Open the config.yaml file in the config directory with your favorite editor.
 
 In the chaincode section, notice we have this attribute `root_path_chaincode: "volume_chaincode"`
 
-Instead of `_volume_chaincode_` put the absolute path to the folder e.g. `root_path_chaincode: "/home/ubuntu/bnc-hlf/tests/chaincode/"`
+Instead of `_volume_chaincode_` put the absolute path to the folder example: `root_path_chaincode: "/home/ubuntu/bnc-hlf/tests/chaincode/"`
 
 Notice we have : _path_chaincode: "abstore"_ which is the folder containing your .go files.
 
@@ -144,7 +144,7 @@ should be able to see the _dev-peer_ containers of your chaincode.
 
 If you want to test your chaincode do the following: (this is testing fabric-samples abstore)
 
-
+_abstore is just doing init of two variables a,b and then substracting from one or the other a specific value_
 
  ````shell script
 bnc chaincode invoke --config-folder $PWD -i "Init,a,100,b,100"
@@ -176,6 +176,7 @@ bnc rm --config-folder $PWD
 * [Run two org on two machines](docs/two-org-two-machine.md)
 * [Add orderer to your running organization](docs/add-orderer.md)
 * [Add new organization to your network](docs/add-org.md)
+* [Run external chaincode](docs/two-org-two-machine.md) //change path https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/demo/config-chaincode.yaml
 
 
 ## Contributing

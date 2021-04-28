@@ -103,7 +103,7 @@ program
   .option('--enableCA', 'starts the cas also ')
   .action(async cmd => {
       if(cmd.addOrderer){
-          await CLI.startNewOrderer(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, cmd.ordererConfig, cmd.noCli);
+          await CLI.startNewOrderer(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.ordererConfig, cmd.noCli);
       }else{
           await CLI.deployHlfServices(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, !!cmd.skipDownload, true, cmd.orderer, cmd.enableCA);
       }
