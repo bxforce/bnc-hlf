@@ -32,7 +32,7 @@ _NOTE: we will be using ssh to access the second machine and execute our command
 
 First modify the config-hosts and put the ip of both your hosts
 
-#### Install BNC
+#### Install 
 
 ````aidl
 export SSH_VM2=IP
