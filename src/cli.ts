@@ -120,12 +120,18 @@ export class CLI {
   }
   
   
-  static async generateNewOrgDefinition(deployConfigPath: string, hostsConfigPath: string) {
-    await ChannelOrchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath);
+  static async generateNewOrgDefinition(deployConfigPath: string, hostsConfigPath: string, addOrderer?) {
+    await ChannelOrchestrator.generateNewOrgDefinition(deployConfigPath, hostsConfigPath, addOrderer);
   }
 
   static async generateCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, orgDefinition, anchorDefinition, channelName: string) {
-    await ChannelOrchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, channelName);
+      await ChannelOrchestrator.generateCustomChannelDef(deployConfigPath, hostsConfigPath, orgDefinition, anchorDefinition, channelName);
+  }
+
+  static async generateNewGenesis(deployConfigPath: string, hostsConfigPath: string) {
+    //generate the new genesis.block to be used by org3 to bootstrap new orderer
+    // look for config_orderer.block under artifacts
+    await ChannelOrchestrator.generateNewGenesis(deployConfigPath, hostsConfigPath);
   }
 
   static async signCustomChannelDef(deployConfigPath: string, hostsConfigPath: string, channelDef, channelName, isAddOrdererReq, isSystemChannel){
@@ -136,13 +142,23 @@ export class CLI {
     await ChannelOrchestrator.submitCustomChannelDef(deployConfigPath, hostsConfigPath, channelDef, signatures, channelName, addOrdererReq, systemChannel);
   }
 
-  static async addOrderer(deployConfigPath: string, hostsConfigPath: string, nameOrderer, portOrderer, nameChannel, addTLS?, addEndpoint?, systemChannel?){
-    await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, nameOrderer, portOrderer, nameChannel, addTLS, addEndpoint, systemChannel);
+  static async addOrderer(deployConfigPath: string, hostsConfigPath: string, nameOrderer, portOrderer, nameChannel, addTLS?, addEndpoint?, systemChannel?, addOrdererOrg?){
+    await ChannelOrchestrator.addOrderer(deployConfigPath, hostsConfigPath, nameOrderer, portOrderer, nameChannel, addTLS, addEndpoint, systemChannel, addOrdererOrg);
   }
 
-  static async generateNewGenesis(deployConfigPath: string, hostsConfigPath: string, deployOrdererConfigPath: string){
-    await ChannelOrchestrator.generateNewGenesis(deployConfigPath, hostsConfigPath);
-    await Orchestrator.startSingleOrderer(deployOrdererConfigPath, hostsConfigPath);
+  static async addNewOrdererOrganization(deployConfigPath: string, hostsConfigPath: string, ordererOrgPath, nameChannel){
+    await ChannelOrchestrator.addNewOrdererOrganization(deployConfigPath, hostsConfigPath, ordererOrgPath, nameChannel);
+  }
+
+
+
+  static async startNewOrderer(deployConfigPath: string, hostsConfigPath: string, deployOrdererConfigPath: string, noCli){
+    if(noCli){
+      await Orchestrator.startSingleOrderer(deployOrdererConfigPath, hostsConfigPath);
+    } else {
+      await ChannelOrchestrator.generateNewGenesis(deployConfigPath, hostsConfigPath);
+      await Orchestrator.startSingleOrderer(deployOrdererConfigPath, hostsConfigPath);
+    }
   }
 
   /****************************************************************************/
