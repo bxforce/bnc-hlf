@@ -13,7 +13,7 @@ These generated artifacts by org1 are shared with org2.
 
 ## Deploy two organizations on two machines
 
-For this tutorial, we will be using these files :
+For this tutorial, each organization will be deployed on one machine and we will be using these files :
 
 * [config-deploy-org1.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-deploy-org1.yaml)
 * [config-deploy-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-deploy-org2.yaml)
@@ -93,18 +93,25 @@ ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-
 
 Now we will start by generating crypto material for org2:
 
+On VM2 do :
+
 ````aidl
-ssh $SSH_VM2 -t 'bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml'
+bnc generate --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml
 ````
 
 
 ### Step4: Copy necessary certificates from machine2 of org2 to machine1 of org1:
 
+Because the CA container is creating the _/tmp/hyperledger-fabric-network_ folder with root privilege, we will do the following
+
+command to be able to copy files between both organizations.
+
 ````aidl
 sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network; ssh $SSH_VM2 -t 'sudo chown -R $USER:$USER /tmp/hyperledger-fabric-network'
 ````
+Next we will be copying from _org2_ the necessary certificates to _org1_ in order to generate the artifacts.
 
-Necessary for creating the configtx.yaml
+Copy orderers TLS certificates, necessary for creating the configtx.yaml
 
 ````aidl
 mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer3.bnc.com/tls
@@ -122,7 +129,7 @@ mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2
 scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls/server.crt /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/orderers/orderer4.bnc.com/tls/server.crt
 ````
 
-Necessary for genesis
+Copy the org2 MSP folder, Necessary for genesis creation
 
 ````aidl
 scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/msp /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org2.bnc.com/msp
@@ -136,7 +143,7 @@ mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bn
 scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/msp /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/msp
 ````
 
-This one is necessary for the invoke with CLI
+Copy peers certificates. This one is necessary for the invoke with CLI
   
 ````aidl
 mkdir -p /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com/peers/peer0.org2.bnc.com/tls
@@ -178,8 +185,9 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/* $SSH_VM2:/tmp/hyperledger-fab
 
 ### Step7: Start peers and orderers on machine2:
 
+On VM2 do : 
 ````aidl
-ssh $SSH_VM2 -t 'bnc start --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml'
+bnc start --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml
 ````
 
 ### Step8: Start peers and orderers on machine1:
@@ -196,14 +204,18 @@ bnc channel deploy --config-folder $PWD/config -f config-deploy-org1.yaml -h con
 
 ### Step10: Join/update anchor peer channel by org2:
 
+On VM2 do :
+
 ````aidl
-ssh $SSH_VM2 -t 'bnc channel deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml --no-create'
+bnc channel deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml --no-create
 ````
 
 ### Step11: Deploy chaincode on org2:
 
+On VM2 do:
+
 ````aidl
-ssh $SSH_VM2 -t 'bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h /config-hosts.yaml -c config-chaincode.yaml'
+bnc chaincode deploy --config-folder $PWD/config -f config-deploy-org2.yaml -h /config-hosts.yaml -c config-chaincode.yaml
 ````
 
 ### Step12: Deploy chaincode on org1:
@@ -232,6 +244,7 @@ bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org1.y
 ````
 
 On machine2 of org2 you can invoke:
+
 ````aidl
 bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org2.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
 ````
