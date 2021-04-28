@@ -57,19 +57,19 @@ mkdir config
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
 ````
 
 ````aidl
@@ -77,15 +77,15 @@ ssh $SSH_VM2 'mkdir config'
 ````
 
 ````aidl
-ssh $SSH_VM2 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-deploy-org2.yaml > $PWD/config/config-deploy-org2.yaml'
+ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-deploy-org2.yaml > $PWD/config/config-deploy-org2.yaml'
 ````
 
 ````aidl
-ssh $SSH_VM2 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml'
+ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml'
 ````
 
 ````aidl
-ssh $SSH_VM2 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
+ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
 ````
 
 ### Step3: Enroll peers and orderers on org2:
