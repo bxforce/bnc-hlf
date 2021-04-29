@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 import { Organization } from '../parser/model/organization';
+import { OrdererOrganization } from '../parser/model/ordererOrganization';
 import { Network } from '../parser/model/network';
 import { IEnrollResponse } from 'fabric-ca-client';
 
@@ -26,15 +27,24 @@ export class DockerComposeYamlOptions {
   networkRootPath: string;
   composeNetwork: string;
   org: Organization;
+  ord?: OrdererOrganization;
   hosts;
   envVars?: {
     FABRIC_VERSION?: string;
     FABRIC_CA_VERSION?: string;
     THIRDPARTY_VERSION?: string;
   };
+  cliBuildersScriptsRootPath?: string;
   cliChaincodeRootPath?: string;
-  cliScriptsRootPath?: string;
   command?: string;
+  singleOrderer?: boolean;
+}
+
+export class ConfigTxBatchOptions {
+  batchTimeout?: string;
+  maxMessageCount?: string;
+  absoluteMaxBytes?: string;
+  preferredMaxBytes?:string
 }
 
 export class CSR {

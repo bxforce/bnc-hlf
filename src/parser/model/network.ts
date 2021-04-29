@@ -39,7 +39,7 @@ export class Network {
   organizations: Organization[] = [];
   channel: Channel;
   hosts: string[]; //added this for extra host section in docker-compose
-  ordererOrganization?: OrdererOrganization; /* This ca will be used to generate only orderer msp */
+  ordererOrganization?: OrdererOrganization[] = []; /* This ca will be used to generate only orderer msp */
   
   constructor(public path: string, public options: NetworkOptions) {}
 

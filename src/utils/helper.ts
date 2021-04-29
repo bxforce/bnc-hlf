@@ -88,6 +88,11 @@ export namespace Utils {
 
   }
 
+  export function getOrdererMspRootPath(rootPath: string, orgName: string, orderer: Orderer): string {
+    return `${rootPath}/organizations/ordererOrganizations/${orgName}/orderers/${orderer.fullName}/msp`;
+
+  }
+
   /**
    * Return Orderer Entity MSP Path
    * @param rootPath
@@ -96,6 +101,14 @@ export namespace Utils {
    */
   export function getOrdererTlsPath(rootPath: string, ordererOrganization: OrdererOrganization, orderer: Orderer): string {
     return `${rootPath}/organizations/ordererOrganizations/${ordererOrganization?.domainName}/orderers/${orderer.fullName}/tls`;
+  }
+
+  export function getOrdererTlsRootPath(rootPath: string, orgName: string, orderer: Orderer): string {
+    return `${rootPath}/organizations/ordererOrganizations/${orgName}/orderers/${orderer.fullName}/tls`;
+  }
+
+  export function getOrdererTlsCrt(rootPath: string, orgName: string, nameOrderer: string): string {
+    return `${rootPath}/organizations/ordererOrganizations/${orgName}/orderers/${nameOrderer}/tls/server.crt`;
   }
 
   /**
@@ -114,6 +127,10 @@ export namespace Utils {
   export function getDockerComposePath(rootPath: string): string {
     return `${rootPath}/docker-compose`;
   }
+  
+  export function getScriptsPath(rootPath: string): string {
+    return `${rootPath}/scripts`;
+  }
 
   export function getPropertiesPath(rootPath: string): string {
     return `${rootPath}/settings`;
@@ -127,8 +144,17 @@ export namespace Utils {
     return `${rootPath}/artifacts/${channelName}/requestNewOrg`;
   }
 
+  export function getAddOrdererRequestPath(rootPath: string, channelName: string): string {
+    return `${rootPath}/artifacts/${channelName}/addOrderer`;
+  }
+
   export function getNewOrgRequestSignaturesPath(rootPath: string, channelName: string): string {
     return `${rootPath}/artifacts/${channelName}/requestNewOrg/signatures`;
+  }
+
+
+  export function getAddOrdererSignaturesPath(rootPath: string, channelName: string): string {
+    return `${rootPath}/artifacts/${channelName}/addOrderer/signatures`;
   }
   
   /*

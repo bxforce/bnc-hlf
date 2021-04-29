@@ -25,19 +25,27 @@ import {DockerComposeCaGenerator} from '../generators/docker-compose/dockerCompo
 import {DockerComposeCaOrdererGenerator} from '../generators/docker-compose/dockerComposeCaOrderer.yaml';
 import {DockerComposePeerGenerator} from '../generators/docker-compose/dockerComposePeer.yaml';
 import {DockerComposeOrdererGenerator} from '../generators/docker-compose/dockerComposeOrderer.yaml';
+import {DockerComposeCli} from '../generators/docker-compose/dockerComposeCli.yaml';
+import {ChaincodeScriptsGenerator} from '../generators/scripts/chaincodeScripts';
+import {BuildersScriptsGenerator} from '../generators/scripts/buildersScripts';
 import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
+import {CoreGenerator} from '../generators/utils/coreGenerator.yaml';
 import {DockerComposeYamlOptions} from '../utils/datatype';
+import {ConfigTxBatchOptions} from '../utils/datatype';
 import {d, e, l} from '../utils/logs';
 import {DockerEngine} from '../utils/dockerAgent';
 import {Utils} from '../utils/helper';
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getDockerComposePath = Utils.getDockerComposePath;
+import getScriptsPath = Utils.getScriptsPath;
 import { SysWrapper } from '../utils/sysWrapper';
 import {
     BNC_NETWORK,
     DEFAULT_CA_ADMIN,
     HLF_DEFAULT_VERSION,
-    NETWORK_ROOT_PATH
+    NETWORK_ROOT_PATH,
+    ENABLE_CONTAINER_LOGGING,
+    BATCH_DEFAULT_PARAMS
 } from '../utils/constants';
 import { Helper } from './helper';
 
@@ -54,13 +62,19 @@ export class Orchestrator {
      * Generate the Genesis template file
      * @param configGenesisFilePath
      */
-    static async generateGenesis(configGenesisFilePath: string) {
+    static async generateGenesis(configGenesisFilePath: string, batchTimeout?: string, maxMessageCount?: string, absoluteMaxBytes?: string, preferredMaxBytes?:string) {
         const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
-
+        const options : ConfigTxBatchOptions ={
+            batchTimeout: batchTimeout? batchTimeout: BATCH_DEFAULT_PARAMS.batchTimeout,
+            maxMessageCount: maxMessageCount? maxMessageCount: BATCH_DEFAULT_PARAMS.maxMessageCount,
+            absoluteMaxBytes: absoluteMaxBytes? absoluteMaxBytes: BATCH_DEFAULT_PARAMS.absoluteMaxBytes,
+            preferredMaxBytes: preferredMaxBytes? preferredMaxBytes: BATCH_DEFAULT_PARAMS.preferredMaxBytes
+        }
+       
         l('[genesis]: start generating genesis block...');
-        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network, options);
         await configTx.save();
         const gen = await configTx.generateGenesisBlock();
 
@@ -71,13 +85,19 @@ export class Orchestrator {
      * Generate the anchor peer update
      * @param configGenesisFilePath
      */
-    static async generateAnchorPeer(configGenesisFilePath: string) {
+    static async generateAnchorPeer(configGenesisFilePath: string, batchTimeout?: string, maxMessageCount?: string, absoluteMaxBytes?: string, preferredMaxBytes?:string) {
         const network: Network = await Helper._parseGenesis(configGenesisFilePath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
-
+        const options : ConfigTxBatchOptions ={
+            batchTimeout: batchTimeout? batchTimeout: BATCH_DEFAULT_PARAMS.batchTimeout,
+            maxMessageCount: maxMessageCount? maxMessageCount: BATCH_DEFAULT_PARAMS.maxMessageCount,
+            absoluteMaxBytes: absoluteMaxBytes? absoluteMaxBytes: BATCH_DEFAULT_PARAMS.absoluteMaxBytes,
+            preferredMaxBytes: preferredMaxBytes? preferredMaxBytes: BATCH_DEFAULT_PARAMS.preferredMaxBytes
+        }
+       
         l('[anchor peer]: start generating anchor peer update...');
-        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network);
+        const configTx = new ConfigtxYamlGenerator('configtx.yaml', path, network, options);
         const gen = await configTx.generateAnchorPeer(network.channel.name);
 
         l(`[anchor peer]: anchor peer generated --> ${gen} !!!`);
@@ -134,12 +154,13 @@ export class Orchestrator {
         l('[Peer Cred]: start CA container...');
         const ca = new DockerComposeCaGenerator(`docker-compose-ca-${network.organizations[0].name}.yaml`, path, network, options, engine);
         await ca.save();
-        const caStarted = await ca.startOrgCa();
+       const caStarted = await ca.startOrgCa();
         if (!caStarted) {
             e('[Peer Cred]: Error while starting the Organization CA container !!!');
             return;
         }
         l(`[Peer Cred]: CA container started (${caStarted}) !!!`);
+
 
         l(`[Peer Cred]: start create peer crypto & certs credentials...`);
         const orgCertsGenerator = new OrgCertsGenerator(`connection-profile-ca-${network.organizations[0].name}-client.yaml`, path, network, options);
@@ -173,10 +194,10 @@ export class Orchestrator {
      * Generate Crypto & Certificates credentials for orderers
      * @param genesisFilePath
      */
-    static async generateOrdererCredentials(genesisFilePath: string) {
+    static async generateOrdererCredentials(genesisFilePath: string, hostsConfigPath: string) {
         // TODO check if files exists already for the same orderers/organizations
         l('[Orderer Cred]: start parsing...');
-        const network = await Helper._parseGenesis(genesisFilePath);
+        const network = await Helper._parse(genesisFilePath, hostsConfigPath);
         if (!network) return;
         const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
         await SysWrapper.createFolder(path);
@@ -187,35 +208,48 @@ export class Orchestrator {
             e('[Orderer Cred]: input file contains invalid parameters !!! ');
             return;
         }
-
-        l('[Orderer Cred]: configure local docker engine to be used for the generation process !!!');
         const options: DockerComposeYamlOptions = {
             networkRootPath: path,
             composeNetwork: BNC_NETWORK,
-            org: null,
+            org: network.organizations[0],
+            ord: network.ordererOrganization[0],
             hosts: []
         };
-        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
-        await engine.createNetwork({Name: options.composeNetwork});
-        l('[Orderer Cred]: docker engine configured !!!');
+        if (network.ordererOrganization[0].ca.options.isOrgCA == false){
+            l('[Orderer Cred]: configure local docker engine to be used for the generation process !!!');
 
-        l('[Orderer Cred]: start CA container...');
-        const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
-        await ca.save();
-        const caStarted = await ca.startOrdererCa();
-        if (!caStarted) {
-            e('[Orderer Cred]: Error while starting the orderer CA container !!!');
-            return;
+            const engine = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
+            await engine.createNetwork({Name: options.composeNetwork});
+            l('[Orderer Cred]: docker engine configured !!!');
+
+            l('[Orderer Cred]: start CA container...');
+            const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
+            await ca.save();
+            const caStarted = await ca.startOrdererCa();
+            if (!caStarted) {
+                e('[Orderer Cred]: Error while starting the orderer CA container !!!');
+                return;
+            }
+            l(`[Orderer Cred]: CA container started (${caStarted}) !!!`);
+
+            l('[Orderer Cred]: start generating credentials...');
+            const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
+                path,
+                network,
+                options,
+                {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
+            const isGenerated = await ordererGenerator.buildCertificate();
+            l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
+        } else {
+            l('[Orderer Cred]: Generate orderer certs by the organization CA');
+            l('[Orderer Cred]: start generating credentials...');
+            const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
+                path,
+                network,
+                options,
+                {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
+            const isGenerated = await ordererGenerator.buildCertificateWithORGCA();
         }
-        l(`[Orderer Cred]: CA container started (${caStarted}) !!!`);
-
-        l('[Orderer Cred]: start generating credentials...');
-        const ordererGenerator = new OrdererCertsGenerator('connection-profile-orderer-client.yaml',
-            path,
-            network,
-            {name: DEFAULT_CA_ADMIN.name, password: DEFAULT_CA_ADMIN.password});
-        const isGenerated = await ordererGenerator.buildCertificate();
-        l(`[Orderer Cred]: credentials generated --> (${isGenerated}) !!!`);
     }
 
     
@@ -228,14 +262,14 @@ export class Orchestrator {
      * @param enablePeers
      * @param enableOrderers
      */
-    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true) {
+    static async deployHlfServices(deploymentConfigPath: string, hostsConfigPath: string, skipDownload = false, enablePeers = true, enableOrderers = true, enableCA?: boolean) {
         const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
         if (!network) return;
         const isNetworkValid = network.validate();
         if (!isNetworkValid) {
             return;
         }
-        const organization: Organization = network.organizations[0];
+       const organization: Organization = network.organizations[0];
         l('[End] Blockchain configuration files parsed');
 
         // Assign & check root path
@@ -254,7 +288,8 @@ export class Orchestrator {
                 FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
                 FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
                 THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
-            }
+            },
+            cliBuildersScriptsRootPath: getScriptsPath(path)+'/builders'
         };
 
         l('Creating Peer base docker compose file');
@@ -265,6 +300,14 @@ export class Orchestrator {
         // TODO use localhost and default port for the default engine
         const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
         await engine.createNetwork({Name: options.composeNetwork});
+
+        l('Creating Peer config');
+        const coreGenerator = new CoreGenerator(`base/core.yaml`, getDockerComposePath(options.networkRootPath));
+        coreGenerator.generate();
+
+        l('Creating Chaincode scripts');
+        (new ChaincodeScriptsGenerator(getScriptsPath(options.networkRootPath))).generate();
+        (new BuildersScriptsGenerator(getScriptsPath(options.networkRootPath)+'/builders')).generate();
 
         if (enablePeers) {
             l('Creating Peer container & deploy');
@@ -282,6 +325,70 @@ export class Orchestrator {
             const ordererStarted = await ordererGenerator.startOrderers();
             l(`Orderers started (${ordererStarted})`);
         }
+        if(enableCA){
+            // star cli also !
+            l('Start CA org');
+            const ca = new DockerComposeCaGenerator(`docker-compose-ca-${network.organizations[0].name}.yaml`, path, network, options, engine);
+            const caStarted = await ca.startOrgCa();
+            //start cli using the engine here and not using the generator under docker compose so we dnt have to pass chaincode commit file
+            l('starting cli container');
+            const serviceName =  `cli.${options.org.fullName}`;
+            l(`Starting CLI ${serviceName}...`);
+            await engine.composeOne(serviceName, { cwd: getDockerComposePath(path), config:  `docker-compose-cli-${options.org.name}.yaml`, log: ENABLE_CONTAINER_LOGGING });
+            l(`Service CLI ${serviceName} started successfully !!!`);
+            if (network.ordererOrganization[0].ca.options.isOrgCA == false){
+                //start CA orderer
+                l('Start CA orderer');
+                const ca = new DockerComposeCaOrdererGenerator('docker-compose-ca-orderer.yaml', path, network, options, engine);
+                const caStarted = await ca.startOrdererCa();
+            }
+        }
+
+    }
+
+    static async startSingleOrderer(deploymentConfigPath: string, hostsConfigPath: string) {
+        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
+        if (!network) return;
+        const isNetworkValid = network.validate();
+        if (!isNetworkValid) {
+            return;
+        }
+        const organization: Organization = network.organizations[0];
+        l('[End] Blockchain configuration files parsed');
+
+        // Assign & check root path
+        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+        await SysWrapper.createFolder(path);
+
+        // Auto-create docker-compose folder if not exists
+        await SysWrapper.createFolder(getDockerComposePath(path));
+
+        const options: DockerComposeYamlOptions = {
+            networkRootPath: path,
+            composeNetwork: BNC_NETWORK,
+            org: network.organizations[0],
+            hosts: network.hosts,
+            envVars: {
+                FABRIC_VERSION: HLF_DEFAULT_VERSION.FABRIC,
+                FABRIC_CA_VERSION: HLF_DEFAULT_VERSION.CA,
+                THIRDPARTY_VERSION: HLF_DEFAULT_VERSION.THIRDPARTY
+            },
+            singleOrderer: true
+        };
+
+        l('Creating Docker network');
+        // TODO use localhost and default port for the default engine
+        const engine = new DockerEngine({socketPath: '/var/run/docker.sock'});
+        await engine.createNetwork({Name: options.composeNetwork});
+
+        l('Starting a single orderer')
+        let nameOrderer = network.organizations[0].orderers[0].name;
+        const ordererGenerator = new DockerComposeOrdererGenerator(`docker-compose-${nameOrderer}-${organization.name}.yaml`, options, engine);
+        await ordererGenerator.createTemplateOrderers();
+        const ordererStarted = await ordererGenerator.startOrderers();
+        l(`Orderers started (${ordererStarted})`);
+
+
     }
 
     /**
@@ -298,52 +405,37 @@ export class Orchestrator {
 
             // loop on organization & peers && orderers
             for (const org of network.organizations) {
-                
-                // build list of docker services/volumes to delete
+                // build list of docker volumes to delete
                 const volumes: string[] = [];
-                const services: string[] = [];
                 
                 for (const peer of org.peers) {
-                    services.push(`${peer.name}.${org.fullName}`);
-                    services.push(`${peer.name}.${org.fullName}.couchdb`);
-                    volumes.push(`${peer.name}.${org.fullName}`);
-                    
-                    //remove chaincode containers
-                    services.push(`dev-${peer.name}.${org.fullName}`) // FIX this
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.fabric`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.root`);
+                    volumes.push(`docker-compose_${peer.name}.${org.fullName}.couchdb`);
                 }
                 
                 for (const orderer of org.orderers) {
-                    services.push(`${orderer.name}.${org.domainName}`);
-                    volumes.push(`${orderer.name}.${org.domainName}`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}.fabric`);
+                    volumes.push(`docker-compose_${orderer.name}.${org.domainName}.root`);
                 }
-                
-                services.push(`${org.ca.name}.${org.name}`);
-                
-                services.push(`${network.ordererOrganization.caName}`);
+                volumes.push(`docker-compose_cli.${org.fullName}`)
 
-                //remove all cli containers
-                services.push(`cli.${org.fullName}`)
+                const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
+                let removeAll = forceRemove? true:false;
 
-                // Now check all container within all organization engine
-                for (const engine of org.engines) {
-                    const docker = new DockerEngine({socketPath: '/var/run/docker.sock'}); // TODO configure local docker remote engine
-                    const containerDeleted = await docker.stopContainerList(services, forceRemove);
-                    if (!containerDeleted) {
-                        e('Error while deleting the docker container for peer & orderer');
-                        return false;
-                    }
-
-                    // delete the network
-                    if (deleteNetwork) {
-                        // TODO API to delete network not yet implemented
-                    }
-
-                    if (deleteVolume) {
-                        // TODO API to delete volumes not yet implemented
-                    }
+                const containerDeleted = await docker.stopAllContainers(removeAll);
+                if (!containerDeleted) {
+                    e('Error while deleting the docker container for peer & orderer');
+                    return false;
+                }
+                if(removeAll){
+                    await docker.deleteVolumesList(volumes) // TODO remove forceRemove arg
+                    //also remove unwanted images starting with dev-peer !
+                    await docker.deleteDevPeerImages();
                 }
             }
-
             return true;
         } catch (err) {
             e(err);

@@ -37,23 +37,13 @@ export class GenesisParser extends BaseParser {
         const parsedYaml = await this.parseRaw();
         const genesisBlock = parsedYaml['genesis'];
 
-        const {template_folder, consensus, orderer_domain, ca, channel, organisations} = genesisBlock;
+        const {template_folder, consensus, channel, organisations} = genesisBlock;
         const networkConsensus = consensus as ConsensusType;
         const networkChannel = new Channel(channel);
-        
-        // Parse CA
-        const {type, url, port, settings} = ca;
-        const caEntity = new Ca('ca.orderer', {
-            number: 0,
-            port: port,
-            host: url,
-            user: 'admin',
-            password: 'adminpw',
-            isSecure: false,
-        });
 
         // parse the organization
         const orgs = [];
+        const ordererOrganizations = [];
         for (const org of organisations) {
             const {organisation: orgName, domain_name: orgDomain, orderers, anchorPeer} = org;
 
@@ -89,6 +79,14 @@ export class GenesisParser extends BaseParser {
                     orderers: ords
                 })
             );
+            let myOrdOrg = new OrdererOrganization(`ordererOrganization${orgName}`, {
+                domainName: orgDomain,
+                orgName: orgName,
+            })
+
+            myOrdOrg.orderers.push(...ords);
+
+            ordererOrganizations.push(myOrdOrg)
         }
 
         // fill and return the network object
@@ -102,23 +100,15 @@ export class GenesisParser extends BaseParser {
             forDeployment: false,
         });
         network.organizations = orgs;
-
-        const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
-            domainName: orderer_domain,
-            ca: caEntity
-        });
-
-        for (const org of network.organizations) {
-            ordererOrganization.orderers.push(...org.orderers);
-        }
-
-        network.ordererOrganization = ordererOrganization;
+        network.ordererOrganization = ordererOrganizations;
 
         // Raft consensus must be always secure
         if (network.options.consensus === ConsensusType.RAFT) {
-            network.ordererOrganization.isSecure = true;
+            //network.ordererOrganization.isSecure = true;
+            for (const ord of network.ordererOrganization) {
+                ord.isSecure = true;
+            }
         }
-
         network.channel = networkChannel;
 
         return network;

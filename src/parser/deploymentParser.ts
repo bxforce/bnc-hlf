@@ -34,10 +34,10 @@ export class DeploymentParser extends BaseParser {
 
   /**
    * Constructor
-   * @param fullFilePath deployment configuration full path
+   * @param filePath deployment configuration full path
    */
-  constructor(public fullFilePath: string) {
-    super(fullFilePath);
+  constructor(public filePath: string) {
+    super(filePath);
   }
 
   /**
@@ -49,12 +49,12 @@ export class DeploymentParser extends BaseParser {
     const parsedYaml = await this.parseRaw();
 
     // Parsing chains definition
-    const organizations: Organization[] = this.buildOrganisations(parsedYaml['chains']);
+    const {organizations, caEntityOrderer} = this.buildOrganisations(parsedYaml['chains']);
     l('Finish Parsing configuration file');
 
     // build the network instance
     const { template_folder, fabric, consensus } = parsedYaml['chains'];
-    const network: Network = new Network(this.fullFilePath, {
+    const network: Network = new Network(this.filePath, {
       hyperledgerVersion: fabric != null ? fabric : HLF_DEFAULT_VERSION.FABRIC,
       hyperledgerCAVersion: HLF_DEFAULT_VERSION.CA,
       hyperledgerThirdpartyVersion : HLF_DEFAULT_VERSION.THIRDPARTY,
@@ -65,17 +65,23 @@ export class DeploymentParser extends BaseParser {
     });
     network.organizations = organizations;
 
-    // set a default ordererOrganization
-    const ordererOrganization = new OrdererOrganization(`ordererOrganization`, {
-      domainName: organizations[0].domainName,
-      ca: new Ca('ca.orderer', {})
-    });
-    for(const org of network.organizations) {
-      ordererOrganization.orderers.push(...org.orderers);
-    }
-    network.ordererOrganization = ordererOrganization;
+      let ordererOrganizations = [];
+      ordererOrganizations.push(new OrdererOrganization(`ordererOrganization${organizations[0].name}`, {
+          domainName: organizations[0].domainName,
+          orgName: organizations[0].name,
+          ca: caEntityOrderer
+      }))
+      for(const org of network.organizations) {
+          ordererOrganizations[0].orderers.push(...org.orderers);
+      }
+      network.ordererOrganization = ordererOrganizations;
+      
+      if (network.options.consensus === ConsensusType.RAFT) {
+          network.ordererOrganization[0].isSecure = true;
+      }
 
-    return network;
+
+      return network;
   }
 
   /**
@@ -102,15 +108,40 @@ export class DeploymentParser extends BaseParser {
    * Parse the organization section within the deployment configuration file
    * @param yamlOrganisations
    */
-  private buildOrganisations(yamlOrganisations): Organization[] {
+  private buildOrganisations(yamlOrganisations) {
     const organizations: Organization[] = [];
     const { template_folder, fabric, tls, consensus, db, organisations } = yamlOrganisations;
-
+      let caEntityOrderer;
     organisations.forEach(org => {
-      const { organisation, domain_name, ca, orderers, peers } = org;
+      const { organisation, domain_name, ca, ca_orderer, orderers, peers } = org;
+        // Parse CA orderer
+        const { name: caName, engine: engineName, port: caPort } = ca;
+        if (ca_orderer != undefined) {
+            const {name, url, port} = ca_orderer;
+            caEntityOrderer = new Ca(name, {
+                number: 0,
+                port: port,
+                host: url,
+                user: 'admin',
+                password: 'adminpw',
+                isSecure: false,
+                isOrgCA: false,
+            });
+        } else {
+           // caEntityOrderer = null
+            caEntityOrderer = new Ca(`${caName}.${organisation}`, {
+                number: 0,
+                port: caPort ?? CA_DEFAULT_PORT,
+                host: `${caName}.${organisation}`,
+                user: 'admin',
+                password: 'adminpw',
+                isSecure: false,
+                isOrgCA: true,
+            });
+        }
 
       // parse CA
-      const { name: caName, engine: engineName, port: caPort } = ca;
+      //const { name: caName, engine: engineName, port: caPort } = ca;
       const caEntity = new Ca(caName, {
         engineName: engineName,
         port: caPort ?? CA_DEFAULT_PORT,
@@ -176,6 +207,6 @@ export class DeploymentParser extends BaseParser {
       );
     });
 
-    return organizations;
+    return {organizations, caEntityOrderer};
   }
 }

@@ -42,23 +42,23 @@ networks:
     external: true
 
 services:
-  ${this.network.ordererOrganization.caName}:
-    container_name: ${this.network.ordererOrganization.caName}
+  ${this.network.ordererOrganization[0].caName}:
+    container_name: ${this.network.ordererOrganization[0].caName}
     image: hyperledger/fabric-ca:${this.network.options.hyperledgerCAVersion}
-    command: sh -c 'fabric-ca-server start -d -b ${this.network.ordererOrganization.ca.options.user}:${this.network.ordererOrganization.ca.options.password} --port ${this.network.ordererOrganization.ca.options?.port} --cfg.identities.allowremove'
+    command: sh -c 'fabric-ca-server start -d -b ${this.network.ordererOrganization[0].ca.options.user}:${this.network.ordererOrganization[0].ca.options.password} --port ${this.network.ordererOrganization[0].ca.options?.port} --cfg.identities.allowremove'
     environment:
       - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
-      - FABRIC_CA_SERVER_CA_NAME=${this.network.ordererOrganization.caName}
-      - FABRIC_CA_SERVER_TLS_ENABLED=${this.network.ordererOrganization.isSecure}
-      - FABRIC_CA_SERVER_CSR_CN=${this.network.ordererOrganization.caCn}
+      - FABRIC_CA_SERVER_CA_NAME=${this.network.ordererOrganization[0].caName}
+      - FABRIC_CA_SERVER_TLS_ENABLED=${this.network.ordererOrganization[0].isSecure}
+      - FABRIC_CA_SERVER_CSR_CN=${this.network.ordererOrganization[0].caCn}
       - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
       - FABRIC_CA_SERVER_DEBUG=true
     labels:
       - "bnc=hlf"
     ports:
-      - "${this.network.ordererOrganization.ca.options.port}:${this.network.ordererOrganization.ca.options.port}"
+      - "${this.network.ordererOrganization[0].ca.options.port}:${this.network.ordererOrganization[0].ca.options.port}"
     volumes:
-      - ${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization.name}:/tmp/hyperledger/fabric-ca
+      - ${this.network.options.networkConfigPath}/organizations/fabric-ca/${this.network.ordererOrganization[0].name}:/tmp/hyperledger/fabric-ca
     networks:
       - ${this.options.composeNetwork}    
   `;
@@ -79,7 +79,7 @@ services:
 
     super(filename, getDockerComposePath(options.networkRootPath));
 
-    this.caName = this.network.ordererOrganization.caName;
+    this.caName = this.network.ordererOrganization[0].caName;
     this.rootPath = this.network.options.networkConfigPath;
   }
 
@@ -114,7 +114,7 @@ services:
 
       // Check the container is running
       await delay(DOCKER_CA_DELAY);
-      const isCaRunning = await this.dockerEngine.doesContainerExist(`${this.network.ordererOrganization.caName}`);
+      const isCaRunning = await this.dockerEngine.doesContainerExist(`${this.network.ordererOrganization[0].caName}`);
       if (!isCaRunning) {
         d('CA container not yet running - waiting more');
         await delay(DOCKER_CA_DELAY * 2);

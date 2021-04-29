@@ -90,7 +90,7 @@ export class Channels extends ClientHelper {
         d('Successfully created the channel.');
         return true;
       }
-      console.log(response);
+     
 
       e(` Failed to create the channel ${channelName}`);
       return false;
@@ -138,12 +138,6 @@ export class Channels extends ClientHelper {
         block: genesisBlock
       };
       const results = await channel.joinChannel(joinRequest);
-
-      d(this.peers)
-      d(this.client.newTransactionID())
-      d(genesisBlock)
-
-      d("#####")
 
       d(util.format('Join Channel R E S P O N S E : %j', results));
       if (results[0] && results[0].response && results[0].response.status === 200) {
@@ -270,11 +264,42 @@ export class Channels extends ClientHelper {
       e('Error retrieving the channel instance');
       return
     }
+
     try{
       var envelope = await channel.getChannelConfigFromOrderer();
       return envelope;
     }catch(err){
-      e('Error converting Binary to Json');
+      e('Error Getting channel Config');
+      console.log(err)
+      return err;
+    }
+  }
+
+  
+
+  async getGenesis(channelName, orgMspId: string) {
+  //Getting bock number 0 not the latest
+    let channel = this.client.newChannel(channelName);
+    channel.addOrderer(this.orderers[0]);
+    for(const peer of this.peers) {
+      channel.addPeer(peer, orgMspId);
+    }
+
+    if (!channel) {
+      e('Error retrieving the channel instance');
+      return
+    }
+
+    try{
+      let tx_id = this.client.newTransactionID();
+      let g_request = {
+        txId : 	tx_id
+      };
+      var block = await channel.getGenesisBlock(g_request);
+      return block;
+    }catch(err){
+      e('Error Getting channel Config');
+      console.log(err)
       return err;
     }
   }
@@ -315,7 +340,6 @@ export class Channels extends ClientHelper {
       var envelope = fs.readFileSync(configUpdatePath);
       // extract the channel config bytes from the envelope to be signed
       var channelConfig = this.client.extractChannelConfig(envelope);
-
       let signature = this.client.signChannelConfig(channelConfig);
       return signature;
     }catch (err) {

@@ -33,9 +33,15 @@ docker rm -f $(docker ps -aq -f label=bnc)
 docker rm -f $(docker ps -a | awk '{ print $1,$2 }' | grep dev-peer | awk '{print $1 }') $(docker ps -a | awk '{ print $1,$2 }' | grep couchdb | awk '{print $1 }')
 docker volume prune -f
 ${this.options.removeImages ? `docker rmi -f $(docker images | grep dev-peer | awk '{print $3}') || true` : ``}
-mv ${this.options.path}/fabric-binaries /tmp/; 
-rm -rf ${this.options.path}/*; 
-mv /tmp/fabric-binaries ${this.options.path}/;
+if [ -d ${this.options.path}/fabric-binaries ] 
+then
+    mv ${this.options.path}/fabric-binaries /tmp/; 
+    rm -rf ${this.options.path}/*; 
+    mv /tmp/fabric-binaries ${this.options.path}/;
+else
+    echo "fabric binaries directory does not exist, cleaning for first time"
+fi
+
 `;
 
   // TODO: avoid docker volume prune...

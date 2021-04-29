@@ -17,6 +17,7 @@ limitations under the License.
 import { BaseGenerator } from '../base';
 import { Network } from '../../parser/model/network';
 import { Organization } from '../../parser/model/organization';
+import { OrdererOrganization } from '../../parser/model/ordererOrganization';
 import { Utils } from '../../utils/helper';
 import { e } from '../../utils/logs';
 import { SysWrapper } from '../../utils/sysWrapper';
@@ -38,30 +39,29 @@ import createFile = SysWrapper.createFile;
  *
  * @author wassim.znaidi@gmail.com
  */
-export class OrgGenerator extends BaseGenerator {
+export class OrdererOrgGenerator extends BaseGenerator {
     /* configtx.yaml contents */
     contents = `
 Organizations:  
-  - &${this.org.name}
-    Name: ${this.org.mspName}
-    ID: ${this.org.mspName}
-    MSPDir: ${getOrganizationMspPath(this.network.options.networkConfigPath, this.org)}
-    Policies: &${this.org.name}POLICIES
+  - &${this.ordOrg.name}
+    Name: ${this.ordOrg.name}
+    ID: ${this.ordOrg.mspName}
+    MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, `${this.ordOrg.orgName}.${this.ordOrg.domainName}`)}/msp
+    Policies: &${this.ordOrg.name}POLICIES
         Readers:
             Type: Signature
-            Rule: "OR('${this.org.mspName}.admin', '${this.org.mspName}.peer', '${this.org.mspName}.client')"
+            Rule: "OR('${this.ordOrg.mspName}.member')"
         Writers:
             Type: Signature
-            Rule: "OR('${this.org.mspName}.admin', '${this.org.mspName}.client')"
+            Rule: "OR('${this.ordOrg.mspName}.member')"
         Admins:
             Type: Signature
-            Rule: "OR('${this.org.mspName}.admin')"
-        Endorsement:
-            Type: Signature
-            Rule: "OR('${this.org.mspName}.peer')"
-    AnchorPeers:
-        - Host: ${this.org.peers[0].name}.${this.org.fullName}
-          port: ${this.org.peers[0].options.ports[0]}                   
+            Rule: "OR('${this.ordOrg.mspName}.admin')"   
+    OrdererEndpoints:
+${this.ordOrg.orderers.map(org => `    
+        - ${org.name}.${org.options.domainName}:${org.options.ports[0]}
+`).join('')}
+              
   `;
 
     /**
@@ -70,13 +70,13 @@ Organizations:
      * @param path
      * @param network
      */
-    constructor(filename: string, path: string, private network: Network, private org: Organization) {
-        super(filename, getPeerOrganizations(path, org.fullName));
+    constructor(filename: string, path: string, private network: Network, private ordOrg: OrdererOrganization) {
+        super(filename, getOrdererOrganizationRootPath(path, `${ordOrg.orgName}.${ordOrg.domainName}`));
     }
-    
+
     async generateDefinition(): Promise<boolean> {
         try{
-            const jsonFile = `${this.org.name}.json`;
+            const jsonFile = `${this.ordOrg.name}.json`;
             const artifactsPath = getArtifactsPath(this.network.options.networkConfigPath)
             const artifactsExists = await SysWrapper.existsPath(artifactsPath);
             if(!artifactsExists) {
@@ -94,11 +94,11 @@ if [ "$?" -ne 0 ]; then
 fi    
   
 
-configtxgen --configPath ${this.path} -printOrg ${this.org.mspName}  > ${artifactsPath}/${jsonFile}
+configtxgen --configPath ${this.path} -printOrg ${this.ordOrg.name}  > ${artifactsPath}/${jsonFile}
 res=$?
 
 if [ $res -ne 0 ]; then
-  echo "Failed to generate json definition for ${this.org.mspName}..."
+  echo "Failed to generate json definition for ${this.ordOrg.mspName}..."
   exit 1
 fi
     `;
@@ -121,18 +121,6 @@ fi
             return false;
         }
     }
-    
-    async generateAnchorDefinition(){
-        const artifactsPath = getArtifactsPath(this.network.options.networkConfigPath)
-        let anchorDef = {
-            "mod_policy": "Admins",
-            "value":{"anchor_peers": [{"host": `${this.org.peers[0].name}.${this.org.fullName}`,"port": `${this.org.peers[0].options.ports[0]} `}]},
-            "version": "0"
-        }
-        let contentAsStr = JSON.stringify(anchorDef)
-        let filePath = `${artifactsPath}/${this.org.name}Anchor.json`
-        //save this to artifacts folder to be used later for channel DEF creation
-        createFile(filePath, contentAsStr);
 
-    }
+
 }

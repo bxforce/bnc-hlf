@@ -16,14 +16,8 @@ chains:
         url: "ca.orderer1"
         port: 9054
       orderers:
-        - orderer: "orderer0"
-          port: 7050
-          engine: "host1"
-        - orderer: "orderer1"
-          port: 8050
-          engine: "host1"
-        - orderer: "orderer2"
-          port: 9050
+        - orderer: "orderer7"
+          port: 10052
           engine: "host1"
       peers:
         - peer: "peer0"

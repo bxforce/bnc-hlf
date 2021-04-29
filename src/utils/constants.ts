@@ -88,6 +88,7 @@ export const NETWORK_ROOT_PATH = './hyperledger-fabric-network';
 export const CONFIG_DEFAULT_PATH = '/bnc/config/config.yaml';
 
 export const GENESIS_FILE_NAME = 'genesis.block';
+export const GENESIS_ORDERER_FILE_NAME = 'config_orderer.block';
 export const channelTimeout = 10000;
 export const updateTimeout = 60000;
 export const BNC_TOOL_NAME = 'BNC';
@@ -102,8 +103,13 @@ export const SEQUENCE = 1;
 export const BLOCK_SIZE = 50;
 
 export const CHAINCODE_DEFAULT_CHAINCODE_ROOT_PATH = "volume_chaincode";
-export const CHAINCODE_DEFAULT_CHAINCODE_PATH = "abstore/go";
-export const CHAINCODE_DEFAULT_SCRIPTS_ROOT_PATH = "volume_scripts";
-export const CHAINCODE_DEFAULT_SCRIPTS_PATH = "./scripts/";
-export const CHAINCODE_DEFAULT_COMPILATION_COMMAND = "/bin/bash -c \"cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1\"";
+export const CHAINCODE_DEFAULT_CHAINCODE_PATH = "abstore";
+export const CHAINCODE_DEFAULT_CHAINCODE_LANG = "golang"; // {golang,node,external}
+export const CHAINCODE_DEFAULT_CHAINCODE_ENV = "chaincode.env";
 
+export const BATCH_DEFAULT_PARAMS = {
+  batchTimeout: '2s',
+  maxMessageCount: '50',
+  absoluteMaxBytes: '99 MB',
+  preferredMaxBytes: '512 KB'
+};

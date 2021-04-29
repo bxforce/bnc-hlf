@@ -22,6 +22,7 @@ export class OrdererOrganizationOptions {
   orderers?: Orderer[];
   domainName?: string;
   isSecure?: boolean;
+  orgName?: string;
 }
 
 /**
@@ -33,6 +34,7 @@ export class OrdererOrganization {
   orderers: Orderer[] = [];
   domainName: string;
   isSecure = false;
+  orgName: string;
 
   constructor(public name: string, options?: OrdererOrganizationOptions) {
     if(options) {
@@ -40,6 +42,7 @@ export class OrdererOrganization {
       this.orderers = options.orderers ?? [];
       this.domainName = options.domainName ?? 'unknown';
       this.isSecure = options.isSecure ?? false;
+      this.orgName = options.orgName ?? 'unknown';
     }
   }
 
@@ -69,5 +72,9 @@ export class OrdererOrganization {
 
   get adminUserFull(): string {
     return `Admin@${this.domainName}`;
+  }
+
+  get fullOrgName(): string {
+    return `${this.orgName}.${this.domainName}`
   }
 }

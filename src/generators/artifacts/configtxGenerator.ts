@@ -19,11 +19,12 @@ import { Network } from '../../parser/model/network';
 import { CHANNEL_RAFT_ID, ConsensusType, GENESIS_FILE_NAME, BLOCK_SIZE } from '../../utils/constants';
 import { Utils } from '../../utils/helper';
 import getOrdererOrganizationRootPath = Utils.getOrdererOrganizationRootPath;
-import getOrdererTlsPath = Utils.getOrdererTlsPath;
+import getOrdererTlsRootPath = Utils.getOrdererTlsRootPath;
 import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getArtifactsPath = Utils.getArtifactsPath;
 import getOrganizationMspPath = Utils.getOrganizationMspPath;
 import { SysWrapper } from '../../utils/sysWrapper';
+import {ConfigTxBatchOptions} from '../../utils/datatype';
 import { e } from '../../utils/logs';
 
 /**
@@ -36,25 +37,27 @@ export class ConfigtxYamlGenerator extends BaseGenerator {
   /* configtx.yaml contents */
   contents = `
 Organizations:
-  - &${this.network.ordererOrganization.name}
-    Name: ${this.network.ordererOrganization.name}
-    ID: ${this.network.ordererOrganization.mspName}
-    MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp
-    Policies: &${this.network.ordererOrganization.name}POLICIES
+${this.network.ordererOrganization.map(ordOrg => `
+  - &${ordOrg.name}
+    Name: ${ordOrg.name}
+    ID: ${ordOrg.mspName}
+    MSPDir: ${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, ordOrg.fullOrgName)}/msp
+    Policies: &${ordOrg.name}POLICIES
         Readers:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.mspName}.member')"
+            Rule: "OR('${ordOrg.mspName}.member')"
         Writers:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.mspName}.member')"
+            Rule: "OR('${ordOrg.mspName}.member')"
         Admins:
             Type: Signature
-            Rule: "OR('${this.network.ordererOrganization.mspName}.admin')"
+            Rule: "OR('${ordOrg.mspName}.admin')"
     OrdererEndpoints:
 ${this.network.organizations.map(org => `    
         - ${org.orderers[0].options.host}:${org.orderers[0].options.ports[0]}
 `).join('')}
-        
+
+`).join('')}         
   
 ${this.network.organizations.map(org => `
   - &${org.name}
@@ -117,19 +120,19 @@ ${org.orderers.map((ord, i) => `
         - ${ord.options.host}:${ord.options.ports[0]}
 `).join('')}
 `).join('')}     
-    BatchTimeout: 2s
+    BatchTimeout: ${this.options.batchTimeout}
     BatchSize:
-        MaxMessageCount: ${BLOCK_SIZE}
-        AbsoluteMaxBytes: 99 MB
-        PreferredMaxBytes: 512 KB
+        MaxMessageCount: ${this.options.maxMessageCount}
+        AbsoluteMaxBytes: ${this.options.absoluteMaxBytes}
+        PreferredMaxBytes: ${this.options.preferredMaxBytes}
     EtcdRaft:
         Consenters:
 ${this.network.organizations.map(org => `
 ${org.orderers.map((ord, i) => `
             - Host: ${ord.options.host}
               Port: ${ord.options.ports[0]}
-              ClientTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
-              ServerTLSCert: ${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, ord)}/server.crt
+              ClientTLSCert: ${getOrdererTlsRootPath(this.network.options.networkConfigPath, org.fullName, ord)}/server.crt
+              ServerTLSCert: ${getOrdererTlsRootPath(this.network.options.networkConfigPath, org.fullName, ord)}/server.crt
 `).join('')}
 `).join('')}
     Organizations:
@@ -180,7 +183,9 @@ ${this.network.organizations.map(org => `
         Orderer:
             <<: *OrdererDefaults
             Organizations:
-                - *${this.network.ordererOrganization.name}
+            ${this.network.ordererOrganization.map(org => `
+                - *${org.name}
+`).join('')}   
             Capabilities:
                 <<: *OrdererCapabilities       
         Consortiums:
@@ -197,7 +202,7 @@ ${this.network.organizations.map(org => `
    * @param path
    * @param network
    */
-  constructor(filename: string, path: string, private network: Network) {
+  constructor(filename: string, path: string, private network: Network, private options: ConfigTxBatchOptions) {
     super(filename, getArtifactsPath(path));
   }
 
@@ -353,18 +358,21 @@ fi
   private async _validate(): Promise<boolean> {
     try {
       // Check org msp folder
-      const mspFolder = `${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, this.network.ordererOrganization.domainName)}/msp`;
-      const mspExists = await SysWrapper.existsFolder(mspFolder);
-      if(!mspExists) {
-        e(`MSP folder not exists on: ${mspFolder}`);
-        return false;
+      for(const org of this.network.organizations) {
+        const mspFolder = `${getOrdererOrganizationRootPath(this.network.options.networkConfigPath, org.fullName)}/msp`;
+        const mspExists = await SysWrapper.existsFolder(mspFolder);
+        if(!mspExists) {
+          e(`MSP folder not exists on: ${mspFolder}`);
+          return false;
+        }
       }
+
 
       // check orderer consenter ssl certs
       if(this.network.options.consensus === ConsensusType.RAFT) {
         for(const org of this.network.organizations) {
           for (const orderer of org.orderers) {
-            const ordCert = `${getOrdererTlsPath(this.network.options.networkConfigPath, this.network.ordererOrganization, orderer)}/server.crt`;
+            const ordCert = `${getOrdererTlsRootPath(this.network.options.networkConfigPath, org.fullName, orderer)}/server.crt`;
             const certExists = await SysWrapper.existsPath(ordCert);
             if(!certExists) {
               e(`Orderer SSL certs not exists on: ${ordCert}`);

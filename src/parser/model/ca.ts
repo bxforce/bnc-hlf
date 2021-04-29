@@ -22,6 +22,7 @@ export class CaOptions {
   user?: string;
   password?: string;
   isSecure?: false;
+  isOrgCA?: boolean;
 }
 
 /**

@@ -1,9 +1,8 @@
 chaincode:
   template_folder: "/tmp/hyperledger-fabric-network"
   root_path_chaincode: "volume_chaincode"
-  root_path_scripts: "volume_scripts"
-  compilation_command: "/bin/bash -c \"cd /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/abstore/go; GO111MODULE=on go mod vendor; cd; peer lifecycle chaincode package /opt/gopath/src/github.com/hyperledger/fabric-samples/chaincode/mycc.tar.gz --path github.com/hyperledger/fabric-samples/chaincode/abstore/go/ --lang golang --label mycc_1\""
-  path_chaincode: "abstore/go"
+  path_chaincode: "abstore"
+  lang_chaincode: "golang"
   channel: "mychannel"
   chaincode: "mycc"
   version: "1"
