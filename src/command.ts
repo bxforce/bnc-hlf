@@ -142,6 +142,9 @@ program
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .option('--policy', 'option used to update chaincode level policy')
+    .option('--private', 'option to approve chaincode with privateData')
+    .option('--force', 'option used to update chaincode level policy')
   .option('--no-chaincode', 'bypass chaincode')
   .option('-batchTimeout, --batchTimeout <batchTimeout>', 'BatchTimeout')
   .option('-maxMessageCount, --maxMessageCount <maxMessageCount>', 'MaxMessageCount')
@@ -159,7 +162,7 @@ program
     await CLI.joinChannel(cmd.config, cmd.hosts, cmd.namech);
     await CLI.updateChannel(cmd.config, cmd.hosts, cmd.namech);
     await CLI.startFabricCli(cmd.config, cmd.hosts, cmd.commit);
-    if (cmd.chaincode) await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade);
+    if (cmd.chaincode) await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade,  cmd.policy, cmd.private, cmd.force);
   });
 
 
@@ -319,9 +322,10 @@ chaincodeCmd
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option to force approving chaincode for first time')
+    .option('--private', 'option to approve chaincode with privateData')
   .option('--force', 'option to force approving chaincode for first time')
   .action(async (cmd) => {
-    await CLI.approveChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.upgrade, cmd.policy, cmd.force);
+    await CLI.approveChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.upgrade, cmd.policy, cmd.private, cmd.force);
   });
 
 chaincodeCmd
@@ -332,8 +336,9 @@ chaincodeCmd
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_PATH)
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option to force approving chaincode for first time')
+    .option('--private', 'option to approve chaincode with privateData')
   .action(async (cmd) => {
-    await CLI.commitChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.upgrade, cmd.policy);
+    await CLI.commitChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.upgrade, cmd.policy, cmd.private);
   });
 
 chaincodeCmd
@@ -345,9 +350,10 @@ chaincodeCmd
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option used to update chaincode level policy')
+    .option('--private', 'option to approve chaincode with privateData')
   .option('--force', 'option used to update chaincode level policy')
   .action(async (cmd) => {
-    await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.force);
+    await CLI.deployChaincode(cmd.config, cmd.hosts, cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.private, cmd.force);
   });
 
 chaincodeCmd

@@ -116,7 +116,7 @@ export class ChaincodeOrchestrator {
         }
     }
 
-    static async approveChaincodeCli(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, forceNew: boolean): Promise<void> {
+    static async approveChaincodeCli(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, privateData: boolean, forceNew: boolean): Promise<void> {
         l(' REQUEST to approve chaincode')
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
@@ -125,6 +125,7 @@ export class ChaincodeOrchestrator {
         await chaincode.init(organization.fullName);
         let seq = await this.getLastSequence(config.chaincodeName, config.version, getScriptsPath(config.networkRootPath), config.channelName, deploymentConfigPath, hostsConfigPath);
         let lastSequence = seq.split(':');
+        let privateCollection = privateData? config.privateData : null ;
         let finalSequence;
         if(! lastSequence[1] ){
             finalSequence = SEQUENCE
@@ -136,17 +137,17 @@ export class ChaincodeOrchestrator {
             }
         }
         if(!policy){
-            await chaincode.approve(finalSequence, config.channelName);
+            await chaincode.approve(finalSequence, config.channelName, privateCollection, config.chaincodePath);
         }else{
             if(! config.endorsementPolicy){
                 e('NO POLICY WAS DEFINED');
                 return
             }
-            await chaincode.approve(finalSequence, config.channelName, config.endorsementPolicy);
+            await chaincode.approve(finalSequence, config.channelName, privateCollection, config.chaincodePath, config.endorsementPolicy);
         }
     }
 
-    static async commitChaincode(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean): Promise <void> {
+    static async commitChaincode(deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, privateData: boolean): Promise <void> {
         l('Request to commit chaincode')
         const {docker, organization} = await this.loadOrgEngine(deploymentConfigPath, hostsConfigPath);
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
@@ -166,6 +167,7 @@ export class ChaincodeOrchestrator {
         
         let seq = await this.getLastSequence(config.chaincodeName, config.version, getScriptsPath(config.networkRootPath), config.channelName, deploymentConfigPath, hostsConfigPath);
         let lastSequence = seq.split(':');
+        let privateCollection = privateData? config.privateData : null ;
         let finalSequence;
         if(! lastSequence[1]){
             finalSequence = SEQUENCE
@@ -174,17 +176,17 @@ export class ChaincodeOrchestrator {
         }
 
         if(!policy){
-            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName);
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, privateCollection, config.chaincodePath);
         } else {
             if(! config.endorsementPolicy){
                 e('NO POLICY DEFINED');
                 return
             }
-            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, config.endorsementPolicy);
+            chaincode.checkCommitReadiness(finalArg1, targets, finalSequence, config.channelName, privateCollection, config.chaincodePath, config.endorsementPolicy);
         }
     }
 
-    static async deployChaincode(targets: string[], upgrade: boolean, policy: boolean, forceNew: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise <void> {
+    static async deployChaincode(targets: string[], upgrade: boolean, policy: boolean, privateData: boolean, forceNew: boolean, deploymentConfigPath: string, hostsConfigPath: string, commitConfigPath: string): Promise <void> {
         let targetPeers = await this.getTargetPeers(targets, deploymentConfigPath, hostsConfigPath)
         const config: CommitConfiguration = await Helper._parseCommitConfig(commitConfigPath);
         if (!config) return;
@@ -196,11 +198,11 @@ export class ChaincodeOrchestrator {
         let res = await chaincode.isInstalled();
         if (res == "false") {
             await this.installChaincodeCli(config.chaincodeName, targetPeers, config.version, deploymentConfigPath, hostsConfigPath, commitConfigPath)
-            await this.approveChaincodeCli(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, forceNew);
-            await this.commitChaincode(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy);
+            await this.approveChaincodeCli(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, privateData, forceNew);
+            await this.commitChaincode(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, privateData);
         } else {
-            await this.approveChaincodeCli(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, forceNew);
-            await this.commitChaincode(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy);
+            await this.approveChaincodeCli(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, privateData, forceNew);
+            await this.commitChaincode(deploymentConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, privateData);
         }
     }
     
