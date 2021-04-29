@@ -28,4 +28,27 @@ file to be provided as parameters to many BNC commands. The file is structured a
 
 TODO
 
+# BNC command description:
 
+```
+Usage: bnc [options] [command]
+
+Options:
+  -V, --version                      output the version number
+  -h, --help                         display help for command
+
+Commands:
+  init [options]                     creates genesis.block and configtx files for channel and anchor update
+  enroll-orderers [options]          creates crypto material for the orderers
+  enroll-peers [options]             creates crypto material for the peers
+  generate [options]                 creates crypto material, genesis.block and configtx files
+  start [options]                    create/start network
+  stop [options]                     stop the blockchain
+  rm [options]                       Removes all BNC containers and related volumes and the dev peer images
+  run [options]                      Starts the default network with single organization
+  generate-org-definition [options]  generates new org definiton to be added to channel
+  generate-new-genesis [options]     generates new genesis to bootstrap new orderer
+  channel                            manages create/join/update channel
+  chaincode                          manages deployment of chaincode
+  help [command]                     display help for command
+```
