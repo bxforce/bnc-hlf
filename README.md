@@ -197,6 +197,4 @@ bnc rm --config-folder $PWD
 - [@worldsibu](https://github.com/worldsibu) for inspiration and some part of the util code.
 
 
-## Changelog
 
-[Go to changelog](./changelog.md)
