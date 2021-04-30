@@ -69,6 +69,17 @@ program
 
 
 program
+    .command('download')
+    .description('downloads binaries')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .action(async (cmd: any) => {
+        if (cmd) {
+            await CLI.download(cmd.config, cmd.hosts);
+        }
+    });
+
+program
   .command('generate')
   .description("creates crypto material, genesis.block and configtx files")
   .option('--genesisBlock', 'generate genesis block')
