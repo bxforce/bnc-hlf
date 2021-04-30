@@ -69,6 +69,17 @@ program
 
 
 program
+    .command('download')
+    .description('downloads binaries')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .action(async (cmd: any) => {
+        if (cmd) {
+            await CLI.download(cmd.config, cmd.hosts);
+        }
+    });
+
+program
   .command('generate')
   .description("creates crypto material, genesis.block and configtx files")
   .option('--genesisBlock', 'generate genesis block')
@@ -142,6 +153,9 @@ program
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
+    .option('--policy', 'option used to update chaincode level policy')
+    .option('--private', 'option to approve chaincode with privateData')
+    .option('--force', 'option used to update chaincode level policy')
   .option('--no-chaincode', 'bypass chaincode')
   .option('-batchTimeout, --batchTimeout <batchTimeout>', 'BatchTimeout')
   .option('-maxMessageCount, --maxMessageCount <maxMessageCount>', 'MaxMessageCount')
@@ -292,7 +306,7 @@ channelCmd
     .description('adds an orderer')
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('-o, --ordererOrgDef <path>', 'path tto the orderer org def')
+    .option('-o, --ordererOrgDef <path>', 'path to the orderer org def')
     .option('-n, --namech <name-channel>', 'name of the channel')
     .action(async (cmd) => {
         await CLI.addNewOrdererOrganization(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, cmd.ordererOrgDef, cmd.namech);
@@ -319,6 +333,7 @@ chaincodeCmd
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option to force approving chaincode for first time')
+    .option('--private', 'option to approve chaincode with privateData')
   .option('--force', 'option to force approving chaincode for first time')
   .action(async (cmd) => {
     await CLI.approveChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.upgrade, cmd.policy, cmd.force);
@@ -332,6 +347,7 @@ chaincodeCmd
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option to force approving chaincode for first time')
+    .option('--private', 'option to approve chaincode with privateData')
   .action(async (cmd) => {
     await CLI.commitChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.upgrade, cmd.policy);
   });
@@ -345,6 +361,7 @@ chaincodeCmd
   .option('-p, --list <items>', 'comma separated list of list peers to install chaincode on', x => { return x.split(','); })
   .option('--upgrade', 'option used when approving to upgrade chaincode')
   .option('--policy', 'option used to update chaincode level policy')
+    .option('--private', 'option to approve chaincode with privateData')
   .option('--force', 'option used to update chaincode level policy')
   .action(async (cmd) => {
     await CLI.deployChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.force);

@@ -28,9 +28,8 @@ export class NetworkCleanShGenerator extends BaseGenerator {
 mv ${this.options.path}/fabric-binaries /tmp/; 
 rm -rf ${this.options.path}/*; 
 mv /tmp/fabric-binaries ${this.options.path}/;
-`;
 
-    // TODO: avoid docker volume prune...
+`;
 
     constructor(filename: string, path: string, private options: NetworkCleanShOptions) {
         super(filename, path);

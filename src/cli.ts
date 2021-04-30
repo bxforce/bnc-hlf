@@ -59,6 +59,11 @@ export class CLI {
     await Orchestrator.generatePeersCredentials(deployConfigPath, hostsConfigPath);
   }
 
+
+  static async download(deployConfigPath: string, hostsConfigPath: string) {
+    await Orchestrator.download(deployConfigPath, hostsConfigPath);
+  }
+  
   static async generateOrdererCredentials(deployConfigPath: string, hostsConfigPath: string) {
     await Orchestrator.generateOrdererCredentials(deployConfigPath, hostsConfigPath);
   }
@@ -80,16 +85,16 @@ export class CLI {
     await ChaincodeOrchestrator.installChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, targets);
   }
 
-  static async approveChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, forceNew: boolean) {
-    await ChaincodeOrchestrator.approveChaincodeCli(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, forceNew)
+  static async approveChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, privateData: boolean, forceNew: boolean) {
+    await ChaincodeOrchestrator.approveChaincodeCli(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, privateData, forceNew)
   }
 
-  static async commitChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean) {
-    await ChaincodeOrchestrator.commitChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy)
+  static async commitChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, upgrade: boolean, policy: boolean, privateData: boolean) {
+    await ChaincodeOrchestrator.commitChaincode(deployConfigPath, hostsConfigPath, commitConfigPath, upgrade, policy, privateData)
   }
 
-  static async deployChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, targets?: string[], upgrade?: boolean, policy?: boolean, forceNew?:boolean) {
-    await ChaincodeOrchestrator.deployChaincode(targets, upgrade, policy, forceNew, deployConfigPath, hostsConfigPath, commitConfigPath)
+  static async deployChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, targets?: string[], upgrade?: boolean, policy?: boolean, privateData?: boolean, forceNew?:boolean) {
+    await ChaincodeOrchestrator.deployChaincode(targets, upgrade, policy, privateData, forceNew, deployConfigPath, hostsConfigPath, commitConfigPath)
   }
 
   static async invokeChaincode(deployConfigPath: string, hostsConfigPath: string, commitConfigPath: string, args?: string[]) {
