@@ -33,7 +33,7 @@ ssh $SSH_VM3 'mkdir config'
 ````
 
 ````aidl
-ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/add-org/config-deploy-org2.yaml > $PWD/config/config-deploy-org2.yaml'
+ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/add-org/config-deploy-org3.yaml > $PWD/config/config-deploy-org3.yaml'
 ````
 
 ````aidl
@@ -51,7 +51,7 @@ bnc enroll-peers --config-folder $PWD/config -f config-deploy-org3.yaml -h confi
 ````
 
 ````aidl
-enroll-orderers --config-folder $PWD/config -f config-deploy-org3.yaml -h config-hosts.yaml
+bnc enroll-orderers --config-folder $PWD/config -f config-deploy-org3.yaml -h config-hosts.yaml
 ````
 
 ### Step4: Start the peer of org3
@@ -105,6 +105,7 @@ bnc channel generate-definition --config-folder $PWD/config -o /tmp/hyperledger-
 ````aidl
 scp -r /tmp/hyperledger-fabric-network/artifacts/system-channel $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts
 ````
+On machine2 of org2 do:
 
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/config_update_as_envelope_pb.pb --systemChannel
@@ -121,11 +122,15 @@ scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts/system-channel/addOrde
 
 ### Step9: Sign definition as org1
 
+On machine1 of org1 do:
+
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org1.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/config_update_as_envelope_pb.pb --systemChannel
 ````
 
 ### Step10: Submit channel update
+
+On machine1 of org1 do:
 
 ````aidl
 bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/config_update_as_envelope_pb.pb -s /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/signatures -f config-deploy-org1.yaml -h config-hosts.yaml --systemChannel
@@ -134,6 +139,7 @@ bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fa
 ### Step11: Add the new orderer organization definition to system channel
 
 Here, org1 will be generation a new channel signable definition by adding the new orderer organization to system channel
+
 ````aidl
 bnc channel add-new-orderer-org --config-folder $PWD/config -f config-deploy-org1.yaml  -h config-hosts.yaml -o /tmp/hyperledger-fabric-network/artifacts/ordererOrganizationorg3.json
 ````
@@ -145,6 +151,8 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/system-channel $SSH_VM2:/tmp/hy
 ````
 
 ### Step12: Sign as org2
+
+On machine2 of org2 do:
 
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/config_update_as_envelope_pb.pb --systemChannel
@@ -163,6 +171,8 @@ scp -r $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts/system-channel/addOrde
 
 ### Step14: Sign and submit as org1
 
+On machine1 of org1 do:
+
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org1.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/config_update_as_envelope_pb.pb --systemChannel
 ````
@@ -176,7 +186,7 @@ bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fa
 On org1 do:
 
 ````aidl
-bnc channel add-orderer --config-folder $PWD/config -f /bnc/config/config-deploy-org1.yaml -h /bnc/config/config-hosts.yaml -org /tmp/hyperledger-fabric-network/artifacts/orderer.json  --addTLS --systemChannel
+bnc channel add-orderer --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -org /tmp/hyperledger-fabric-network/artifacts/orderer.json  --addTLS --systemChannel
 ````
 
 ### Step16: Sign definition By org1
@@ -196,6 +206,8 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/system-channel $SSH_VM2:/tmp/hy
 ````
 
 ### Step17: Sign definition By org2
+
+On machine2 of org2 do:
 
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/config_update_as_envelope_pb.pb --addOrderer --systemChannel
@@ -219,6 +231,8 @@ bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fa
 ### Step19: Generate new genesis file for the new orderer
 
 In this step, org1 will retrieve the latest system channel definition that will be used to bootstrap the new orderer of org3
+
+On machine1 of org1 do:
 
 ````aidl 
 bnc generate-new-genesis --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml
@@ -249,12 +263,15 @@ bnc start --config-folder $PWD/config -f config-deploy-org3.yaml -h config-hosts
 ### Step21: Add new orderer endpoint to system channel
 
 First copy the new orderer tls
+
+On machine1 of org1 do:
+
 ````aidl 
 mkdir -p /tmp/hyperledger-fabric-network/organizations/ordererOrganizations/org1.bnc.com/orderers/orderer5.bnc.com/tls/
 ````
 
 ````aidl 
-sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
+sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network;
 ````
 
 ````aidl 
@@ -285,11 +302,15 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/system-channel $SSH_VM2:/tmp/hy
 
 ### Step22: Sign the definition as org2
 
+On machine2 of org2 do:
+
 ````aidl 
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/system-channel/addOrderer/config_update_as_envelope_pb.pb --addOrderer --systemChannel
 ````
 
 ### Step23: Copy the signature to org1 and submit it
+
+On machine1 of org1 do:
 
 ````aidl 
 sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
@@ -309,6 +330,8 @@ bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fa
 
 Now org1 will generate a new signable definition by adding the _org3.json_ to application channel
 
+On machine1 of org1 do:
+
 ````aidl 
 bnc channel generate-definition --config-folder $PWD/config -o /tmp/hyperledger-fabric-network/artifacts/org3.json -a /tmp/hyperledger-fabric-network/artifacts/org3Anchor.json -f config-deploy-org1.yaml  -h config-hosts.yaml -n mychannel
 ````
@@ -321,11 +344,15 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/mychannel $SSH_VM2:/tmp/hyperle
 
 ### Step24: Sign definition by org2:
 
+On machine2 of org2 do:
+
 ````aidl 
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.yaml  -h config-hosts.yaml  -n mychannel -c /tmp/hyperledger-fabric-network/artifacts/mychannel/requestNewOrg/config_update_as_envelope_pb.pb
 ````
 
 ### Step25: Copy signature to org1 and submit it
+
+On machine1 of org1:
 
 ````aidl 
 sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
@@ -351,6 +378,8 @@ bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fa
 
 Org1 will create a new signable definition by adding the new orderer organization to application channel
 
+On machine1 of org1 do:
+
 ````aidl 
 bnc channel add-new-orderer-org  --config-folder $PWD/config  -f config-deploy-org1.yaml  -h config-hosts.yaml -o /tmp/hyperledger-fabric-network/artifacts/ordererOrganizationorg3.json -n mychannel
 ````
@@ -363,13 +392,17 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/mychannel $SSH_VM2:/tmp/hyperle
 
 ### Step27: Sign as org2
 
+On machine2 of org2:
+
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/config_update_as_envelope_pb.pb -n mychannel --addOrderer
 ````
 
-### Step28: Sign as org2 and submit to network
+### Step28: Sign as org1 and submit to network
 
 First let's copy from org2 the signature to org1
+
+On machine1 of org1:
 
 ````aidl
 sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
@@ -389,11 +422,15 @@ bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fa
 
 ### Step29: Add new orderer TLS to application channel
 
+On machine1 of org1 do:
+
 ````aidl
 bnc channel add-orderer --config-folder $PWD/config -f config-deploy-org1.yaml  -h config-hosts.yaml -org /tmp/hyperledger-fabric-network/artifacts/orderer.json -n mychannel  --addTLS
 ````
 
 ### Step30: Sign new channel definition by org1
+
+On machine1 of org1:
 
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/config_update_as_envelope_pb.pb -n mychannel --addOrderer
@@ -407,11 +444,15 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/mychannel $SSH_VM2:/tmp/hyperle
 
 ### Step31: Sign channel definition as org2
 
+On machine2 of org2 do:
+
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config  -f config-deploy-org2.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/config_update_as_envelope_pb.pb -n mychannel --addOrderer
 ````
 
 ### Step32: Submit new channel definition by org1
+
+On machine1 of org1 do:
 
 ````aidl
 scp $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/signatures/org2_sign.json /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/signatures
@@ -424,6 +465,8 @@ bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fa
 ### Step33: Add endpoint of new orderer to application channel
 
 Here org1 will generate a new signable definition by adding the endpoint of the new orderer of org3 to application channel
+
+On machine1 of org1:
 
 ````aidl
 bnc channel add-orderer --config-folder $PWD/config -f config-deploy-org1.yaml  -h config-hosts.yaml -o orderer5.bnc.com -p 12050 --addEndpoint -n mychannel
@@ -438,7 +481,7 @@ bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org1.ya
 Copy the channel definition to org2 to be signed
 
 ````aidl
-  sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
+sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
 ````
 
 ````aidl
@@ -446,6 +489,8 @@ scp -r /tmp/hyperledger-fabric-network/artifacts/mychannel $SSH_VM2:/tmp/hyperle
 ````
 
 ### Step34: Sign channel definition as org2
+
+On machine2 of org2:
 
 ````aidl
 bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.yaml  -h config-hosts.yaml -c /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/config_update_as_envelope_pb.pb -n mychannel --addOrderer
@@ -456,7 +501,7 @@ bnc channel sign-definition --config-folder $PWD/config -f config-deploy-org2.ya
 first lets copy the signature of org2 to org1
 
 ````aidl
-  sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
+sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM2 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
 ````
 ````aidl
 scp $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/signatures/org2_sign.json /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/signatures
@@ -465,8 +510,30 @@ scp $SSH_VM2:/tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/sign
 bnc channel submit-definition --config-folder $PWD/config -c /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/config_update_as_envelope_pb.pb -s /tmp/hyperledger-fabric-network/artifacts/mychannel/addOrderer/signatures/ -f config-deploy-org1.yaml -h config-hosts.yaml  -n mychannel --addOrderer
 ````
 
-Restart network after modifying _config-hosts.yaml_ on org1 and org2
+Stop network on org1:
 
+````aidl
+bnc stop --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml
+````
+
+Stop network on org2:
+
+````aidl
+bnc stop --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml
+````
+
+Modify _config-hosts.yaml_ on both organizations by adding IP of _host3_
+
+Start nework on org1:
+
+````aidl
+bnc start --config-folder $PWD/config -f config-deploy-org1.yaml -h config-hosts.yaml
+````
+Start network on org2:
+
+````aidl
+bnc start --config-folder $PWD/config -f config-deploy-org2.yaml -h config-hosts.yaml
+````
 
 ### Step36: Join channel as org3
 
@@ -489,4 +556,44 @@ bnc chaincode install --config-folder $PWD/config -f config-deploy-org3.yaml -h 
 
 ````aidl
 bnc chaincode approve --config-folder $PWD/config -f config-deploy-org3.yaml -h config-hosts.yaml -c config-chaincode.yaml --force
+````
+
+### TEST IT :fire:
+
+On machine1 of org1:
+
+````aidl
+sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network; ssh $SSH_VM3 'sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network'
+````
+
+````aidl
+scp -r /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org1.bnc.com $SSH_VM3:/tmp/hyperledger-fabric-network/organizations/peerOrganizations
+````
+
+On machine2 of org2:
+
+````aidl
+sudo chown -R ubuntu:ubuntu /tmp/hyperledger-fabric-network;
+````
+
+````aidl
+scp -r /tmp/hyperledger-fabric-network/organizations/peerOrganizations/org2.bnc.com $SSH_VM3:/tmp/hyperledger-fabric-network/organizations/peerOrganizations
+````
+
+Query a value on org3:
+
+````aidl
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org3.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "query,a"
+````
+
+substract 10 from a:
+
+````aidl 
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org3.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
+````
+
+Query again:
+
+````aidl
+bnc chaincode invoke --config-folder /home/ubuntu/config -f config-deploy-org3.yaml -h config-hosts.yaml -c config-chaincode.yaml -i "query,a"
 ````
