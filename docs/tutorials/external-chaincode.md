@@ -42,11 +42,11 @@ docker run -d --name external.org1.bnc.com --env-file /tmp/hyperledger-fabric-ne
 ### TEST IT :fire:
 
 ````aidl
-bnc chaincode invoke -i "Init,a,100,b,100" 
+bnc chaincode invoke --config-folder $PWD -f config.yaml -c config-chaincode.yaml -i "Init,a,100,b,100" 
 ````
 ````aidl
-bnc chaincode query -i "query,a" 
+bnc chaincode query --config-folder $PWD -f config.yaml -c config-chaincode.yaml -i "query,a" 
 ````
 ````aidl
-bnc chaincode invoke -i "invoke,a,b,10"
+bnc chaincode invoke --config-folder $PWD -f config.yaml -c config-chaincode.yaml -i "invoke,a,b,10"
 ````

@@ -17,9 +17,4 @@ hosts:
       - "peer1.org2.bnc.com"
       - "orderer3.bnc.com"
       - "orderer4.bnc.com"
-  host3:
-    ip: 192.168.208.64
-    targets:
-      - "peer0.org3.bnc.com"
-      - "ca3.org3"
-      - "orderer5.bnc.com"
+

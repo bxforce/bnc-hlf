@@ -24,7 +24,7 @@ Using BNC everyone can easily:
 ## Install
 
 ````aidl
-sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
+sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
 ````
 
 
@@ -126,7 +126,7 @@ bnc run  --config-folder $PWD --no-chaincode
 bnc chaincode deploy --config-folder $PWD
 ````
 
-Otherwise you can override the default [chaincode configuration](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-chaincode.yaml):
+Otherwise you can override the default [chaincode configuration](https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-chaincode.yaml):
 
 ````aidl
 bnc chaincode deploy --config-folder $PWD -c config-chaincode.yaml
@@ -172,11 +172,11 @@ bnc rm --config-folder $PWD
 
 ## Tutorials :books:
 
-* [Run two org on a single machine](docs/two-org-single-machine.md)
-* [Run two org on two machines](docs/two-org-two-machine.md)
-* [Add orderer to your running organization](docs/add-orderer.md)
-* [Add new organization to your network](docs/add-org.md)
-* [Run external chaincode](docs/external-chaincode.md) 
+* [Run two org on a single machine](docs/tutorials/two-org-single-machine.md)
+* [Run two org on two machines](docs/tutorials/two-org-two-machine.md)
+* [Add orderer to your running organization](docs/tutorials/add-orderer.md)
+* [Add new organization to your network](docs/tutorials/add-org.md)
+* [Run external chaincode](docs/tutorials/external-chaincode.md) 
 
 
 ## Contributing

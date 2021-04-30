@@ -17,15 +17,15 @@ Also in the config-hosts.yaml, we will add _orderer7.bnc.com_ in the correspondi
 Do the following to update the config files in your config folder on machine1 of org1:
 
 ````aidl
-curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/add-orderer/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/add-orderer/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
 ````
 
 ````aidl
-curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/add-orderer/config-hosts.yaml > $PWD/config/config-hosts.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/add-orderer/config-hosts.yaml > $PWD/config/config-hosts.yaml
 ````
 
 ````aidl
-curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/add-orderer/config-deploy-orderer.yaml > $PWD/config/config-deploy-orderer.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/add-orderer/config-deploy-orderer.yaml > $PWD/config/config-deploy-orderer.yaml
 ````
 
 ### Step2: Generate orderer7 credentials

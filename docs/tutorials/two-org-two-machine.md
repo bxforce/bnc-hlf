@@ -15,11 +15,11 @@ These generated artifacts by org1 are shared with org2.
 
 For this tutorial, each organization will be deployed on one machine and we will be using these files :
 
-* [config-deploy-org1.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-deploy-org1.yaml)
-* [config-deploy-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-deploy-org2.yaml)
-* [config-genesis-org1-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-genesis-org1-org2.yaml)
-* [config-chaincode.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml)
-* [config-hosts.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/two-orgs/config-hosts.yaml)
+* [config-deploy-org1.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/two-orgs/config-deploy-org1.yaml)
+* [config-deploy-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/two-orgs/config-deploy-org2.yaml)
+* [config-genesis-org1-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/two-orgs/config-genesis-org1-org2.yaml)
+* [config-chaincode.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/two-orgs/config-chaincode.yaml)
+* [config-hosts.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/two-orgs/config-hosts.yaml)
 
 Notice that we have a new file that we will be using compared to the last tutorial : **config-hosts.yaml**
 
@@ -43,13 +43,13 @@ export SSH_VM2=IP
 Install on the first machine of org1
 
 ````aidl
-sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
+sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
 ````
 
 Install on the second machine of org2
 
 ````aidl
-ssh $SSH_VM2 'sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc'
+ssh $SSH_VM2 'sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc'
 ````
 
 #### Create config files
@@ -61,19 +61,19 @@ mkdir config
 ````
 
 ````aidl
-curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/two-orgs/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
 ````
 
 ````aidl
-curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/two-orgs/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
 ````
 
 ````aidl
-curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml
 ````
 
 ````aidl
-curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
+curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
 ````
 
 ````aidl
@@ -81,15 +81,15 @@ ssh $SSH_VM2 'mkdir config'
 ````
 
 ````aidl
-ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-deploy-org2.yaml > $PWD/config/config-deploy-org2.yaml'
+ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/two-orgs/config-deploy-org2.yaml > $PWD/config/config-deploy-org2.yaml'
 ````
 
 ````aidl
-ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml'
+ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/two-orgs/config-hosts.yaml > $PWD/config/config-hosts.yaml'
 ````
 
 ````aidl
-ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
+ssh $SSH_VM2 'curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/tests/multi_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
 ````
 
 ### Step1: Enroll peers and orderers on org2:

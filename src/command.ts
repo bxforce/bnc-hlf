@@ -32,7 +32,7 @@ import { Utils } from './utils/helper';
  */
 program
   .command('init')
-  .description("creates genesis.block and configtx files for channel and anchor update")
+  .description("Create genesis.block and configtx files for channel and anchor update")
   .option('--genesisBlock', 'generate genesis block')
   .option('--configTx', 'generate channel configuration file')
   .option('--anchorTx', 'generate anchor peer update file')
@@ -47,7 +47,7 @@ program
 
 program
   .command('enroll-orderers')
-  .description('creates crypto material for the orderers')
+  .description('Create crypto material for the orderers')
   .option('-f, --config <path>', 'Absolute Path to the deployment  definition file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .action(async (cmd: any) => {
@@ -58,7 +58,7 @@ program
 
 program
   .command('enroll-peers')
-  .description('creates crypto material for the peers')
+  .description('Create crypto material for the peers')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .action(async (cmd: any) => {
@@ -70,18 +70,18 @@ program
 
 program
     .command('download')
-    .description('downloads binaries')
-    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_PATH)
+    .description('Download binaries')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .action(async (cmd: any) => {
         if (cmd) {
-            await CLI.download(cmd.config, cmd.hosts);
+            await CLI.download(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null);
         }
     });
 
 program
   .command('generate')
-  .description("creates crypto material, genesis.block and configtx files")
+  .description("Create crypto material, genesis.block and configtx files")
   .option('--genesisBlock', 'generate genesis block')
   .option('--configTx', 'generate channel configuration file')
   .option('--anchorTx', 'generate anchor peer update file')
@@ -104,7 +104,7 @@ program
 
 program
   .command('start')
-  .description('create/start network')
+  .description('Create/Start network')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-o, --ordererConfig <path>', 'Absolute path for new config file of orderer')
@@ -123,7 +123,7 @@ program
 
 program
   .command('stop')
-  .description('stop the blockchain')
+  .description('Stop the blockchain')
   .option('-f, --config <path>', 'Absolute Path to the blockchain deployment  definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .action(async (cmd: any) => {
@@ -132,7 +132,7 @@ program
 
 program
   .command('rm')
-    .description('Removes all BNC containers and related volumes and the dev peer images')
+    .description('Remove all BNC containers and related volumes and the dev peer images')
   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .action(async (cmd: any) => {
@@ -142,7 +142,7 @@ program
 
 program
   .command('run')
-    .description('Starts the default network with single organization ')
+    .description('Start the default network with single organization ')
   .option('-f, --config <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-g, --genesis <path>', 'Absolute path to the genesis deployment definition file', CONFIG_DEFAULT_NAME)
@@ -172,35 +172,17 @@ program
     await Utils.delay(DOCKER_DELAY);
     await CLI.joinChannel(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, cmd.namech);
     await CLI.updateChannel(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, cmd.namech);
-    await CLI.startFabricCli(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit);
     if (cmd.chaincode) await CLI.deployChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.list, cmd.upgrade);
   });
 
 
-program
-    .command('generate-org-definition')
-    .description('generates new org definiton to be added to channel')
-    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .option('--addOrderer', 'will generate new orderer json files')
-    .action(async cmd => {
-        await CLI.generateNewOrgDefinition(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, cmd.addOrderer);
-    });
-
-program
-    .command('generate-new-genesis')
-    .description('generates new genesis to bootstrap new orderer')
-    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
-    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
-    .action(async cmd => {
-        await CLI.generateNewGenesis(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null);
-    });
 
 
-const channelCmd = program.command('channel').description('manages create/join/update channel ');
+
+const channelCmd = program.command('channel').description('Manage create/join/update channel ');
 channelCmd
   .command('create')
-  .description('create channel if it does not exist')
+  .description('Create channel if it does not exist')
   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   //.requiredOption('-t, --channel-tx <channel-path>', 'channel configuration file path')
@@ -211,7 +193,7 @@ channelCmd
 
 channelCmd
   .command('join')
-  .description('join peers to channel')
+  .description('Join peers to channel')
   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .requiredOption('-n, --namech <channel-name>', 'name of the channel')
@@ -221,7 +203,7 @@ channelCmd
 
 channelCmd
   .command('update')
-  .description('commit anchor update to peers on channel')
+  .description('Commit anchor update to peers on channel')
   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   //.requiredOption('-a, --anchortx <update-path>', 'configurationTemplateFilePath')
@@ -232,7 +214,7 @@ channelCmd
 
 channelCmd
   .command('deploy')
-  .description('deploy channel')
+  .description('Deploy channel')
   .option('-f, --config <path>', 'Absolute path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-n, --namech <channel-name>', 'name of the channel', CHANNEL_DEFAULT_NAME)
@@ -247,7 +229,7 @@ channelCmd
 
 channelCmd
     .command('generate-definition')
-    .description('generates a sign able channel definition')
+    .description('Generate a sign able channel definition')
     .option('-f, --config <path>', 'Absolsign-definitionute path to the config deployment file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-o, --orgdef <path>', 'Absolute path to the new org definition')
@@ -259,7 +241,7 @@ channelCmd
 
 channelCmd
     .command('sign-definition')
-    .description('generates a sign able channel definition')
+    .description('Generate a sign able channel definition')
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
@@ -272,7 +254,7 @@ channelCmd
 
 channelCmd
     .command('submit-definition')
-    .description('submits a sign able channel definition')
+    .description('Submit a sign able channel definition')
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .requiredOption('-c, --channeldef <update-path>', 'path to the definition to be signed')
@@ -286,7 +268,7 @@ channelCmd
 
 channelCmd
     .command('add-orderer')
-    .description('adds an orderer')
+    .description('Add an orderer')
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .option('-o, --nameOrd <name-ord>', 'name orderer')
@@ -303,7 +285,7 @@ channelCmd
 
 channelCmd
     .command('add-new-orderer-org')
-    .description('adds an orderer')
+    .description('Add an orderer')
     .option('-f, --config <path>', 'Absolute path to the config deployment file', CONFIG_DEFAULT_NAME)
     .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
     .option('-o, --ordererOrgDef <path>', 'path to the orderer org def')
@@ -313,10 +295,10 @@ channelCmd
     });
 
 
-const chaincodeCmd = program.command('chaincode') .description('manages deployment of chaincode');
+const chaincodeCmd = program.command('chaincode') .description('Manage deployment of chaincode');
 chaincodeCmd
   .command('install')
-  .description('install chaincode')
+  .description('Install chaincode')
   .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
@@ -327,7 +309,7 @@ chaincodeCmd
 
 chaincodeCmd
   .command('approve')
-  .description('approve chaincode')
+  .description('Approve chaincode')
   .option('-f, --config <path>', 'Absolute path to the chaincode', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
@@ -336,12 +318,12 @@ chaincodeCmd
     .option('--private', 'option to approve chaincode with privateData')
   .option('--force', 'option to force approving chaincode for first time')
   .action(async (cmd) => {
-    await CLI.approveChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.upgrade, cmd.policy, cmd.force);
+    await CLI.approveChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.upgrade, cmd.policy, cmd.private, cmd.force);
   });
 
 chaincodeCmd
   .command('commit')
-  .description('commit chaincode')
+  .description('Commit chaincode')
   .option('-f, --config <path>', 'Absolute path to the config deploy file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
@@ -349,12 +331,12 @@ chaincodeCmd
   .option('--policy', 'option to force approving chaincode for first time')
     .option('--private', 'option to approve chaincode with privateData')
   .action(async (cmd) => {
-    await CLI.commitChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.upgrade, cmd.policy);
+    await CLI.commitChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.upgrade, cmd.policy, cmd.private);
   });
 
 chaincodeCmd
   .command('deploy')
-  .description('deploy chaincode')
+  .description('Deploy chaincode')
   .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
@@ -364,12 +346,12 @@ chaincodeCmd
     .option('--private', 'option to approve chaincode with privateData')
   .option('--force', 'option used to update chaincode level policy')
   .action(async (cmd) => {
-    await CLI.deployChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.force);
+    await CLI.deployChaincode(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit, cmd.list, cmd.upgrade, cmd.policy, cmd.private, cmd.force);
   });
 
 chaincodeCmd
   .command('invoke')
-  .description('invoke chaincode')
+  .description('Invoke chaincode')
   .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
@@ -380,7 +362,7 @@ chaincodeCmd
 
 chaincodeCmd
   .command('query')
-  .description('query chaincode')
+  .description('Query chaincode')
   .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
@@ -391,13 +373,32 @@ chaincodeCmd
 
 chaincodeCmd
   .command('cli')
-  .description('start fabric cli')
+  .description('Start fabric cli')
   .option('-f, --config <path>', 'Absolute path to deploy config file', CONFIG_DEFAULT_NAME)
   .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
   .option('-c, --commit <path>', 'Absolute path to the commit config', CONFIG_DEFAULT_NAME)
   .action(async (cmd) => {
     await CLI.startFabricCli(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, CONFIG_DEFAULT_FOLDER+cmd.commit);
   });
+
+program
+    .command('generate-org-definition')
+    .description('Generate new org definiton to be added to channel')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .option('--addOrderer', 'will generate new orderer json files')
+    .action(async cmd => {
+        await CLI.generateNewOrgDefinition(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null, cmd.addOrderer);
+    });
+
+program
+    .command('generate-new-genesis')
+    .description('Generate new genesis to bootstrap new orderer')
+    .option('-f, --config <path>', 'Absolute Path to the blockchain deployment definition file', CONFIG_DEFAULT_NAME)
+    .option('-h, --hosts <path>', 'Absolute Path to the blockchain hosts definition file')
+    .action(async cmd => {
+        await CLI.generateNewGenesis(CONFIG_DEFAULT_FOLDER+cmd.config, cmd.hosts ? CONFIG_DEFAULT_FOLDER+cmd.hosts : null);
+    });
 
 program.version(pkg.version);
 program.parse(process.argv);

@@ -2,10 +2,10 @@
 
 For this tutorial, we will be using these files :
 
-* [config-deploy-org1.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-deploy-org1.yaml)
-* [config-deploy-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-deploy-org2.yaml)
-* [config-genesis-org1-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-genesis-org1-org2.yaml)
-* [config-chaincode.yaml](https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/two-orgs/config-chaincode.yaml)
+* [config-deploy-org1.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-deploy-org1.yaml)
+* [config-deploy-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-deploy-org2.yaml)
+* [config-genesis-org1-org2.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-genesis-org1-org2.yaml)
+* [config-chaincode.yaml](https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-chaincode.yaml)
 
 Check the files to see the configuration of each organization.
 
@@ -14,7 +14,7 @@ For the chaincode we will be deploying [abstore chaincode](https://github.com/hy
 ## Install
 
 ````aidl
-sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
+sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
 ````
 
 ## Getting Started :rocket:
@@ -26,19 +26,19 @@ mkdir config
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-deploy-org2.yaml > $PWD/config/config-deploy-org1.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-deploy-org2.yaml > $PWD/config/config-deploy-org1.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/single_machine/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
 ````
 
 ### Step2: Enroll peers and orderers of org2

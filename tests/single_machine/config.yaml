@@ -7,11 +7,11 @@ genesis:
     - organisation: "org1"
       domain_name: "bnc.com"
       orderers:
-        - orderer: "orderer1"
-          host_name: "orderer1.bnc.com"
+        - orderer: "orderer0"
+          host_name: "orderer0.bnc.com"
           port: 7050
       anchorPeer:
-        host_name: "peer1.org1.bnc.com"
+        host_name: "peer0.org1.bnc.com"
         port: 7051
 
 chains:
@@ -28,18 +28,21 @@ chains:
         port: 7054
         engine: "host1"
       orderers:
-        - orderer: "orderer1"
+        - orderer: "orderer0"
           port: 7050
           #metrics: 7060
           engine: "host1"
       peers:
-        - peer: "peer1"
+        - peer: "peer0"
           port: 7051
           #metrics: 7061
           engine: "host1"
 
 chaincode:
   template_folder: "/tmp/hyperledger-fabric-network"
+  root_path_chaincode: "/home/ubuntu/bnc-hlf/tests/chaincode/"
+  path_chaincode: "abstore"
+  lang_chaincode: "golang"
   channel: "mychannel"
   chaincode: "mycc"
   version: "1"
@@ -47,8 +50,8 @@ chaincode:
     - organisation: "org1"
       domain_name: "bnc.com"
       peers:
-        - peer: "peer1"
-          host_name: "peer1.org1.bnc.com"
+        - peer: "peer0"
+          host_name: "peer0.org1.bnc.com"
           port: 7051
 
 engines:

@@ -18,11 +18,11 @@ export SSH_VM3=IP
 ````
 
 ````aidl
-sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
+sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc
 ````
 
 ````aidl
-ssh $SSH_VM3 'sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/improve-docs/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc'
+ssh $SSH_VM3 'sudo curl -L https://raw.githubusercontent.com/bxforce/bnc-hlf/master/bin/bnc -o /usr/local/bin/bnc && sudo chmod +x /usr/local/bin/bnc'
 ````
 
 ### Step2: Create conffig files
@@ -33,15 +33,15 @@ ssh $SSH_VM3 'mkdir config'
 ````
 
 ````aidl
-ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/add-org/config-deploy-org3.yaml > $PWD/config/config-deploy-org3.yaml'
+ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/add-org/config-deploy-org3.yaml > $PWD/config/config-deploy-org3.yaml'
 ````
 
 ````aidl
-ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/add-org/config-hosts.yaml > $PWD/config/config-hosts.yaml'
+ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/add-org/config-hosts.yaml > $PWD/config/config-hosts.yaml'
 ````
 
 ````aidl
-ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/improve-docs/tests/multi_machine/add-org/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
+ssh $SSH_VM3 'curl https://github.com/bxforce/bnc-hlf/blob/master/tests/multi_machine/add-org/config-chaincode.yaml > $PWD/config/config-chaincode.yaml'
 ````
 
 ### Step3: Generate certificates for new organization
