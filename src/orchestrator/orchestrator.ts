@@ -28,7 +28,6 @@ import {DockerComposeOrdererGenerator} from '../generators/docker-compose/docker
 import {DockerComposeCli} from '../generators/docker-compose/dockerComposeCli.yaml';
 import {ChaincodeScriptsGenerator} from '../generators/scripts/chaincodeScripts';
 import {BuildersScriptsGenerator} from '../generators/scripts/buildersScripts';
-import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
 import {CoreGenerator} from '../generators/utils/coreGenerator.yaml';
 import {DockerComposeYamlOptions} from '../utils/datatype';
 import {ConfigTxBatchOptions} from '../utils/datatype';
@@ -39,6 +38,7 @@ import getHlfBinariesPath = Utils.getHlfBinariesPath;
 import getDockerComposePath = Utils.getDockerComposePath;
 import getScriptsPath = Utils.getScriptsPath;
 import { SysWrapper } from '../utils/sysWrapper';
+import {NetworkCleanShGenerator, NetworkCleanShOptions} from '../generators/utils/networkClean.sh';
 import {
     BNC_NETWORK,
     DEFAULT_CA_ADMIN,
@@ -398,7 +398,7 @@ export class Orchestrator {
      * @param deleteVolume
      * @param forceRemove
      */
-    static async stopHlfServices(forceRemove: boolean, deploymentConfigPath: string, hostsConfigPath: string, deleteNetwork: boolean = false, deleteVolume: boolean = false): Promise<boolean> {
+    static async stopHlfServices(deploymentConfigPath: string, hostsConfigPath: string, forceRemove?: boolean): Promise<boolean> {
         try {
             const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
             if (!network) return;
@@ -434,6 +434,13 @@ export class Orchestrator {
                     await docker.deleteVolumesList(volumes) // TODO remove forceRemove arg
                     //also remove unwanted images starting with dev-peer !
                     await docker.deleteDevPeerImages();
+                    const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
+
+                    const options = new NetworkCleanShOptions();
+                    options.path = path;
+
+                    let networkClean = new NetworkCleanShGenerator('clean.sh', 'na', options);
+                    await networkClean.run();
                 }
             }
             return true;
@@ -443,23 +450,5 @@ export class Orchestrator {
         }
     }
 
-    /**
-     * Clean all docker
-     * @param rmi remove image also
-     */
-    static async cleanDocker(rmi: boolean, deploymentConfigPath: string, hostsConfigPath: string) {
-        const network: Network = await Helper._parse(deploymentConfigPath, hostsConfigPath);
-        if (!network) return;
-        const path = network.options.networkConfigPath ?? Helper._getDefaultPath();
 
-        const options = new NetworkCleanShOptions();
-        options.removeImages = rmi;
-        options.path = path;
-
-        let networkClean = new NetworkCleanShGenerator('clean.sh', 'na', options);
-        await networkClean.run();
-
-        l('************ Success!');
-        l('Environment cleaned!');
-    }
 }

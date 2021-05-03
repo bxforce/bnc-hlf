@@ -1,6 +1,6 @@
 {
   "name": "bnc",
-  "version": "1.4.3",
+  "version": "1.4.7",
   "description": "The CLI deployment tool for Hyperledger enterprise blockchains",
   "main": "commands.js",
   "private": true,

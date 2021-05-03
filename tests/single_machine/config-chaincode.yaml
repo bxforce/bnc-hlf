@@ -1,0 +1,16 @@
+chaincode:
+  template_folder: "/tmp/hyperledger-fabric-network"
+  root_path_chaincode: "/home/ubuntu/bnc-hlf/tests/chaincode/"
+  path_chaincode: "abstore"
+  lang_chaincode: "golang"
+  channel: "mychannel"
+  chaincode: "mycc"
+  version: "1"
+  commit:
+    - organisation: "org1"
+      domain_name: "bnc.com"
+      peers:
+        - peer: "peer1"
+          host_name: "peer1.org1.bnc.com"
+          port: 7051
+

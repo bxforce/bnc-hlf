@@ -1,34 +1,80 @@
 #!/bin/bash
 
-# env BNC_BUILD_PATH
-# env BNC_CONFIG_PATH
+# env BNC_BUILD_PATH > set this variable to trigger the build
+# env BNC_DOCKER_IMAGE
+# env BNC_DOCKER_NETWORK
 # env BNC_ENTRYPOINT
 
-DOCKER_IMAGE=bnc-hlf
-DOCKER_NETWORK=bnc_network
-
-if [[ "$(docker images -q $DOCKER_IMAGE 2> /dev/null)" == "" ]] || [[ ! -z "$BNC_BUILD_PATH" ]]; then
-    docker build -t bnc-hlf -f Dockerfile $BNC_BUILD_PATH
+## Set default variables
+if [[ -z "$BNC_DOCKER_IMAGE" ]]; then
+    BNC_DOCKER_IMAGE=bxforce/bnc-hlf:latest
 fi
 
-if [[ -z "$(docker network ls -q -f name=$DOCKER_NETWORK)" ]]; then 
-    docker network create --driver=bridge $DOCKER_NETWORK;
+if [[ -z "$BNC_DOCKER_NETWORK" ]]; then
+    BNC_DOCKER_NETWORK=bnc_network
 fi
 
-if [[ -z "$BNC_CONFIG_PATH" ]]; then
-    BNC_CONFIG_PATH=$PWD/tests/demo
+if [[ -z "$BNC_NAME" ]]; then
+    BNC_NAME=bnc-hlf
 fi
 
 if [[ -z "$BNC_ENTRYPOINT" ]]; then
     BNC_ENTRYPOINT=bnc
 fi
 
-docker run -it --rm --name bnc-hlf --network $DOCKER_NETWORK \
-    -v /tmp/hyperledger-fabric-network:/tmp/hyperledger-fabric-network \
-    -v $BNC_CONFIG_PATH:/bnc/config \
+## Parse params
+PARAMS=""
+while [ $# -gt 0 ]; do
+    key="$1"
+    case "$key" in
+        --config-folder)
+        shift
+        CONFIG_FOLDER="$1"
+        ;;
+        --output-folder)
+        shift
+        OUTPUT_FOLDER="$1"
+        ;;
+        *)
+        PARAMS=$PARAMS" "$1
+        ;;
+    esac
+    shift
+done
+
+if [[ -z "$OUTPUT_FOLDER" ]]; then
+    OUTPUT_FOLDER=/tmp/hyperledger-fabric-network
+fi
+
+## Build if needed
+if [[ "$(docker images -q $BNC_DOCKER_IMAGE 2> /dev/null)" == "" ]] && [[ ! -z "$BNC_BUILD_PATH" ]]; then
+    docker build -t $BNC_DOCKER_IMAGE -f Dockerfile $BNC_BUILD_PATH
+fi
+
+## Create network if needed
+if [[ -z "$(docker network ls -q -f name=$BNC_DOCKER_NETWORK)" ]]; then
+    docker network create --driver=bridge $BNC_DOCKER_NETWORK;
+fi
+
+## Run bnc-hlf image
+if [[ -z "$CONFIG_FOLDER" ]]; then
+
+docker run -it --rm --name $BNC_NAME --network $BNC_DOCKER_NETWORK \
+    -v $OUTPUT_FOLDER:$OUTPUT_FOLDER \
     -v volume_chaincode:/bnc/chaincode \
     -v /var/run/docker.sock:/var/run/docker.sock \
     --entrypoint $BNC_ENTRYPOINT \
-        bnc-hlf $@
+        $BNC_DOCKER_IMAGE $PARAMS
 
+else
+
+docker run -it --rm --name $BNC_NAME --network $BNC_DOCKER_NETWORK \
+    -v $OUTPUT_FOLDER:$OUTPUT_FOLDER \
+    -v volume_chaincode:/bnc/chaincode \
+    -v $CONFIG_FOLDER:/bnc/config \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --entrypoint $BNC_ENTRYPOINT \
+        $BNC_DOCKER_IMAGE $PARAMS
+
+fi
 

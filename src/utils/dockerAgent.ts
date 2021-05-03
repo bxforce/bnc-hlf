@@ -200,16 +200,15 @@ export class DockerEngine {
     try {
       // filter existing containers info
       let listOpts = {
-        "filters": "{\"label\": [\"bnc\"]}"
+        "filters": "{\"label\": [\"bnc\"]}",
+        "all": true
       };
       const containersInfo = await this.engine.listContainers(listOpts);
-      //    const foundContainerInfos = containersInfo.filter(container => this.checkContainerName(serviceName, container.Names));
-
-      // retrieve container instance from one found and stop it
       for (let containerInfo of containersInfo) {
-        const container: DockerContainer = this.getContainer(containerInfo.Id);
-        await container.stop();
-
+        const container: DockerContainer = await this.getContainer(containerInfo.Id);
+        if(containerInfo.State != "exited"){
+          await container.stop();
+        }
         if(remove) {
           await container.remove();
         }
@@ -354,11 +353,9 @@ export class DockerEngine {
 
   async deleteVolumesList(volumesList: string[]): Promise<boolean> {
     try {
-
       const volumeInfo = await this.engine.listVolumes();
       const arrayVolumes = volumeInfo.Volumes;
       const foundVolumeInfos = arrayVolumes.filter(volume => this.checkVolumeName(volumesList, volume.Name));
-
       for (let singleVolume of foundVolumeInfos) {
          let volumeObj: DockerVolume = this.getVolume(singleVolume.Name);
          await volumeObj.remove({

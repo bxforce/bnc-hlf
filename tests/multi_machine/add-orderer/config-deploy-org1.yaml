@@ -21,6 +21,9 @@ chains:
         - orderer: "orderer2"
           port: 9050
           engine: "host1"
+        - orderer: "orderer7"
+          port: 10052
+          engine: "host1"
       peers:
         - peer: "peer0"
           port: 7051
