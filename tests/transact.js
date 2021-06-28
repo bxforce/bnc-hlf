@@ -1,5 +1,10 @@
 'use strict';
 
+//
+// usage:
+// docker run --rm -it --name transact --network bnc_network -v /tmp:/tmp -v /var/run/docker.sock:/var/run/docker.sock --entrypoint node bxforce/bnc-hlf:latest transact.js invoke 1 5
+//
+
 const { Gateway, Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 
