@@ -6,8 +6,8 @@ const FabricCAServices = require('fabric-ca-client');
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
-const AwaitLock = require('await-lock');
-const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
+//const AwaitLock = require('await-lock');
+//const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
 
 const PATH_WALLET =  '/tmp/wallet';
 const PATH_NETWORK = '/tmp/hyperledger-fabric-network/settings/connection-org1.json';
