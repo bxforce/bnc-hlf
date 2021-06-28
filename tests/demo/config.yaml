@@ -60,7 +60,7 @@ chains:
 chaincode:
   template_folder: "/tmp/hyperledger-fabric-network"
   root_path_chaincode: "volume_chaincode"
-  path_chaincode: "abstore/go"
+  path_chaincode: "abstore"
   lang_chaincode: "golang"
   chaincode: "mycc"
   version: "1"
