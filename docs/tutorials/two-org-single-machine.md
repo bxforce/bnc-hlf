@@ -26,19 +26,19 @@ mkdir config
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-deploy-org1.yaml > $PWD/config/config-deploy-org1.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-deploy-org2.yaml > $PWD/config/config-deploy-org1.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-deploy-org2.yaml > $PWD/config/config-deploy-org2.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-genesis-org1-org2.yaml > $PWD/config/config-genesis-org1-org2.yaml
 ````
 
 ````aidl
-curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
+curl https://github.com/bxforce/bnc-hlf/blob/master/tests/single_machine/two-orgs/config-chaincode.yaml > $PWD/config/config-chaincode.yaml
 ````
 
 ### Step2: Enroll peers and orderers of org2
